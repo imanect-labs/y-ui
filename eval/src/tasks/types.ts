@@ -1,4 +1,4 @@
-import type { Figure, Kind } from "@y-ui/core";
+import type { Figure, Kind } from "@imanect/yui";
 
 export const CATEGORIES = [
   "bar",

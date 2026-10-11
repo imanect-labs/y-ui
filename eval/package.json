@@ -1,8 +1,8 @@
 {
-  "name": "@y-ui/eval",
+  "name": "@imanect/yui-eval",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@y-ui/core": "workspace:*"
+    "@imanect/yui": "workspace:*"
   }
 }

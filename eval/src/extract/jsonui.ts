@@ -9,7 +9,7 @@
  *   {"t":"stack","title":"…","layers":[{"name":"API","desc":"…","items":["認証"]},{"row":[{"name":"DB"},{"name":"Cache"}]}]}
  */
 
-import { parseCell, parseNumber, splitMarkdown, type Figure, type StackBox, type StackTier } from "@y-ui/core";
+import { parseCell, parseNumber, splitMarkdown, type Figure, type StackBox, type StackTier } from "@imanect/yui";
 import type { Extraction } from "../score.js";
 
 type Json = unknown;

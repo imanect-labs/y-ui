@@ -1,6 +1,6 @@
 /** 方式 B / C: 本文中の ` ```ui ` ブロックを読む。 */
 
-import { parseMarkdown, type Figure } from "@y-ui/core";
+import { parseMarkdown, type Figure } from "@imanect/yui";
 import type { Extraction } from "../score.js";
 
 export function extractYui(text: string): Extraction {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseBlock, type Figure } from "@y-ui/core";
+import { parseBlock, type Figure } from "@imanect/yui";
 import { runArm } from "../src/arms.js";
 import { extractJsonui } from "../src/extract/jsonui.js";
 import { extractMermaid } from "../src/extract/mermaid.js";

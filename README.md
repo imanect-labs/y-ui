@@ -35,7 +35,7 @@ unit: 万円
 
 | パス | 内容 |
 |---|---|
-| `packages/core` | パーサ・中間表現・テキスト化（`@y-ui/core`） |
+| `packages/core` | パーサ・中間表現・テキスト化（`@imanect/yui`） |
 | `eval` | 小さなモデルでの書きやすさの評価（課題・採点・実行・レポート） |
 | `docs/spec.md` | 記法仕様 |
 | `docs/export.md` | コピー・書き出しの設計 |
@@ -44,7 +44,7 @@ unit: 万円
 ## 使い方
 
 ```ts
-import { parseMarkdown, toText } from "@y-ui/core";
+import { parseMarkdown, toText } from "@imanect/yui";
 
 for (const seg of parseMarkdown(streamingText)) {      // ストリーミング中でもよい
   if (seg.type === "ui" && seg.result.figure) {

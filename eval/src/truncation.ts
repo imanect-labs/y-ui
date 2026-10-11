@@ -9,7 +9,7 @@
  * あわせて、図が最初に描けるようになる位置と、解析にかかる時間を測る。
  */
 
-import { parseMarkdown, toSource, type Figure } from "@y-ui/core";
+import { parseMarkdown, toSource, type Figure } from "@imanect/yui";
 import type { EvalTask } from "./tasks/types.js";
 
 export interface TruncationCase {

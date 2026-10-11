@@ -5,9 +5,9 @@
  * subgraph / end / classDef / style などの行だけをここで処理する。
  */
 
-import { parseBlock, type FlowFigure, type StackBox } from "@y-ui/core";
+import { parseBlock, type FlowFigure, type StackBox } from "@imanect/yui";
 import type { Extraction } from "../score.js";
-import type { Figure } from "@y-ui/core";
+import type { Figure } from "@imanect/yui";
 
 const IGNORED = /^(classDef|class|style|linkStyle|click|direction)\b/;
 

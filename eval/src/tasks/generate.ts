@@ -3,7 +3,7 @@
  * 生成結果は eval/tasks/tasks.jsonl にコミットし、評価のたびに同じ課題を使う。
  */
 
-import type { ChartFigure, Kind, StatFigure } from "@y-ui/core";
+import type { ChartFigure, Kind, StatFigure } from "@imanect/yui";
 import type { EvalTask } from "./types.js";
 
 // ------------------------------------------------------------ 乱数（mulberry32）

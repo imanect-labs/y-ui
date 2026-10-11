@@ -1,6 +1,6 @@
 /** 1 課題 × 1 方式を実行し、抽出結果を返す。 */
 
-import { isEmpty, parseMarkdown } from "@y-ui/core";
+import { isEmpty, parseMarkdown } from "@imanect/yui";
 import { chat, type ChatMessage, type ChatRequest, type ChatResult, type Endpoint } from "./client.js";
 import { chatGemini } from "./gemini.js";
 import { extractJsonui } from "./extract/jsonui.js";

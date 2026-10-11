@@ -23,7 +23,7 @@ importers:
 
   eval:
     dependencies:
-      '@y-ui/core':
+      '@imanect/yui':
         specifier: workspace:*
         version: link:../packages/core
 

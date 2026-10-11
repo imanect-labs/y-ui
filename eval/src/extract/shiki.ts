@@ -8,7 +8,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { parseNumber, type ChartFigure, type Figure, type FlowFigure, type StatFigure, type StatItem } from "@y-ui/core";
+import { parseNumber, type ChartFigure, type Figure, type FlowFigure, type StatFigure, type StatItem } from "@imanect/yui";
 import type { Extraction } from "../score.js";
 
 type J = unknown;
