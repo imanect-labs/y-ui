@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      # 生成途中で切れたときの検証（モデル不要）
+      - run: pnpm eval truncation
+      # 公開物の中身を確かめる（ビルドして tarball の一覧を出すだけで、公開はしない）
+      - run: npm pack --dry-run
+        working-directory: packages/core

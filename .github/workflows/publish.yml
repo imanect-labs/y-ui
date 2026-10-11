@@ -1,0 +1,37 @@
+name: Publish
+
+# v0.1.0 のようなタグを push すると、@imanect/yui を npm に公開する。
+# 認証は npm の Trusted Publishing（OIDC）。リポジトリに npm のトークンは置かない。
+# 事前に npmjs.com の @imanect/yui の設定で、Trusted Publisher として
+# このリポジトリ（imanect-labs/y-ui）とワークフロー（publish.yml）を登録しておくこと。
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Trusted Publishing には npm 11.5.1 以上が要る（Node 24 に同梱）
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: タグと package.json の版が一致するか
+        working-directory: packages/core
+        run: |
+          version="$(node -p 'require("./package.json").version')"
+          test "v${version}" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != v${version}"; exit 1; }
+      - run: npm publish
+        working-directory: packages/core

@@ -1,10 +1,36 @@
 {
   "name": "@imanect/yui",
-  "version": "0.1.0-draft",
-  "private": true,
-  "description": "Yui: Markdown に埋め込む軽量な図・UI 記法のパーサと中間表現",
+  "version": "0.1.0",
+  "description": "Yui（結）: Markdown の ```ui ブロックに図を書くための、LLM が書きやすい小さな記法のパーサと中間表現",
+  "keywords": ["markdown", "generative-ui", "llm", "chart", "flowchart", "diagram", "streaming", "parser"],
+  "license": "MIT OR Apache-2.0",
+  "author": "Imanect Labs",
+  "homepage": "https://github.com/imanect-labs/y-ui#readme",
+  "bugs": "https://github.com/imanect-labs/y-ui/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imanect-labs/y-ui.git",
+    "directory": "packages/core"
+  },
   "type": "module",
+  "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "README.md", "LICENSE-MIT", "LICENSE-APACHE"],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "prepack": "cp ../../LICENSE-MIT ../../LICENSE-APACHE . && pnpm run build"
   }
 }

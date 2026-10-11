@@ -12,7 +12,10 @@
     "allowImportingTsExtensions": false,
     "lib": ["ES2022", "DOM"],
     "types": ["node"],
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@imanect/yui": ["./packages/core/src/index.ts"]
+    }
   },
   "include": ["packages/*/src", "packages/*/test", "eval/src", "eval/test", "vitest.config.ts"]
 }

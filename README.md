@@ -67,6 +67,12 @@ pnpm eval run --mock --seeds 1
 
 評価の実行方法は [docs/eval-plan.md](docs/eval-plan.md) §8。実モデルの代わりに Claude のサブエージェントで回した予備評価の結果は [eval/pilot/2026-10-11-claude/report.md](eval/pilot/2026-10-11-claude/report.md)（§10）。
 
+## npm パッケージ
+
+`@imanect/yui`（`packages/core`）。描画や Markdown プラグインは `@imanect/yui/react` などのサブパスで足していく。
+
+公開は `v0.1.0` のようなタグの push で GitHub Actions（`.github/workflows/publish.yml`）が行う。npm の Trusted Publishing を使うため、npmjs.com 側でこのリポジトリとワークフローを登録しておく。
+
 ## ライセンス
 
-未定。
+[MIT](LICENSE-MIT) または [Apache-2.0](LICENSE-APACHE) のどちらかを選んで使える（`MIT OR Apache-2.0`）。Copyright (c) 2026 Imanect Labs.
