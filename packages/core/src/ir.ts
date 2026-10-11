@@ -1,0 +1,132 @@
+/**
+ * MiniUI の中間表現（IR）。
+ *
+ * パーサの出力であり、レンダラー・テキスト化・評価の入力。
+ * LLM が書くソースは寛容に受けるが、IR は常にこの形に正規化されている。
+ */
+
+export const KINDS = ["bar", "line", "stat", "flow", "stack"] as const;
+export type Kind = (typeof KINDS)[number];
+
+/** 全図に共通する項目。 */
+export interface FigureBase {
+  kind: Kind;
+  /** 見出し。無ければ空文字。 */
+  title: string;
+  /** 見出しに付いた引用番号（`[1]` → 1）。 */
+  refs: number[];
+  /** 図の下の注記（`note:`）。 */
+  note?: string;
+  /**
+   * データ参照（`src:`）。MiniUI 本体は解決しない。
+   * ホストが閲覧者の権限で解決する前提の不透明な文字列。
+   */
+  src?: string;
+}
+
+export interface ChartRow {
+  label: string;
+  /** 列ごとの値。欠損（空・`-`）は null。 */
+  values: (number | null)[];
+  refs: number[];
+}
+
+export interface ChartFigure extends FigureBase {
+  kind: "bar" | "line";
+  /** 列名。columns[0] はラベル列の見出し、columns[1..] が系列名。 */
+  columns: string[];
+  rows: ChartRow[];
+  unit?: string;
+  stacked?: boolean;
+  horizontal?: boolean;
+}
+
+export interface StatItem {
+  label: string;
+  /** 表示用の文字列（書かれたまま）。 */
+  value: string;
+  /** value を数値として読めた場合の値。 */
+  num?: number;
+  /** 補足（3 列目）。 */
+  sub?: string;
+  refs: number[];
+}
+
+export interface StatFigure extends FigureBase {
+  kind: "stat";
+  items: StatItem[];
+}
+
+export type NodeShape = "box" | "decision" | "terminal";
+
+export interface FlowNode {
+  id: string;
+  label: string;
+  shape: NodeShape;
+}
+
+export interface FlowEdge {
+  from: string;
+  to: string;
+  label?: string;
+}
+
+export interface FlowFigure extends FigureBase {
+  kind: "flow";
+  direction: "TB" | "LR";
+  nodes: FlowNode[];
+  edges: FlowEdge[];
+}
+
+export interface StackBox {
+  title: string;
+  desc?: string;
+  children: StackBox[];
+  refs: number[];
+}
+
+/** 層。boxes が 1 つなら通常の層、複数なら横並び。 */
+export interface StackTier {
+  boxes: StackBox[];
+  /** この層の直前の矢印に付くラベル（`↓ HTTPS`）。 */
+  arrowLabel?: string;
+}
+
+export interface StackFigure extends FigureBase {
+  kind: "stack";
+  tiers: StackTier[];
+}
+
+export type Figure = ChartFigure | StatFigure | FlowFigure | StackFigure;
+
+export type Severity = "error" | "warning" | "info";
+
+export interface Diagnostic {
+  /** ブロック内の行番号（1 始まり）。ブロック全体に関するものは 0。 */
+  line: number;
+  severity: Severity;
+  code: DiagnosticCode;
+  message: string;
+}
+
+export type DiagnosticCode =
+  | "empty"
+  | "unknown_kind"
+  | "missing_header"
+  | "bad_number"
+  | "extra_cells"
+  | "unrecognized_line"
+  | "unknown_option"
+  | "limit_exceeded"
+  | "text_too_long"
+  | "nested_too_deep";
+
+export interface ParseResult {
+  /** 描画できる図。種類が分からない場合のみ null。 */
+  figure: Figure | null;
+  diagnostics: Diagnostic[];
+  /**
+   * 未確定の最終行を保留したか（ストリーミング中で、末尾が改行で終わっていない）。
+   */
+  pending: boolean;
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@miniui/core",
+  "version": "0.1.0-draft",
+  "private": true,
+  "description": "MiniUI: Markdown に埋め込む軽量な図・UI 記法のパーサと中間表現",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

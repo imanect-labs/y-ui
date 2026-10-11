@@ -1,0 +1,30 @@
+{
+  "$comment": "評価に使うモデル。秘密情報は書かず、環境変数名だけを書く。effort ごとの追加パラメータは実機で要確認（docs/eval-plan.md）。",
+  "luna": {
+    "baseUrlEnv": "OPENAI_BASE_URL",
+    "baseUrlDefault": "https://api.openai.com/v1",
+    "apiKeyEnv": "OPENAI_API_KEY",
+    "modelEnv": "LUNA_MODEL",
+    "model": "gpt-6-luna",
+    "maxTokensParam": "max_completion_tokens",
+    "maxTokens": 8192,
+    "effort": {
+      "low": { "reasoning_effort": "low" },
+      "medium": { "reasoning_effort": "medium" },
+      "high": { "reasoning_effort": "high" }
+    }
+  },
+  "gemma": {
+    "baseUrlEnv": "GEMMA_BASE_URL",
+    "apiKeyEnv": "GEMMA_API_KEY",
+    "modelEnv": "GEMMA_MODEL",
+    "model": "google/gemma-4-31B-it",
+    "maxTokensParam": "max_tokens",
+    "maxTokens": 8192,
+    "effort": {
+      "low": { "chat_template_kwargs": { "enable_thinking": false } },
+      "medium": { "chat_template_kwargs": { "enable_thinking": true } },
+      "high": { "chat_template_kwargs": { "enable_thinking": true } }
+    }
+  }
+}
