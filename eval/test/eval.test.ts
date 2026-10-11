@@ -72,6 +72,14 @@ describe("採点", () => {
     expect(scoreTask(gold, ex([fig("flow y\n経費精算書を提出 -> 上長が内容を承認 -> 経理部が内容を確認 -> 支払\n")])).pass).toBe(true);
   });
 
+  it("名前だけで対応しないノードを、つながりで補う（精算書提出／申請者が提出）", () => {
+    const gold = task("flow x\n精算書提出 -> 上長承認\n上長承認 -承認-> 経理確認\n上長承認 -差戻し-> 修正\n修正 -> 精算書提出\n経理確認 -> 支払\n", ["flow"]);
+    const model = "flow y\n申請者が提出 -> 上長が承認\n上長が承認 -承認-> 経理部の確認 -> 支払い\n上長が承認 -差し戻し-> 申請者が修正 -> 申請者が提出\n";
+    expect(scoreTask(gold, ex([fig(model)])).pass).toBe(true);
+    // つながりが合わなければ補わない
+    expect(scoreTask(gold, ex([fig("flow y\n申請者が提出 -> 支払い\n上長が承認 -> 経理部の確認\n")])).pass).toBe(false);
+  });
+
   it("資料にある中間の手順を挟んでも同じ流れとみなす", () => {
     const gold = task("flow x\n出張 -> 旅費精算\n", ["flow"], { context: "出張に行き、帰着後に旅費を精算する。" });
     expect(scoreTask(gold, ex([fig("flow y\n出張 -> 帰着 -> 旅費精算\n")])).pass).toBe(true);

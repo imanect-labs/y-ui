@@ -110,6 +110,7 @@ async function main(): Promise<void> {
         concurrency: Number(str(opts.concurrency, "4")),
         shiki: shikiFrom(opts, arms),
         mock: opts.mock === true,
+        ...(opts["max-requests"] !== undefined ? { maxRequests: Number(opts["max-requests"]) } : {}),
         ...(padChars > 0 ? { pad: { dir: str(opts["pad-dir"], resolve(ROOT, "../shiki-platform/docs")), chars: padChars } } : {}),
       };
       const planned = cfg.models.length * cfg.efforts.length * cfg.seeds * arms.reduce((n, a) => n + tasks.filter((t) => armApplies(a, t)).length, 0);

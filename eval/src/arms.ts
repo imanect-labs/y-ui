@@ -2,6 +2,7 @@
 
 import { isEmpty, parseMarkdown } from "@miniui/core";
 import { chat, type ChatMessage, type ChatRequest, type ChatResult, type Endpoint } from "./client.js";
+import { chatGemini } from "./gemini.js";
 import { extractJsonui } from "./extract/jsonui.js";
 import { extractMermaid } from "./extract/mermaid.js";
 import { extractMiniui } from "./extract/miniui.js";
@@ -16,7 +17,7 @@ const SHIKI_MAX_REPAIRS = 2;
 export type ChatFn = (req: ChatRequest, figureReady?: (text: string) => boolean) => Promise<ChatResult>;
 
 export function endpointChat(ep: Endpoint): ChatFn {
-  return (req, figureReady) => chat(ep, req, figureReady);
+  return ep.api === "gemini" ? (req, figureReady) => chatGemini(ep, req, figureReady) : (req, figureReady) => chat(ep, req, figureReady);
 }
 
 export interface ArmOutcome {
@@ -31,6 +32,8 @@ export interface ArmOutcome {
   firstFigureMs?: number;
   totalMs: number;
   promptChars: number;
+  /** 各ターンの生成の終わり方（stop / tool_calls / MAX_TOKENS / MALFORMED_FUNCTION_CALL など）。 */
+  finishReasons: string[];
 }
 
 /** ストリーミング中に、MiniUI の図が 1 行以上描ける状態になったか。 */
@@ -64,6 +67,7 @@ export async function runArm(arm: ArmId, task: EvalTask, call: ChatFn, shiki: Sh
     let ex: ReturnType<typeof extractShiki> | null = null;
     let firstFigureMs: number | undefined;
     let turns = 0;
+    const finishReasons: string[] = [];
     for (let attempt = 0; attempt <= SHIKI_MAX_REPAIRS; attempt++) {
       turns++;
       const req: ChatRequest = { messages, tools: [shiki.tool] };
@@ -72,6 +76,7 @@ export async function runArm(arm: ArmId, task: EvalTask, call: ChatFn, shiki: Sh
       if (ttftMs === undefined && r.ttftMs !== undefined) ttftMs = elapsed + r.ttftMs;
       elapsed += r.totalMs;
       addUsage(usage, r);
+      finishReasons.push(r.finishReason ?? "");
       text += r.text;
       allCalls.push(...r.toolCalls);
       const cur = extractShiki(r.toolCalls);
@@ -99,7 +104,7 @@ export async function runArm(arm: ArmId, task: EvalTask, call: ChatFn, shiki: Sh
       });
     }
     const extraction: Extraction = { figures: ex!.figures, attempted: ex!.attempted, syntaxOk: ex!.syntaxOk, errors: ex!.errors, warnings: 0 };
-    const out: ArmOutcome = { extraction, firstTrySyntaxOk, text, toolCalls: allCalls, turns, usage, totalMs: elapsed, promptChars };
+    const out: ArmOutcome = { extraction, firstTrySyntaxOk, text, toolCalls: allCalls, turns, usage, totalMs: elapsed, promptChars, finishReasons };
     if (ttftMs !== undefined) out.ttftMs = ttftMs;
     if (firstFigureMs !== undefined) out.firstFigureMs = firstFigureMs;
     return out;
@@ -119,6 +124,7 @@ export async function runArm(arm: ArmId, task: EvalTask, call: ChatFn, shiki: Sh
     usage,
     totalMs: r.totalMs,
     promptChars,
+    finishReasons: [r.finishReason ?? ""],
   };
   if (r.ttftMs !== undefined) out.ttftMs = r.ttftMs;
   if (r.firstFigureMs !== undefined && extraction.figures.length > 0) out.firstFigureMs = r.firstFigureMs;

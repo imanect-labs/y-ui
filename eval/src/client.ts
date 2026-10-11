@@ -22,6 +22,8 @@ export interface ChatRequest {
 }
 
 export interface Endpoint {
+  /** API の形式。既定は OpenAI 互換。 */
+  api?: "openai" | "gemini";
   baseUrl: string;
   apiKey?: string;
   model: string;
@@ -30,6 +32,8 @@ export interface Endpoint {
   maxTokensParam: "max_tokens" | "max_completion_tokens";
   maxTokens: number;
   timeoutMs: number;
+  /** 1 分あたりのリクエスト数の上限（無料枠のレート制限に合わせる）。 */
+  rpm?: number;
 }
 
 export interface ChatResult {
@@ -47,7 +51,7 @@ export interface ChatResult {
 export class HttpError extends Error {
   constructor(
     readonly status: number,
-    body: string,
+    readonly body: string,
   ) {
     super(`HTTP ${status}: ${body.slice(0, 500)}`);
   }

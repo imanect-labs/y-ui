@@ -227,11 +227,44 @@ function contractMentionedSteps(f: FlowFigure, matched: Set<string>, context: st
   return { ...f, edges };
 }
 
+/**
+ * 名前だけでは対応しなかったノードを、つながりで補って対応付ける（「精算書提出」と「申請者が提出」）。
+ * 名前が少しでも似ていて（類似度 0.2 以上）、対応付けると一致する辺が増える組だけを、増える辺の多い順に採る。
+ */
+function alignByStructure(gold: FlowFigure, f: FlowFigure, nodeMap: Map<number, number>): void {
+  const gi = new Map(gold.nodes.map((n, i) => [n.id, i]));
+  const mi = new Map(f.nodes.map((n, i) => [n.id, i]));
+  const gEdges = gold.edges.map((e) => [gi.get(e.from)!, gi.get(e.to)!] as const);
+  const mEdges = new Set(f.edges.map((e) => `${mi.get(e.from)}>${mi.get(e.to)}`));
+  for (;;) {
+    const used = new Set(nodeMap.values());
+    let best: { g: number; m: number; gain: number; sim: number } | null = null;
+    gold.nodes.forEach((gn, g) => {
+      if (nodeMap.has(g)) return;
+      f.nodes.forEach((mn, m) => {
+        if (used.has(m)) return;
+        const sim = similarity(gn.label, mn.label);
+        if (sim < 0.2) return;
+        let gain = 0;
+        for (const [a, b] of gEdges) {
+          if (a === g && nodeMap.has(b) && mEdges.has(`${m}>${nodeMap.get(b)}`)) gain++;
+          if (b === g && nodeMap.has(a) && mEdges.has(`${nodeMap.get(a)}>${m}`)) gain++;
+        }
+        if (gain > 0 && (!best || gain > best.gain || (gain === best.gain && sim > best.sim))) best = { g, m, gain, sim };
+      });
+    });
+    if (!best) return;
+    const b: { g: number; m: number } = best;
+    nodeMap.set(b.g, b.m);
+  }
+}
+
 function scoreFlow(gold: FlowFigure, f0: FlowFigure, context: string): Omit<Score, "syntaxOk" | "produced" | "kindOk" | "fabricated"> & { fabricated: number } {
   const nodeMap = matchByText(
     gold.nodes.map((n) => n.label),
     f0.nodes.map((n) => n.label),
   );
+  alignByStructure(gold, f0, nodeMap);
   const f = contractMentionedSteps(f0, new Set([...nodeMap.values()].map((i) => f0.nodes[i]!.id)), context);
   const goldIdx = new Map(gold.nodes.map((n, i) => [n.id, i]));
   const modelIdx = new Map(f.nodes.map((n, i) => [n.id, i]));

@@ -13,6 +13,9 @@ import type { EvalTask } from "./tasks/types.js";
 const MODELS_PATH = join(dirname(fileURLToPath(import.meta.url)), "../models.json");
 
 interface ModelConfig {
+  api?: "openai" | "gemini";
+  /** 1 分あたりのリクエスト数の上限。 */
+  rpm?: number;
   baseUrlEnv: string;
   baseUrlDefault?: string;
   apiKeyEnv: string;
@@ -49,6 +52,8 @@ export function resolveEndpoint(name: string, effort: string): Endpoint {
     maxTokens: cfg.maxTokens,
     timeoutMs: 300_000,
   };
+  if (cfg.api) ep.api = cfg.api;
+  if (cfg.rpm) ep.rpm = cfg.rpm;
   if (apiKey) ep.apiKey = apiKey;
   return ep;
 }
@@ -65,6 +70,35 @@ export interface RunConfig {
   shiki: ShikiTool | null;
   pad?: Padding;
   mock: boolean;
+  /** この実行で送るリクエスト数の上限（修正ループの再送も数える）。無料枠を超えないための歯止め。 */
+  maxRequests?: number;
+}
+
+/** 日次の割り当てを使い切った・リクエスト数の上限に達した。ここで実行を止める（再開できる）。 */
+export class StopRun extends Error {}
+
+/**
+ * 429 の扱い。日次の割り当て切れ（Gemini の `…PerDay…`）なら実行を止める。
+ * 分あたりの制限なら、サーバが示す待ち時間（`retryDelay`）だけ待って再送する。
+ */
+export function classify429(body: string): { daily: boolean; retryMs: number } {
+  const daily = /PerDay|per day|daily/i.test(body);
+  const m = /"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/.exec(body) ?? /retry in (\d+(?:\.\d+)?)s/i.exec(body);
+  return { daily, retryMs: m ? Math.ceil(Number(m[1]) * 1000) + 1000 : 30_000 };
+}
+
+/** リクエストの間隔を空け（rpm）、総数を数える（maxRequests）。全ワーカーで共有する。 */
+export function limited(fn: ChatFn, state: { nextAt: number; sent: number }, rpm: number | undefined, maxRequests: number | undefined): ChatFn {
+  const interval = rpm ? Math.ceil(60_000 / rpm) : 0;
+  return async (req, figureReady) => {
+    if (maxRequests !== undefined && state.sent >= maxRequests) throw new StopRun(`リクエスト数の上限（${maxRequests}）に達しました`);
+    state.sent++;
+    const now = Date.now();
+    const at = Math.max(now, state.nextAt);
+    state.nextAt = at + interval;
+    if (at > now) await new Promise((r) => setTimeout(r, at - now));
+    return fn(req, figureReady);
+  };
 }
 
 export interface ResultRecord {
@@ -97,13 +131,24 @@ export function readResults(outDir: string): ResultRecord[] {
     .map((l) => JSON.parse(l) as ResultRecord);
 }
 
-async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+async function withRetry<T>(fn: () => Promise<T>, log: (msg: string) => void): Promise<T> {
   let delay = 2000;
+  let rateWaits = 0;
   for (let attempt = 0; ; attempt++) {
     try {
       return await fn();
     } catch (e) {
-      const retriable = (e instanceof HttpError && (e.status === 429 || e.status >= 500)) || (e as Error).name === "AbortError" || (e as Error).name === "TypeError";
+      if (e instanceof StopRun) throw e;
+      if (e instanceof HttpError && e.status === 429) {
+        const q = classify429(e.body);
+        if (q.daily) throw new StopRun(`日次の割り当てを使い切りました: ${e.body.slice(0, 300)}`);
+        if (++rateWaits > 8) throw new StopRun(`429 が続くため止めます: ${e.body.slice(0, 300)}`);
+        log(`  429（分あたりの制限）: ${Math.round(q.retryMs / 1000)} 秒待って再送`);
+        await new Promise((r) => setTimeout(r, q.retryMs));
+        attempt--;
+        continue;
+      }
+      const retriable = (e instanceof HttpError && e.status >= 500) || (e as Error).name === "AbortError" || (e as Error).name === "TypeError";
       if (!retriable || attempt >= 4) throw e;
       await new Promise((r) => setTimeout(r, delay));
       delay *= 2;
@@ -121,25 +166,33 @@ export async function run(cfg: RunConfig, log: (msg: string) => void = console.l
   );
 
   const jobs: (() => Promise<void>)[] = [];
+  const limiterState = { nextAt: 0, sent: 0 };
+  let stopped: string | null = null;
+  // 課題ごとに全方式を並べる（途中で割り当てが切れても、方式間で同じ課題が揃うように）。
   for (const model of cfg.models) {
     for (const effort of cfg.efforts) {
       const ep = cfg.mock ? null : resolveEndpoint(model, effort);
-      for (const arm of cfg.arms) {
+      for (let seed = 0; seed < cfg.seeds; seed++) {
         for (const task of cfg.tasks) {
-          if (!armApplies(arm, task)) continue;
-          for (let seed = 0; seed < cfg.seeds; seed++) {
+          for (const arm of cfg.arms) {
+            if (!armApplies(arm, task)) continue;
             const padChars = cfg.pad?.chars ?? 0;
             const key = [task.id, arm, model, effort, seed, padChars].join("|");
             if (done.has(key)) continue;
             jobs.push(async () => {
-              const call: ChatFn = ep ? endpointChat(ep) : mockChat(arm, task);
+              const call: ChatFn = ep ? limited(endpointChat(ep), limiterState, ep.rpm, cfg.maxRequests) : mockChat(arm, task);
               const rec: ResultRecord = { key, runId: cfg.runId, taskId: task.id, category: task.category, arm, model, effort, seed, padChars, ok: false, at: new Date().toISOString() };
               try {
-                const outcome = await withRetry(() => runArm(arm, task, call, cfg.shiki, cfg.pad));
+                const outcome = await withRetry(() => runArm(arm, task, call, cfg.shiki, cfg.pad), log);
                 rec.ok = true;
                 rec.score = scoreTask(task, outcome.extraction);
                 rec.outcome = { ...outcome, extraction: { ...outcome.extraction, figures: outcome.extraction.figures.length } };
               } catch (e) {
+                // 止める理由（割り当て切れ・上限）は結果に残さない（再開時にやり直す）。
+                if (e instanceof StopRun) {
+                  stopped ??= e.message;
+                  return;
+                }
                 rec.error = String((e as Error).message ?? e);
               }
               appendFileSync(path, `${JSON.stringify(rec)}\n`);
@@ -154,7 +207,7 @@ export async function run(cfg: RunConfig, log: (msg: string) => void = console.l
   let next = 0;
   let finished = 0;
   const worker = async () => {
-    while (next < jobs.length) {
+    while (next < jobs.length && stopped === null) {
       const job = jobs[next++]!;
       await job();
       finished++;
@@ -162,6 +215,8 @@ export async function run(cfg: RunConfig, log: (msg: string) => void = console.l
     }
   };
   await Promise.all(Array.from({ length: Math.max(1, cfg.concurrency) }, worker));
+  log(`送ったリクエスト: ${limiterState.sent} 件`);
+  if (stopped) log(`途中で止めました（同じ --run-id で再開できます）: ${stopped}`);
 }
 
 /** 保存した出力を、現在の抽出・採点で採点し直す（採点の不具合を直したとき用）。 */

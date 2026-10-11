@@ -1,5 +1,5 @@
 {
-  "$comment": "評価に使うモデル。秘密情報は書かず、環境変数名だけを書く。effort ごとの追加パラメータは実機で要確認（docs/eval-plan.md）。",
+  "$comment": "評価に使うモデル。秘密情報は書かず、環境変数名だけを書く。effort ごとの追加パラメータは実機で要確認（docs/eval-plan.md）。api=gemini はネイティブの Gemini API、rpm は 1 分あたりのリクエスト数の上限。",
   "luna": {
     "baseUrlEnv": "OPENAI_BASE_URL",
     "baseUrlDefault": "https://api.openai.com/v1",
@@ -9,9 +9,15 @@
     "maxTokensParam": "max_completion_tokens",
     "maxTokens": 8192,
     "effort": {
-      "low": { "reasoning_effort": "low" },
-      "medium": { "reasoning_effort": "medium" },
-      "high": { "reasoning_effort": "high" }
+      "low": {
+        "reasoning_effort": "low"
+      },
+      "medium": {
+        "reasoning_effort": "medium"
+      },
+      "high": {
+        "reasoning_effort": "high"
+      }
     }
   },
   "gemma": {
@@ -22,9 +28,56 @@
     "maxTokensParam": "max_tokens",
     "maxTokens": 8192,
     "effort": {
-      "low": { "chat_template_kwargs": { "enable_thinking": false } },
-      "medium": { "chat_template_kwargs": { "enable_thinking": true } },
-      "high": { "chat_template_kwargs": { "enable_thinking": true } }
+      "low": {
+        "chat_template_kwargs": {
+          "enable_thinking": false
+        }
+      },
+      "medium": {
+        "chat_template_kwargs": {
+          "enable_thinking": true
+        }
+      },
+      "high": {
+        "chat_template_kwargs": {
+          "enable_thinking": true
+        }
+      }
+    }
+  },
+  "gemma-api": {
+    "api": "gemini",
+    "rpm": 15,
+    "baseUrlEnv": "GEMINI_BASE_URL",
+    "baseUrlDefault": "https://generativelanguage.googleapis.com/v1beta",
+    "apiKeyEnv": "GEMINI_API_KEY",
+    "modelEnv": "GEMMA_API_MODEL",
+    "model": "gemma-4-31b-it",
+    "maxTokensParam": "max_tokens",
+    "maxTokens": 8192,
+    "effort": {
+      "default": {}
+    }
+  },
+  "gemini-flash": {
+    "api": "gemini",
+    "rpm": 8,
+    "baseUrlEnv": "GEMINI_BASE_URL",
+    "baseUrlDefault": "https://generativelanguage.googleapis.com/v1beta",
+    "apiKeyEnv": "GEMINI_API_KEY",
+    "modelEnv": "GEMINI_FLASH_MODEL",
+    "model": "gemini-flash-latest",
+    "maxTokensParam": "max_tokens",
+    "maxTokens": 8192,
+    "effort": {
+      "default": {},
+      "low": {
+        "generationConfig": {
+          "thinkingConfig": {
+            "thinkingLevel": "low"
+          }
+        }
+      }
     }
   }
 }
