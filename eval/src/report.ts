@@ -112,7 +112,7 @@ export function decide(recs: ResultRecord[], primaryEffort: string, primary = "g
   lines.push(`  - 条件2（差が -${CRITERIA.margin * 100} pt 以内かつトークン ${CRITERIA.tokenRatio} 倍以下）: ${equivalentCheaper ? "満たす" : "満たさない"}`);
   lines.push(`- ${secondary}: A ${pct(lA.pass)} → B ${pct(lB.pass)}（差 ${((lB.pass - lA.pass) * 100).toFixed(1)} pt、許容 -${CRITERIA.margin * 100} pt）: ${lunaOk ? "悪化なし" : "悪化"}`);
   const adopt = (superior || equivalentCheaper) && lunaOk;
-  lines.push(`- **判定: ${adopt ? "MiniUI（B）を採用" : "採用基準を満たさない"}**`);
+  lines.push(`- **判定: ${adopt ? "Yui（B）を採用" : "採用基準を満たさない"}**`);
   return { lines, adopt };
 }
 
@@ -127,7 +127,7 @@ export interface ReportOptions {
 
 export function renderReport(recs: ResultRecord[], opts: ReportOptions = {}): string {
   const primaryEffort = opts.effort ?? "low";
-  const out: string[] = ["# MiniUI 評価結果", "", ...(opts.notes ?? []).flatMap((n) => [n, ""])];
+  const out: string[] = ["# Yui 評価結果", "", ...(opts.notes ?? []).flatMap((n) => [n, ""])];
   const failed = recs.filter((r) => !r.ok);
   out.push(`生成 ${recs.length} 件（API 失敗 ${failed.length} 件）`, "");
 

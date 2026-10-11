@@ -1,6 +1,6 @@
-# MiniUI
+# Yui（結）
 
-Markdown の中に ` ```ui ` ブロックで図を書くための、小さな記法とレンダラー。
+文章と UI を結ぶ。Markdown の中に ` ```ui ` ブロックで図を書くための、小さな記法とレンダラー。
 チャットの回答やノートに、Markdown レンダラーと同じ感覚で組み込める Intelligent UI を目指します。
 
 ````
@@ -35,7 +35,7 @@ unit: 万円
 
 | パス | 内容 |
 |---|---|
-| `packages/core` | パーサ・中間表現・テキスト化（`@miniui/core`） |
+| `packages/core` | パーサ・中間表現・テキスト化（`@y-ui/core`） |
 | `eval` | 小さなモデルでの書きやすさの評価（課題・採点・実行・レポート） |
 | `docs/spec.md` | 記法仕様 |
 | `docs/export.md` | コピー・書き出しの設計 |
@@ -44,7 +44,7 @@ unit: 万円
 ## 使い方
 
 ```ts
-import { parseMarkdown, toText } from "@miniui/core";
+import { parseMarkdown, toText } from "@y-ui/core";
 
 for (const seg of parseMarkdown(streamingText)) {      // ストリーミング中でもよい
   if (seg.type === "ui" && seg.result.figure) {
@@ -52,7 +52,7 @@ for (const seg of parseMarkdown(streamingText)) {      // ストリーミング�
   }
 }
 
-toText(figure); // MiniUI 非対応の場所向けの表・箇条書き
+toText(figure); // Yui 非対応の場所向けの表・箇条書き
 ```
 
 ## 開発

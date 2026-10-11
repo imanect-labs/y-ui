@@ -23,7 +23,7 @@ importers:
 
   eval:
     dependencies:
-      '@miniui/core':
+      '@y-ui/core':
         specifier: workspace:*
         version: link:../packages/core
 

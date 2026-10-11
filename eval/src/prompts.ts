@@ -17,8 +17,8 @@ export type ArmId = (typeof ARMS)[number];
 export const ARM_LABELS: Record<ArmId, string> = {
   A: "現行 emit_ui（ツール＋JSON）",
   A2: "emit_ui をツール指定で強制",
-  B: "MiniUI 本文中（簡易版の説明）",
-  C: "MiniUI 本文中（完全版の説明）",
+  B: "Yui 本文中（簡易版の説明）",
+  C: "Yui 本文中（完全版の説明）",
   D: "短い JSON を本文中のフェンスに",
   E: "Mermaid（flow / stack のみ）",
 };
@@ -34,7 +34,7 @@ export function armApplies(arm: ArmId, task: EvalTask): boolean {
 
 /**
  * Rust の文字列リテラルを読む（`\` + 改行 + 字下げの継続、`\"` `\n` `\\`）。
- * Shiki のプロンプトを MiniUI リポジトリに複製しないため、評価のたびに Shiki のソースから読む。
+ * Shiki のプロンプトを Yui リポジトリに複製しないため、評価のたびに Shiki のソースから読む。
  */
 export function readRustString(src: string, from: number): string {
   const start = src.indexOf('"', from);

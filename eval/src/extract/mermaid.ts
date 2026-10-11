@@ -1,13 +1,13 @@
 /**
  * 方式 E: Mermaid の一部（flowchart）。flow はそのまま、stack は subgraph を層の中の要素として読む。
  *
- * 本物の Mermaid パーサではない。MiniUI の flow パーサが Mermaid 風の記法を受けることを利用し、
+ * 本物の Mermaid パーサではない。Yui の flow パーサが Mermaid 風の記法を受けることを利用し、
  * subgraph / end / classDef / style などの行だけをここで処理する。
  */
 
-import { parseBlock, type FlowFigure, type StackBox } from "@miniui/core";
+import { parseBlock, type FlowFigure, type StackBox } from "@y-ui/core";
 import type { Extraction } from "../score.js";
-import type { Figure } from "@miniui/core";
+import type { Figure } from "@y-ui/core";
 
 const IGNORED = /^(classDef|class|style|linkStyle|click|direction)\b/;
 

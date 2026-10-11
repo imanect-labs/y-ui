@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseBlock, type Figure } from "@miniui/core";
+import { parseBlock, type Figure } from "@y-ui/core";
 import { generatedTasks } from "./generate.js";
 import { FLOW_TASKS, STACK_TASKS, type Handwritten } from "./handwritten.js";
 import type { EvalTask } from "./types.js";

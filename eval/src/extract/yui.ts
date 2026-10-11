@@ -1,9 +1,9 @@
 /** 方式 B / C: 本文中の ` ```ui ` ブロックを読む。 */
 
-import { parseMarkdown, type Figure } from "@miniui/core";
+import { parseMarkdown, type Figure } from "@y-ui/core";
 import type { Extraction } from "../score.js";
 
-export function extractMiniui(text: string): Extraction {
+export function extractYui(text: string): Extraction {
   const figures: Figure[] = [];
   const errors: string[] = [];
   let attempted = false;

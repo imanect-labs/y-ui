@@ -1,6 +1,6 @@
 # エクスポート設計（草案）
 
-MiniUI の図を含む Markdown を、MiniUI に対応していない場所へ持ち出すときの扱い。
+Yui の図を含む Markdown を、Yui に対応していない場所へ持ち出すときの扱い。
 
 実装状況: テキスト化（`toText` / `transformMarkdown`）と正規形のソース（`toSource`）は `packages/core` に実装済み。画像の出力（SVG / PNG）とクリップボード処理は未実装（レンダラーと一緒に作る）。
 
@@ -14,7 +14,7 @@ base64 の PNG を Markdown のテキストに直接入れる方式（data URI�
 |---|---|---|
 | A. base64 PNG を Markdown に直接 | 1 ファイルで完結 | 1 枚あたり数十〜百数十 KB の文字列になり、別の LLM に貼るとコンテキストを大きく消費する。data URI を表示しない・除去するサービスがある。編集も検索もできない |
 | B. 外部 URL の画像 | 短い | 認証なしで見られる URL はデータの持ち出し経路になる。署名付き URL は期限切れで消える。閉域網では使えない |
-| C. ui ソースのまま | 情報が欠けない。短い。MiniUI 対応の場所では図に戻る | 非対応の場所ではコードに見える |
+| C. ui ソースのまま | 情報が欠けない。短い。Yui 対応の場所では図に戻る | 非対応の場所ではコードに見える |
 | D. テキスト化（表・箇条書き） | どこでも読める。LLM にも読める | 見た目は失われる |
 | E. 画像ファイルを相対パスで参照（md＋assets） | 一般的（Obsidian・Notion の書き出しと同じ） | ファイルが複数になる |
 
@@ -24,9 +24,9 @@ base64 の PNG を Markdown のテキストに直接入れる方式（data URI�
 |---|---|---|
 | `text/plain` | D: テキスト化した Markdown | Slack、プレーンテキストのエディタ、他の LLM |
 | `text/html` | `<img src="data:image/png;base64,…">` ＋データの表＋ alt テキスト | Word、Google ドキュメント、Gmail、Notion（貼り付け時に画像として取り込まれる） |
-| `web application/x-miniui` | C: ui ソース | MiniUI 対応アプリ（図が編集できる状態で戻る） |
+| `web application/x-yui` | C: ui ソース | Yui 対応アプリ（図が編集できる状態で戻る） |
 
-- 独自形式（`web ` で始まる形式）は Chromium だけが対応する。他のブラウザ向けに、HTML 側の `<figure data-miniui-source="…">` にもソースを入れる。貼り付け先が MiniUI 対応ならここから復元し、他のアプリは無視する。
+- 独自形式（`web ` で始まる形式）は Chromium だけが対応する。他のブラウザ向けに、HTML 側の `<figure data-yui-source="…">` にもソースを入れる。貼り付け先が Yui 対応ならここから復元し、他のアプリは無視する。
 - Safari ではクリック操作の中でクリップボードに書く必要があるため、画像は `ClipboardItem` に Promise で渡して非同期に作る。
 - ブロック単位のメニューに「画像をコピー」「ソースをコピー」も置く。
 
@@ -34,7 +34,7 @@ base64 の PNG を Markdown のテキストに直接入れる方式（data URI�
 
 | 選択肢 | 内容 |
 |---|---|
-| Markdown（ソース） | MiniUI 間の受け渡し用。情報が欠けない |
+| Markdown（ソース） | Yui 間の受け渡し用。情報が欠けない |
 | Markdown（テキスト化） | 汎用 |
 | Markdown ＋画像（zip、既定） | `fig-1.svg` / `.png` を相対パスで参照し、画像の下にデータの表を付ける |
 | Markdown（1 ファイル） | 画像を data URI で埋め込む。明示的に選んだときだけ |
@@ -59,7 +59,7 @@ base64 の PNG を Markdown のテキストに直接入れる方式（data URI�
 
 ```ts
 toMarkdown(doc, { ui: "source" | "text" | "image", image?: { format: "svg" | "png", embed: "data-uri" | "file" | ((fig) => Promise<string>) } })
-toClipboardItem(doc)   // text/plain + text/html + MiniUI ソース
+toClipboardItem(doc)   // text/plain + text/html + Yui ソース
 renderSVG(fig, { width, theme }) / renderPNG(fig, { width, scale })
 ```
 

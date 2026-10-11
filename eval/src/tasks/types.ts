@@ -1,4 +1,4 @@
-import type { Figure, Kind } from "@miniui/core";
+import type { Figure, Kind } from "@y-ui/core";
 
 export const CATEGORIES = [
   "bar",

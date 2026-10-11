@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { parseBlock, type Figure } from "@miniui/core";
+import { parseBlock, type Figure } from "@y-ui/core";
 import { runArm } from "../src/arms.js";
 import { extractJsonui } from "../src/extract/jsonui.js";
 import { extractMermaid } from "../src/extract/mermaid.js";
-import { extractMiniui } from "../src/extract/miniui.js";
+import { extractYui } from "../src/extract/yui.js";
 import { approxValidate, extractShiki } from "../src/extract/shiki.js";
 import { mockChat } from "../src/mock.js";
 import { armApplies, readRustString, type ArmId } from "../src/prompts.js";
@@ -114,9 +114,9 @@ describe("採点", () => {
 });
 
 describe("抽出", () => {
-  it("MiniUI: 解析できないブロックは構文エラー", () => {
-    expect(extractMiniui("```ui\npie x\n```").syntaxOk).toBe(false);
-    expect(extractMiniui("本文のみ").attempted).toBe(false);
+  it("Yui: 解析できないブロックは構文エラー", () => {
+    expect(extractYui("```ui\npie x\n```").syntaxOk).toBe(false);
+    expect(extractYui("本文のみ").attempted).toBe(false);
   });
 
   it("JSON: 壊れた JSON と形の誤りを区別して報告する", () => {

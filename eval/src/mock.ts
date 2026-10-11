@@ -3,7 +3,7 @@
  * 配線が正しいか（各方式で満点が出るか）を確かめるために使う。
  */
 
-import { toSource, type Figure } from "@miniui/core";
+import { toSource, type Figure } from "@y-ui/core";
 import type { ChatFn } from "./arms.js";
 import type { ChatResult } from "./client.js";
 import type { ArmId } from "./prompts.js";

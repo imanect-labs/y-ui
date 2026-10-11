@@ -31,6 +31,7 @@ describe("splitMarkdown", () => {
   it("情報文字列の種類指定と長いフェンス", () => {
     const segs = splitMarkdown("~~~~ui:flow\nA -> B\n~~~~\n");
     expect(segs[0]).toMatchObject({ type: "ui", kind: "flow", closed: true });
+    expect(splitMarkdown("```yui bar\n売上\n```\n")[0]).toMatchObject({ type: "ui", kind: "bar" });
   });
 
   it("ストリーミング中の閉じていないブロック", () => {

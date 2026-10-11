@@ -4,7 +4,7 @@
  * 判定基準は docs/eval-plan.md で実行前に固定したもの。ここを変えたら計画書も直す。
  */
 
-import { parseNumber, type ChartFigure, type Figure, type FlowFigure, type StackFigure, type StatFigure } from "@miniui/core";
+import { parseNumber, type ChartFigure, type Figure, type FlowFigure, type StackFigure, type StatFigure } from "@y-ui/core";
 import { matchByText, norm, similarity } from "./similarity.js";
 import type { EvalTask } from "./tasks/types.js";
 

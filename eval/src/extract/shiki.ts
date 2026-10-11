@@ -4,11 +4,11 @@
  * - 検証: Shiki の `validate_spec`（crates/gui）の主な規則を近似する。環境変数 SHIKI_VALIDATE_CMD に
  *   本物の検証コマンドを指定すれば、そちらを使う（標準入力に spec JSON、標準出力に {"ok":bool,"errors":[...]}）。
  * - 変換: 採点のため、表示系のコンポーネント（chart / stat / key_value / table / stepper / timeline）を
- *   MiniUI の中間表現に写す。Shiki のカタログに無い構成図（stack）は写さない。
+ *   Yui の中間表現に写す。Shiki のカタログに無い構成図（stack）は写さない。
  */
 
 import { execFileSync } from "node:child_process";
-import { parseNumber, type ChartFigure, type Figure, type FlowFigure, type StatFigure, type StatItem } from "@miniui/core";
+import { parseNumber, type ChartFigure, type Figure, type FlowFigure, type StatFigure, type StatItem } from "@y-ui/core";
 import type { Extraction } from "../score.js";
 
 type J = unknown;

@@ -28,11 +28,11 @@ const OPEN = /^( {0,3})(`{3,}|~{3,})(.*)$/;
 
 export function isUiInfo(info: string): boolean {
   const lang = info.trim().split(/[\s:{]/)[0]?.toLowerCase() ?? "";
-  return lang === "ui" || lang === "miniui";
+  return lang === "ui" || lang === "yui";
 }
 
 function kindFromInfo(info: string): Kind | undefined {
-  const m = /^(?:ui|miniui)(?:\s+|:)(\S+)/i.exec(info.trim());
+  const m = /^(?:ui|yui)(?:\s+|:)(\S+)/i.exec(info.trim());
   return m ? resolveKind(m[1]!) : undefined;
 }
 

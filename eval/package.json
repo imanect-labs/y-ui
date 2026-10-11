@@ -1,8 +1,8 @@
 {
-  "name": "@miniui/eval",
+  "name": "@y-ui/eval",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@miniui/core": "workspace:*"
+    "@y-ui/core": "workspace:*"
   }
 }

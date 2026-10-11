@@ -1,7 +1,7 @@
 /**
  * 生成途中で切れたときの強さ（モデル不要）。
  *
- * 各課題の正解を MiniUI のソース（正規形と、モデルが書きがちな崩した形）にして文章に埋め込み、
+ * 各課題の正解を Yui のソース（正規形と、モデルが書きがちな崩した形）にして文章に埋め込み、
  * 先頭から 1 文字ずつ伸ばしながら解析する。確かめること:
  *   1. 例外を出さない
  *   2. 途中で表示した行・項目・辺・層が、最終結果の先頭部分と一致する（途中で誤った値を出さない）
@@ -9,7 +9,7 @@
  * あわせて、図が最初に描けるようになる位置と、解析にかかる時間を測る。
  */
 
-import { parseMarkdown, toSource, type Figure } from "@miniui/core";
+import { parseMarkdown, toSource, type Figure } from "@y-ui/core";
 import type { EvalTask } from "./tasks/types.js";
 
 export interface TruncationCase {

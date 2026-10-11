@@ -1,11 +1,11 @@
 /** 1 課題 × 1 方式を実行し、抽出結果を返す。 */
 
-import { isEmpty, parseMarkdown } from "@miniui/core";
+import { isEmpty, parseMarkdown } from "@y-ui/core";
 import { chat, type ChatMessage, type ChatRequest, type ChatResult, type Endpoint } from "./client.js";
 import { chatGemini } from "./gemini.js";
 import { extractJsonui } from "./extract/jsonui.js";
 import { extractMermaid } from "./extract/mermaid.js";
-import { extractMiniui } from "./extract/miniui.js";
+import { extractYui } from "./extract/yui.js";
 import { extractShiki } from "./extract/shiki.js";
 import { buildMessages, type ArmId, type Padding, type ShikiTool } from "./prompts.js";
 import type { Extraction } from "./score.js";
@@ -36,8 +36,8 @@ export interface ArmOutcome {
   finishReasons: string[];
 }
 
-/** ストリーミング中に、MiniUI の図が 1 行以上描ける状態になったか。 */
-function miniuiReady(text: string): boolean {
+/** ストリーミング中に、Yui の図が 1 行以上描ける状態になったか。 */
+function yuiReady(text: string): boolean {
   return parseMarkdown(text).some((s) => s.type === "ui" && s.result.figure !== null && !isEmpty(s.result.figure));
 }
 
@@ -110,11 +110,11 @@ export async function runArm(arm: ArmId, task: EvalTask, call: ChatFn, shiki: Sh
     return out;
   }
 
-  const ready = arm === "B" || arm === "C" ? miniuiReady : arm === "D" ? fenceClosed("uijson") : fenceClosed("mermaid");
+  const ready = arm === "B" || arm === "C" ? yuiReady : arm === "D" ? fenceClosed("uijson") : fenceClosed("mermaid");
   const r = await call({ messages }, ready);
   addUsage(usage, r);
   const extraction =
-    arm === "B" || arm === "C" ? extractMiniui(r.text) : arm === "D" ? extractJsonui(r.text) : extractMermaid(r.text, task.category === "stack");
+    arm === "B" || arm === "C" ? extractYui(r.text) : arm === "D" ? extractJsonui(r.text) : extractMermaid(r.text, task.category === "stack");
   const out: ArmOutcome = {
     extraction,
     firstTrySyntaxOk: extraction.syntaxOk,

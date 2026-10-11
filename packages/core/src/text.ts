@@ -1,8 +1,8 @@
 /**
  * IR からテキストへの変換。
  *
- * - toSource: 正規形の MiniUI ソース（` ```ui ` の中身）。parseBlock(toSource(f)) は f に戻る。
- * - toText: MiniUI 非対応の場所に貼るためのテキスト化 Markdown（表・リスト）。
+ * - toSource: 正規形の Yui ソース（` ```ui ` の中身）。parseBlock(toSource(f)) は f に戻る。
+ * - toText: Yui 非対応の場所に貼るためのテキスト化 Markdown（表・リスト）。
  */
 
 import type { ChartFigure, Figure, FlowFigure, StackBox, StackFigure, StatFigure } from "./ir.js";
@@ -160,7 +160,7 @@ export type UiExportMode = "source" | "text";
 
 /**
  * Markdown 中の ui ブロックを書き換える。
- * - source: そのまま残す（MiniUI 対応の貼り付け先向け）
+ * - source: そのまま残す（Yui 対応の貼り付け先向け）
  * - text: テキスト化する。解析できないブロックはソースのまま残す。
  */
 export function transformMarkdown(markdown: string, mode: UiExportMode): string {
