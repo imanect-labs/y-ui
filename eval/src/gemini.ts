@@ -50,6 +50,7 @@ export function toGeminiContents(messages: ChatMessage[]): { systemInstruction?:
 }
 
 interface StreamChunk {
+  error?: { code?: number; message?: string; status?: string };
   candidates?: { content?: { parts?: Part[] }; finishReason?: string }[];
   usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; thoughtsTokenCount?: number };
 }
@@ -92,6 +93,8 @@ export async function chatGemini(ep: Endpoint, req: ChatRequest, figureReady?: (
         buf = buf.slice(nl + 1);
         if (!line.startsWith("data:")) continue;
         const ev = JSON.parse(line.slice(5).trim()) as StreamChunk;
+        // ストリームの途中で送られてくるエラー（HTTP は 200 のまま）。読み飛ばすと空の応答に見えてしまう。
+        if (ev.error) throw new HttpError(ev.error.code ?? 500, JSON.stringify(ev));
         if (ev.usageMetadata) {
           const u = ev.usageMetadata;
           out.usage = {
@@ -116,6 +119,8 @@ export async function chatGemini(ep: Endpoint, req: ChatRequest, figureReady?: (
         }
       }
     }
+    // 終わり方（finishReason）が無いまま切れたストリームは、途中で打ち切られた応答として再送させる。
+    if (out.finishReason === undefined) throw new HttpError(502, "stream ended without finishReason");
     out.totalMs = performance.now() - started;
     if (figureReady && out.firstFigureMs === undefined && figureReady(out.text)) out.firstFigureMs = out.totalMs;
     return out;

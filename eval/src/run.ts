@@ -122,13 +122,21 @@ export function resultsPath(outDir: string): string {
   return join(outDir, "results.jsonl");
 }
 
+/**
+ * 結果を読む。同じ課題・方式・条件（key）の記録が複数あれば 1 つにまとめる
+ * （再開で失敗をやり直した場合など。成功した記録を優先し、その中では後のものを採る）。
+ */
 export function readResults(outDir: string): ResultRecord[] {
   const p = resultsPath(outDir);
   if (!existsSync(p)) return [];
-  return readFileSync(p, "utf8")
-    .split("\n")
-    .filter((l) => l.trim() !== "")
-    .map((l) => JSON.parse(l) as ResultRecord);
+  const byKey = new Map<string, ResultRecord>();
+  for (const line of readFileSync(p, "utf8").split("\n")) {
+    if (line.trim() === "") continue;
+    const r = JSON.parse(line) as ResultRecord;
+    const prev = byKey.get(r.key);
+    if (!prev || r.ok || !prev.ok) byKey.set(r.key, r);
+  }
+  return [...byKey.values()];
 }
 
 async function withRetry<T>(fn: () => Promise<T>, log: (msg: string) => void): Promise<T> {

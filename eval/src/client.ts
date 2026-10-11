@@ -99,6 +99,7 @@ export async function chat(ep: Endpoint, req: ChatRequest, figureReady?: (text: 
         const data = line.slice(5).trim();
         if (data === "[DONE]") continue;
         const ev = JSON.parse(data) as StreamEvent;
+        if (ev.error) throw new HttpError(ev.error.code ?? 500, JSON.stringify(ev));
         if (ev.usage) {
           out.usage = { promptTokens: ev.usage.prompt_tokens, completionTokens: ev.usage.completion_tokens };
           const r = ev.usage.completion_tokens_details?.reasoning_tokens;
@@ -127,6 +128,7 @@ export async function chat(ep: Endpoint, req: ChatRequest, figureReady?: (text: 
       }
     }
     out.toolCalls = calls.filter(Boolean);
+    if (out.finishReason === undefined) throw new HttpError(502, "stream ended without finish_reason");
     out.totalMs = performance.now() - started;
     if (figureReady && out.firstFigureMs === undefined && figureReady(out.text)) out.firstFigureMs = out.totalMs;
     return out;
@@ -136,6 +138,7 @@ export async function chat(ep: Endpoint, req: ChatRequest, figureReady?: (text: 
 }
 
 interface StreamEvent {
+  error?: { code?: number; message?: string };
   choices?: {
     delta?: { content?: string | null; tool_calls?: { index?: number; id?: string; function?: { name?: string; arguments?: string } }[] };
     finish_reason?: string | null;
