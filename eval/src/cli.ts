@@ -7,6 +7,12 @@
  *   pnpm eval run --models gemma,luna --arms A,B,C,D,E [--efforts low] [--seeds 3] [--mock] ...
  *   pnpm eval report <dir> [--effort low] レポートを <dir>/report.md に書く
  *   pnpm eval rescore <dir>               保存した出力を採点し直す
+ *   pnpm eval pilot-export --dir D [--per-category 3] [--arms A,B,C,D,E]
+ *                                         予備評価: プロンプトを D/prompts-<方式>.md に書き出す
+ *   pnpm eval pilot-repair-export --dir D --model M
+ *                                         予備評価: 方式 A の検証エラーを返す修正ターンを D/repair-<M>-A.md に書き出す
+ *   pnpm eval pilot-ingest --dir D --model M [--arms …] [--primary M1 --secondary M2]
+ *                                         予備評価: D/answers-<M>-<方式>.md を取り込んで採点する
  */
 
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -14,6 +20,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ARMS, armApplies, buildMessages, loadShikiTool, type ArmId, type ShikiTool } from "./prompts.js";
 import { renderReport } from "./report.js";
+import { exportPrompts, exportRepairs, ingestAnswers, PILOT_NOTES, sampleTasks } from "./pilot.js";
 import { readResults, rescore, run } from "./run.js";
 import { buildTasks, loadTasks, TASKS_PATH } from "./tasks/index.js";
 import { checkCase, summarize, truncationCases } from "./truncation.js";
@@ -109,7 +116,7 @@ async function main(): Promise<void> {
       console.log(`課題 ${tasks.length} 件、方式 ${arms.join(",")}、モデル ${cfg.models.join(",")}、effort ${cfg.efforts.join(",")}、各 ${cfg.seeds} 回 → 最大 ${planned} 生成`);
       console.log(`出力先: ${outDir}`);
       await run(cfg);
-      const report = renderReport(readResults(outDir), str(opts.effort, cfg.efforts[0]!));
+      const report = renderReport(readResults(outDir), { effort: str(opts.effort, cfg.efforts[0]!) });
       writeFileSync(join(outDir, "report.md"), `${report}\n`);
       console.log(`レポート: ${join(outDir, "report.md")}`);
       return;
@@ -117,7 +124,7 @@ async function main(): Promise<void> {
     case "report": {
       const dir = positional[0];
       if (!dir) throw new Error("結果のディレクトリを指定してください");
-      const report = renderReport(readResults(dir), str(opts.effort, "low"));
+      const report = renderReport(readResults(dir), { effort: str(opts.effort, "low"), primary: str(opts.primary, "gemma"), secondary: str(opts.secondary, "luna") });
       writeFileSync(join(dir, "report.md"), `${report}\n`);
       console.log(report);
       return;
@@ -127,6 +134,44 @@ async function main(): Promise<void> {
       if (!dir) throw new Error("結果のディレクトリを指定してください");
       const n = await rescore(dir, loadTasks(), shikiFrom(opts, ARMS));
       console.log(`${n} 件を採点し直しました`);
+      return;
+    }
+    case "pilot-export": {
+      const dir = str(opts.dir, "");
+      if (!dir) throw new Error("--dir を指定してください");
+      const arms = list(opts.arms, "A,B,C,D,E") as ArmId[];
+      const tasks = sampleTasks(loadTasks(), Number(str(opts["per-category"], "3")));
+      const files = exportPrompts(tasks, arms, dir, shikiFrom(opts, arms));
+      writeFileSync(join(dir, "tasks.json"), JSON.stringify(tasks.map((t) => t.id)));
+      console.log(`課題 ${tasks.length} 件: ${tasks.map((t) => t.id).join(", ")}`);
+      for (const f of files) console.log(f);
+      return;
+    }
+    case "pilot-repair-export": {
+      const dir = str(opts.dir, "");
+      const model = str(opts.model, "");
+      if (!dir || !model) throw new Error("--dir と --model を指定してください");
+      const tasks = sampleTasks(loadTasks(), Number(str(opts["per-category"], "3")));
+      const ids = exportRepairs(dir, model, tasks, shikiFrom(opts, ["A"])!);
+      console.log(ids.length ? `${model}: 修正ターン ${ids.length} 件（${ids.join(", ")}）→ ${join(dir, `repair-${model}-A.md`)}` : `${model}: 修正が必要な回答はありません`);
+      return;
+    }
+    case "pilot-ingest": {
+      const dir = str(opts.dir, "");
+      const model = str(opts.model, "");
+      if (!dir || !model) throw new Error("--dir と --model を指定してください");
+      const arms = list(opts.arms, "A,B,C,D,E") as ArmId[];
+      const tasks = sampleTasks(loadTasks(), Number(str(opts["per-category"], "3")));
+      const r = await ingestAnswers({ dir, model, arms, tasks, shiki: shikiFrom(opts, arms), runId: `pilot-${model}` });
+      console.log(`${model}: ${r.ingested} 件を取り込みました${r.missing.length ? `（欠け: ${r.missing.join(", ")}）` : ""}`);
+      const report = renderReport(readResults(dir), {
+        effort: "pilot",
+        primary: str(opts.primary, "haiku"),
+        secondary: str(opts.secondary, "sonnet"),
+        notes: PILOT_NOTES,
+      });
+      writeFileSync(join(dir, "report.md"), `${report}\n`);
+      console.log(`レポート: ${join(dir, "report.md")}`);
       return;
     }
     default:

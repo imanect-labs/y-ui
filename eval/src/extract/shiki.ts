@@ -138,7 +138,9 @@ function statItem(n: Record<string, J>): StatItem {
   const item: StatItem = { label: isStr(n.label) ? n.label : "", value, refs: [] };
   const num = parseNumber(value);
   if (num) item.num = num.value;
-  const sub = [n.delta_label, n.caption].filter(isStr).join(" ");
+  // delta は数値（前年比などの増減）。表示上は delta_label と並ぶので、補足として持たせる。
+  const delta = isNum(n.delta) ? `${n.delta >= 0 ? "+" : ""}${n.delta}` : undefined;
+  const sub = [isStr(n.delta_label) ? n.delta_label : undefined, delta, isStr(n.caption) ? n.caption : undefined].filter((x): x is string => x !== undefined).join(" ");
   if (sub) item.sub = sub;
   return item;
 }

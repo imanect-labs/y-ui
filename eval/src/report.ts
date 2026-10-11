@@ -91,37 +91,47 @@ export interface Decision {
 }
 
 /** 採用基準の判定。主条件は Gemma、Luna は非劣性の確認。 */
-export function decide(recs: ResultRecord[], primaryEffort: string): { lines: string[]; adopt: boolean | null } {
+export function decide(recs: ResultRecord[], primaryEffort: string, primary = "gemma", secondary = "luna"): { lines: string[]; adopt: boolean | null } {
   const common = recs.filter((r) => COMMON_CATEGORIES.includes(r.category) && r.effort === primaryEffort && r.padChars === 0);
   const pick = (model: string, arm: ArmId) => aggregate(common.filter((r) => r.model === model && r.arm === arm));
   const lines: string[] = [];
-  const gA = pick("gemma", "A");
-  const gB = pick("gemma", "B");
-  const lA = pick("luna", "A");
-  const lB = pick("luna", "B");
+  const gA = pick(primary, "A");
+  const gB = pick(primary, "B");
+  const lA = pick(secondary, "A");
+  const lB = pick(secondary, "B");
   if (gA.n === 0 || gB.n === 0 || lA.n === 0 || lB.n === 0) {
-    lines.push(`判定に必要な結果が揃っていません（effort=${primaryEffort}、文脈の水増しなし、Gemma と Luna の A・B）。`);
+    lines.push(`判定に必要な結果が揃っていません（effort=${primaryEffort}、文脈の水増しなし、${primary} と ${secondary} の A・B）。`);
     return { lines, adopt: null };
   }
   const diffG = gB.pass - gA.pass;
   const superior = diffG >= CRITERIA.superiority;
   const equivalentCheaper = diffG >= -CRITERIA.margin && gB.totalTokens <= CRITERIA.tokenRatio * gA.totalTokens;
   const lunaOk = lB.pass - lA.pass >= -CRITERIA.margin;
-  lines.push(`- Gemma: A ${pct(gA.pass)} → B ${pct(gB.pass)}（差 ${(diffG * 100).toFixed(1)} pt、トークン比 B/A ${(gB.totalTokens / gA.totalTokens).toFixed(2)}）`);
+  lines.push(`- ${primary}: A ${pct(gA.pass)} → B ${pct(gB.pass)}（差 ${(diffG * 100).toFixed(1)} pt、トークン比 B/A ${(gB.totalTokens / gA.totalTokens).toFixed(2)}）`);
   lines.push(`  - 条件1（+${CRITERIA.superiority * 100} pt 以上）: ${superior ? "満たす" : "満たさない"}`);
   lines.push(`  - 条件2（差が -${CRITERIA.margin * 100} pt 以内かつトークン ${CRITERIA.tokenRatio} 倍以下）: ${equivalentCheaper ? "満たす" : "満たさない"}`);
-  lines.push(`- Luna: A ${pct(lA.pass)} → B ${pct(lB.pass)}（差 ${((lB.pass - lA.pass) * 100).toFixed(1)} pt、許容 -${CRITERIA.margin * 100} pt）: ${lunaOk ? "悪化なし" : "悪化"}`);
+  lines.push(`- ${secondary}: A ${pct(lA.pass)} → B ${pct(lB.pass)}（差 ${((lB.pass - lA.pass) * 100).toFixed(1)} pt、許容 -${CRITERIA.margin * 100} pt）: ${lunaOk ? "悪化なし" : "悪化"}`);
   const adopt = (superior || equivalentCheaper) && lunaOk;
   lines.push(`- **判定: ${adopt ? "MiniUI（B）を採用" : "採用基準を満たさない"}**`);
   return { lines, adopt };
 }
 
-export function renderReport(recs: ResultRecord[], primaryEffort = "low"): string {
-  const out: string[] = ["# MiniUI 評価結果", ""];
+export interface ReportOptions {
+  effort?: string;
+  /** 採用判定の主条件・副条件のモデル名（既定 gemma / luna）。 */
+  primary?: string;
+  secondary?: string;
+  /** レポート冒頭に入れる注記。 */
+  notes?: string[];
+}
+
+export function renderReport(recs: ResultRecord[], opts: ReportOptions = {}): string {
+  const primaryEffort = opts.effort ?? "low";
+  const out: string[] = ["# MiniUI 評価結果", "", ...(opts.notes ?? []).flatMap((n) => [n, ""])];
   const failed = recs.filter((r) => !r.ok);
   out.push(`生成 ${recs.length} 件（API 失敗 ${failed.length} 件）`, "");
 
-  out.push("## 採用基準の判定（事前登録）", "", ...decide(recs, primaryEffort).lines, "");
+  out.push("## 採用基準の判定（事前登録）", "", ...decide(recs, primaryEffort, opts.primary, opts.secondary).lines, "");
 
   const conditions = groupBy(recs, (r) => `${r.model}|${r.effort}|${r.padChars}`);
   for (const [cond, rs] of conditions) {

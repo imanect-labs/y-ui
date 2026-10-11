@@ -78,8 +78,8 @@ function scoreFigure(task: EvalTask, gold: Figure, f: Figure): Score {
     return { ...base, ...s, pass: kindOk && s.pass };
   }
   if (gold.kind === "stat" && f.kind === "stat") return { ...base, ...scoreStat(task, gold, f) };
-  if (gold.kind === "flow" && f.kind === "flow") return { ...base, ...scoreFlow(gold, f) };
-  if (gold.kind === "stack" && f.kind === "stack") return { ...base, ...scoreStack(gold, f) };
+  if (gold.kind === "flow" && f.kind === "flow") return { ...base, ...scoreFlow(gold, f, task.context) };
+  if (gold.kind === "stack" && f.kind === "stack") return { ...base, ...scoreStack(gold, f, task.context) };
   // 種類が違う（グラフを求めたのに数値カードなど）。数値の捏造だけは数える。
   const goldNums = numericValues(gold);
   const fabricated = numericValues(f).filter((v) => !SCALES.some((k) => goldNums.some((g) => same(v, g * k)))).length;
@@ -164,12 +164,26 @@ function scoreStat(task: EvalTask, gold: StatFigure, f: StatFigure): Omit<Score,
     f.items.map((i) => i.label),
   );
   let matched = 0;
+  const done = new Set<number>();
   for (const [gi, mi] of map) {
     const g = gold.items[gi]!;
     const m = f.items[mi]!;
     const mNum = m.num ?? parseNumber(m.value)?.value;
-    if (statValueMatches(g.value, g.num, m.value, mNum)) matched++;
+    if (statValueMatches(g.value, g.num, m.value, mNum)) {
+      matched++;
+      done.add(gi);
+    }
   }
+  // 別の項目の補足欄に書かれた指標（`売上 | 3,200万円 | 前年比 +18%`）も表示されているので一致とみなす。
+  gold.items.forEach((g, gi) => {
+    if (done.has(gi)) return;
+    const inSub = f.items.some((m) => {
+      if (m.sub === undefined || !norm(m.sub).includes(norm(g.label))) return false;
+      const nums = [...m.sub.matchAll(/[-+△▲]?[0-9０-９][0-9０-９,，.．]*(?:億|万|千)?/g)].map((x) => parseNumber(x[0])?.value);
+      return g.num !== undefined ? nums.some((v) => v !== undefined && SCALES.some((k) => same(v, g.num! * k))) : norm(m.sub).includes(norm(g.value));
+    });
+    if (inSub) matched++;
+  });
   // 値の欄に補足として書かれた数値も資料と照合する。
   const ctxNums = [...task.context.matchAll(/[-+△▲]?[0-9０-９][0-9０-９,，.．]*(?:億|万|千)?/g)]
     .map((m) => parseNumber(m[0])?.value)
@@ -194,11 +208,31 @@ function f1(tp: number, goldN: number, modelN: number): number {
   return p + r === 0 ? 0 : (2 * p * r) / (p + r);
 }
 
-function scoreFlow(gold: FlowFigure, f: FlowFigure): Omit<Score, "syntaxOk" | "produced" | "kindOk" | "fabricated"> & { fabricated: number } {
+/**
+ * 正解に無い中間の手順（入る辺・出る辺が 1 本ずつ）で、名前が資料に書かれているものは縮約する
+ * （「出張 → 帰着 → 旅費精算」を「出張 → 旅費精算」として比べる）。
+ */
+function contractMentionedSteps(f: FlowFigure, matched: Set<string>, context: string): FlowFigure {
+  const ctx = norm(context);
+  let edges = [...f.edges];
+  for (const n of f.nodes) {
+    if (matched.has(n.id) || norm(n.label).length < 2 || !ctx.includes(norm(n.label))) continue;
+    const ins = edges.filter((e) => e.to === n.id);
+    const outs = edges.filter((e) => e.from === n.id);
+    if (ins.length !== 1 || outs.length !== 1 || ins[0]!.from === n.id) continue;
+    const label = ins[0]!.label ?? outs[0]!.label;
+    const merged = label === undefined ? { from: ins[0]!.from, to: outs[0]!.to } : { from: ins[0]!.from, to: outs[0]!.to, label };
+    edges = [...edges.filter((e) => e !== ins[0] && e !== outs[0]), merged];
+  }
+  return { ...f, edges };
+}
+
+function scoreFlow(gold: FlowFigure, f0: FlowFigure, context: string): Omit<Score, "syntaxOk" | "produced" | "kindOk" | "fabricated"> & { fabricated: number } {
   const nodeMap = matchByText(
     gold.nodes.map((n) => n.label),
-    f.nodes.map((n) => n.label),
+    f0.nodes.map((n) => n.label),
   );
+  const f = contractMentionedSteps(f0, new Set([...nodeMap.values()].map((i) => f0.nodes[i]!.id)), context);
   const goldIdx = new Map(gold.nodes.map((n, i) => [n.id, i]));
   const modelIdx = new Map(f.nodes.map((n, i) => [n.id, i]));
   const modelEdges = new Map<string, string | undefined>();
@@ -238,7 +272,25 @@ function scoreFlow(gold: FlowFigure, f: FlowFigure): Omit<Score, "syntaxOk" | "p
 
 // ------------------------------------------------------------ stack
 
-function scoreStack(gold: StackFigure, f: StackFigure): Omit<Score, "syntaxOk" | "produced" | "kindOk"> {
+/**
+ * 横並びを「見出し付きのまとまり＋中の要素」で書いた層（`- データ保存` の下に `- PostgreSQL | Redis | S3`）を、
+ * 横並びの層に開く。見出しが正解のどの箱とも対応しない、子を 2 つ以上持つ 1 箱だけの層に限る。
+ */
+function unwrapGroups(gold: StackFigure, f: StackFigure): StackFigure {
+  const goldTitles = gold.tiers.flatMap((t) => t.boxes.map((b) => b.title));
+  return {
+    ...f,
+    tiers: f.tiers.map((t) => {
+      const b = t.boxes[0];
+      if (t.boxes.length !== 1 || !b || b.children.length < 2) return t;
+      if (goldTitles.some((g) => similarity(g, b.title) >= 0.5)) return t;
+      return { ...t, boxes: b.children.map((c) => ({ ...c, children: [] })) };
+    }),
+  };
+}
+
+function scoreStack(gold: StackFigure, f0: StackFigure, context: string): Omit<Score, "syntaxOk" | "produced" | "kindOk"> {
+  const f = unwrapGroups(gold, f0);
   const flat = (s: StackFigure) => s.tiers.flatMap((t, ti) => t.boxes.map((b) => ({ tier: ti, box: b })));
   const g = flat(gold);
   const m = flat(f);
@@ -248,7 +300,11 @@ function scoreStack(gold: StackFigure, f: StackFigure): Omit<Score, "syntaxOk" |
     g.map((x) => boxText(x.box)),
     m.map((x) => boxText(x.box)),
   );
-  const boxF1 = f1(map.size, g.length, m.length);
+  // 正解に無い箱でも、見出しが資料に書かれているもの（「利用者」の層など）は誤りとしない。
+  const ctx = norm(context);
+  const matchedModel = new Set(map.values());
+  const extraNotInContext = m.filter((x, i) => !matchedModel.has(i) && !(norm(x.box.title).length >= 2 && ctx.includes(norm(x.box.title)))).length;
+  const boxF1 = f1(map.size, g.length, map.size + extraNotInContext);
 
   // 層の順序: 対応した組のすべての対で、上下関係（同じ層かどうかも含む）が一致する割合。
   const pairs = [...map.entries()];

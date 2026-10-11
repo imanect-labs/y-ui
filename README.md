@@ -65,7 +65,7 @@ pnpm eval truncation   # 生成途中で切れたときの検証
 pnpm eval run --mock --seeds 1
 ```
 
-評価の実行方法は [docs/eval-plan.md](docs/eval-plan.md) §8。
+評価の実行方法は [docs/eval-plan.md](docs/eval-plan.md) §8。実モデルの代わりに Claude のサブエージェントで回した予備評価の結果は [eval/pilot/2026-10-11-claude/report.md](eval/pilot/2026-10-11-claude/report.md)（§10）。
 
 ## ライセンス
 

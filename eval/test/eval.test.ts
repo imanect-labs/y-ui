@@ -67,6 +67,30 @@ describe("採点", () => {
     expect(scoreTask(gold, ex([fig("stack y\n- DB | Cache\n- API\n  - 認証\n  - 検索\n- Web\n")])).pass).toBe(false);
   });
 
+  it("言い換えたノード名を対応付ける（経理確認／経理部が内容を確認）", () => {
+    const gold = task("flow x\n精算書提出 -> 上長承認 -> 経理確認 -> 支払\n", ["flow"]);
+    expect(scoreTask(gold, ex([fig("flow y\n経費精算書を提出 -> 上長が内容を承認 -> 経理部が内容を確認 -> 支払\n")])).pass).toBe(true);
+  });
+
+  it("資料にある中間の手順を挟んでも同じ流れとみなす", () => {
+    const gold = task("flow x\n出張 -> 旅費精算\n", ["flow"], { context: "出張に行き、帰着後に旅費を精算する。" });
+    expect(scoreTask(gold, ex([fig("flow y\n出張 -> 帰着 -> 旅費精算\n")])).pass).toBe(true);
+    // 資料に無い手順は縮約しない
+    expect(scoreTask(gold, ex([fig("flow y\n出張 -> 報告会 -> 旅費精算\n")])).pass).toBe(false);
+  });
+
+  it("数値カードの補足欄に書いた指標も一致とみなす", () => {
+    const gold = task("stat x\n売上 | 3,200万円\n前年比 | +18%\n", ["stat"], { context: "売上は3,200万円、前年比は+18%。" });
+    expect(scoreTask(gold, ex([fig("stat y\n売上 | 3,200万円 | 前年比 +18%\n")])).pass).toBe(true);
+  });
+
+  it("構成図: 見出し付きのまとまりで書いた横並び・資料にある追加の層を許す", () => {
+    const gold = task("stack x\n- Web\n- API\n- DB | Cache | S3\n", ["stack"], { context: "利用者は Web から API を使う。" });
+    expect(scoreTask(gold, ex([fig("stack y\n- 利用者\n- Web\n- API\n- データ保存\n  - DB | Cache | S3\n")])).pass).toBe(true);
+    // まとまりの見出しが正解の箱（API）なら、中に入れるのは別の意味なので開かない
+    expect(scoreTask(gold, ex([fig("stack y\n- Web\n- API\n  - DB | Cache | S3\n")])).pass).toBe(false);
+  });
+
   it("図を出すべきでない課題", () => {
     const none = { ...task("bar x\nA | 1\n", []), expect: "none" as const, category: "none-nodata" as const };
     expect(scoreTask(none, ex([])).pass).toBe(true);
