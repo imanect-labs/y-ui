@@ -14,8 +14,10 @@
     "types": ["node"],
     "noEmit": true,
     "paths": {
-      "@imanect/yui": ["./packages/core/src/index.ts"]
+      "@imanect/yui": ["./packages/core/src/index.ts"],
+      "@imanect/yui/svg": ["./packages/core/src/svg.ts"],
+      "@imanect/yui/react": ["./packages/core/src/react/index.ts"]
     }
   },
-  "include": ["packages/*/src", "packages/*/test", "eval/src", "eval/test", "vitest.config.ts"]
+  "include": ["packages/*/src", "packages/*/test", "eval/src", "eval/test", "scripts", "vitest.config.ts"]
 }

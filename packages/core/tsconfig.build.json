@@ -7,9 +7,14 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
     "types": [],
     "paths": {}
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

@@ -1,0 +1,34 @@
+/** 図 1 つをシーンにする（見出し → 本体 → 注記）。 */
+
+import type { Figure } from "../ir.js";
+import { toText } from "../text.js";
+import { layoutChart } from "./chart.js";
+import { drawNote, drawTitle, makeCtx, type LayoutOptions } from "./frame.js";
+import { layoutFlow } from "./flow.js";
+import type { Scene } from "./scene.js";
+import { layoutStack } from "./stack.js";
+import { layoutStat } from "./stat.js";
+
+export type { LayoutOptions } from "./frame.js";
+
+export function layout(f: Figure, opts: LayoutOptions = {}): Scene {
+  const ctx = makeCtx(opts);
+  let y = drawTitle(ctx, f, ctx.pad - 4);
+  switch (f.kind) {
+    case "bar":
+    case "line":
+      y = layoutChart(ctx, f, y);
+      break;
+    case "stat":
+      y = layoutStat(ctx, f, y);
+      break;
+    case "flow":
+      y = layoutFlow(ctx, f, y + 4);
+      break;
+    case "stack":
+      y = layoutStack(ctx, f, y + 4);
+      break;
+  }
+  y = drawNote(ctx, f, y);
+  return { width: ctx.width, height: Math.ceil(y + ctx.pad - 6), items: ctx.items, title: f.title, desc: toText(f) };
+}

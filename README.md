@@ -18,9 +18,16 @@ unit: 万円
 - **生成途中から描ける。** 1 行ずつ確定して描画し、途中で誤った値を見せない。
 - **どんなテキストでも安全。** HTML・URL・スクリプトを持たない。
 
-状態: **v0.1 草案**。パーサと評価ハーネスまで。レンダラー（SVG / React）は未実装。
+状態: パーサ・SVG レンダラー・React 部品まで。npm: [`@imanect/yui`](https://www.npmjs.com/package/@imanect/yui)。
 
-## 図の種類（v0.1）
+![構成図（stack）](docs/images/stack.png)
+![流れ図（flow）](docs/images/flow.png)
+![棒グラフ（bar）](docs/images/bar.png)
+![数値カード（stat、ダーク）](docs/images/stat-dark.png)
+
+（左は幅 640px、右は 360px。描画は幅に合わせて組み直す）
+
+## 図の種類
 
 | 種類 | 例 |
 |---|---|
@@ -35,7 +42,8 @@ unit: 万円
 
 | パス | 内容 |
 |---|---|
-| `packages/core` | パーサ・中間表現・テキスト化（`@imanect/yui`） |
+| `packages/core` | パーサ・中間表現・テキスト化（`@imanect/yui`）、SVG レンダラー（`/svg`）、React 部品（`/react`） |
+| `scripts/gallery.ts` | 描画の確認用ギャラリー（`pnpm tsx scripts/gallery.ts <出力先>`） |
 | `eval` | 小さなモデルでの書きやすさの評価（課題・採点・実行・レポート） |
 | `docs/spec.md` | 記法仕様 |
 | `docs/export.md` | コピー・書き出しの設計 |
@@ -43,17 +51,26 @@ unit: 万円
 
 ## 使い方
 
-```ts
-import { parseMarkdown, toText } from "@imanect/yui";
+```tsx
+// React（react-markdown のコードブロックを差し替える例）
+import { YuiBlock, isYuiLanguage } from "@imanect/yui/react";
 
-for (const seg of parseMarkdown(streamingText)) {      // ストリーミング中でもよい
-  if (seg.type === "ui" && seg.result.figure) {
-    render(seg.result.figure, seg.result.diagnostics); // レンダラーは未実装
-  }
-}
-
-toText(figure); // Yui 非対応の場所向けの表・箇条書き
+const code = ({ className, children }) =>
+  isYuiLanguage(className) ? <YuiBlock source={String(children)} streaming={isStreaming} /> : <code className={className}>{children}</code>;
 ```
+
+```ts
+// SVG（ブラウザでもサーバーでも同じ結果）
+import { parseBlock, toText } from "@imanect/yui";
+import { renderSVG } from "@imanect/yui/svg";
+
+const { figure } = parseBlock(source, { final: true });
+renderSVG(figure);                                 // 画面用: CSS 変数で明暗に追従、幅は親に合わせる
+renderSVG(figure, { theme: "light", width: 720 }); // 書き出し用: 色と寸法を焼き込む
+toText(figure);                                    // Yui 非対応の場所向けの表・箇条書き
+```
+
+描画は 1 本のレイアウトから SVG と React の両方を作るので、画面と書き出しの見た目がずれない。配色は色覚多様性に配慮して検証済みの既定パレット（明暗それぞれ）で、`--yui-s1`〜`--yui-s8`・`--yui-ink` などの CSS 変数で差し替えられる。
 
 ## 開発
 

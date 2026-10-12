@@ -1,8 +1,19 @@
 {
   "name": "@imanect/yui",
-  "version": "0.1.0",
-  "description": "Yui（結）: Markdown の ```ui ブロックに図を書くための、LLM が書きやすい小さな記法のパーサと中間表現",
-  "keywords": ["markdown", "generative-ui", "llm", "chart", "flowchart", "diagram", "streaming", "parser"],
+  "version": "0.2.0",
+  "description": "Yui（結）: Markdown の ```ui ブロックに図を書くための、LLM が書きやすい小さな記法。パーサ・SVG レンダラー・React 部品",
+  "keywords": [
+    "markdown",
+    "generative-ui",
+    "llm",
+    "chart",
+    "flowchart",
+    "diagram",
+    "streaming",
+    "parser",
+    "svg",
+    "react"
+  ],
   "license": "MIT OR Apache-2.0",
   "author": "Imanect Labs",
   "homepage": "https://github.com/imanect-labs/y-ui#readme",
@@ -19,9 +30,22 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./svg": {
+      "types": "./dist/svg.d.ts",
+      "import": "./dist/svg.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
+    },
     "./package.json": "./package.json"
   },
-  "files": ["dist", "README.md", "LICENSE-MIT", "LICENSE-APACHE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE"
+  ],
   "engines": {
     "node": ">=18"
   },
@@ -32,5 +56,13 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "prepack": "cp ../../LICENSE-MIT ../../LICENSE-APACHE . && pnpm run build"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   }
 }
