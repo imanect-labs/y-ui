@@ -15,6 +15,8 @@ const NODE_SIZE = 13;
 const LINE_H = 17;
 const RANK_GAP = { TB: 44, LR: 64 };
 const NODE_GAP = 28;
+/** 縦向きで、ラベル付きの辺が出る段の下に足す間隔（ラベルの下に矢印が見えるように）。 */
+const LABEL_ROOM = 24;
 
 interface Box {
   id: string;
@@ -163,11 +165,14 @@ function layoutOnce(ctx: Ctx, f: FlowFigure, dir: "TB" | "LR"): { items: Ctx["it
   const along = (b: Box) => (dir === "TB" ? b.h : b.w); // 段方向の大きさ
   const across = (b: Box) => (dir === "TB" ? b.w : b.h); // 交差方向の大きさ
   const gap = NODE_GAP;
+  // 縦向きのラベルは出発側の縦線の上に置くので、その段の下だけ広げて矢印を隠さない
+  const labeled = new Set<number>();
+  if (dir === "TB") for (const { edge, ids } of chains) if (edge.label) labeled.add(boxes.get(ids[0]!)!.rank);
   let rPos = 0;
-  ranks.forEach((rk) => {
+  ranks.forEach((rk, i) => {
     const thick = Math.max(...rk.map(along));
     rk.forEach((b) => (b.r = rPos + thick / 2));
-    rPos += thick + RANK_GAP[dir];
+    rPos += thick + RANK_GAP[dir] + (labeled.has(i) ? LABEL_ROOM : 0);
   });
   const place = (rk: Box[], desired: (b: Box) => number) => {
     let cursor = -Infinity;
