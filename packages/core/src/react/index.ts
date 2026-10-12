@@ -128,7 +128,7 @@ export function SceneSvg(props: { scene: Scene; theme?: ThemeMode; fluid?: boole
 export function YuiFigure(props: YuiFigureProps): ReactElement {
   const { figure, theme, width, className, ...layoutOpts } = props;
   const [ref, w] = useContainerWidth(width);
-  const scene = useMemo(() => layout(figure, { ...layoutOpts, width: w }), [figure, w, layoutOpts.locale, layoutOpts.measure]);
+  const scene = useMemo(() => layout(figure, { ...layoutOpts, width: w }), [figure, w, layoutOpts.locale, layoutOpts.measure, layoutOpts.labels]);
   return h("div", { ref, className, "data-yui": figure.kind }, h(SceneSvg, { scene, theme: theme ?? "auto" }));
 }
 

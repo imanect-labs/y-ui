@@ -12,19 +12,33 @@ export interface LayoutOptions {
   locale?: string;
   /** 文字幅の計測（ブラウザなら canvas の measureText などに差し替えられる）。 */
   measure?: Measure;
+  /** 定型の文言。既定はロケールが ja なら日本語、それ以外は英語。 */
+  labels?: Labels;
 }
+
+/** 図の中に出る定型の文言（ロケールで切り替える）。 */
+export interface Labels {
+  unit: (unit: string) => string;
+  note: (note: string) => string;
+}
+
+export const LABELS_JA: Labels = { unit: (u) => `単位: ${u}`, note: (n) => `※ ${n}` };
+export const LABELS_EN: Labels = { unit: (u) => `Unit: ${u}`, note: (n) => `Note: ${n}` };
 
 export interface Ctx {
   width: number;
   pad: number;
   locale: string;
+  labels: Labels;
   measure: Measure;
   items: Item[];
 }
 
 export function makeCtx(opts: LayoutOptions): Ctx {
   const width = Math.max(240, Math.round(opts.width ?? 640));
-  return { width, pad: width < 400 ? 12 : 16, locale: opts.locale ?? "ja-JP", measure: opts.measure ?? estimate, items: [] };
+  const locale = opts.locale ?? "ja-JP";
+  const labels = opts.labels ?? (locale.toLowerCase().startsWith("ja") ? LABELS_JA : LABELS_EN);
+  return { width, pad: width < 400 ? 12 : 16, locale, labels, measure: opts.measure ?? estimate, items: [] };
 }
 
 export const TITLE_SIZE = 15;
@@ -65,7 +79,7 @@ export function drawLegend(ctx: Ctx, names: string[], y: number, mark: "box" | "
 /** 注記を置き、次に使える y を返す。 */
 export function drawNote(ctx: Ctx, f: Figure, y: number): number {
   if (!f.note) return y;
-  const lines = wrap(`※ ${f.note}`, ctx.width - ctx.pad * 2, BODY_SIZE, ctx.measure, 4);
+  const lines = wrap(ctx.labels.note(f.note), ctx.width - ctx.pad * 2, BODY_SIZE, ctx.measure, 4);
   lines.forEach((l, i) => ctx.items.push({ t: "text", x: ctx.pad, y: y + 14 + i * 17, text: l, size: BODY_SIZE, fill: "muted" }));
   return y + lines.length * 17 + 6;
 }

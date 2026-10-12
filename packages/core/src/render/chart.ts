@@ -47,7 +47,7 @@ export function layoutChart(ctx: Ctx, f: ChartFigure, y0: number): number {
   const names = seriesNames(f);
   let y = drawLegend(ctx, names, y0, f.kind === "bar" ? "box" : "line");
   if (f.unit) {
-    ctx.items.push({ t: "text", x: ctx.pad, y: y + 12, text: `単位: ${f.unit}`, size: SMALL_SIZE, fill: "muted" });
+    ctx.items.push({ t: "text", x: ctx.pad, y: y + 12, text: ctx.labels.unit(f.unit), size: SMALL_SIZE, fill: "muted" });
     y += 18;
   }
   if (f.rows.length === 0) return y;
