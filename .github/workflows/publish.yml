@@ -1,9 +1,13 @@
 name: Publish
 
-# v0.1.0 のようなタグを push するか、Actions の画面から手動で起動すると、@imanect/yui を npm に公開する。
+# v0.1.0 のようなタグを push するか、Actions の画面から手動で起動すると、@imanect/yui を npm に仮公開（stage）する。
+# 仮公開した版は、メンテナーが 2 段階認証付きで承認するまで公開されない。
+#   npmjs.com の @imanect/yui の画面で承認する、または手元で
+#   npm stage list @imanect/yui → npm stage approve <stage-id>
 # 認証は npm の Trusted Publishing（OIDC）。リポジトリに npm のトークンは置かない。
 # 事前に npmjs.com の @imanect/yui の設定で、Trusted Publisher として
 # このリポジトリ（imanect-labs/y-ui）とワークフロー（publish.yml）を登録しておくこと。
+# Allowed actions は既定（stage publish のみ）のままでよい。CI だけでは本公開できないようにしておく。
 
 on:
   push:
@@ -23,10 +27,11 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          # Trusted Publishing には npm 11.5.1 以上が要る（Node 24 に同梱）
           node-version: 24
           registry-url: https://registry.npmjs.org
           cache: pnpm
+      # npm stage は新しい npm にしか無い（Node 24 同梱の npm では足りないことがある）
+      - run: npm install -g npm@12
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
@@ -39,5 +44,5 @@ jobs:
           else
             if npm view "@imanect/yui@${version}" version >/dev/null 2>&1; then echo "@imanect/yui@${version} は公開済み"; exit 1; fi
           fi
-      - run: npm publish
+      - run: npm stage publish --provenance --access public
         working-directory: packages/core

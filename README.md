@@ -163,7 +163,7 @@ pnpm eval truncation        # streaming robustness check (no model needed)
 pnpm tsx scripts/readme-images.ts
 ```
 
-Releases are published to npm by GitHub Actions when a `v*` tag is pushed (npm Trusted Publishing; no tokens in the repo).
+Pushing a `v*` tag makes GitHub Actions stage the release on npm (npm Trusted Publishing; no tokens in the repo); a maintainer then approves it with 2FA.
 
 ## License
 

@@ -163,7 +163,7 @@ pnpm eval truncation        # 生成途中で切れたときの検証（モデ�
 pnpm tsx scripts/readme-images.ts
 ```
 
-`v*` のタグを push すると、GitHub Actions が npm に公開します（npm の Trusted Publishing。リポジトリにトークンは置かない）。
+`v*` のタグを push すると、GitHub Actions が npm に仮公開し（npm の Trusted Publishing。リポジトリにトークンは置かない）、メンテナーが 2 段階認証付きで承認して公開します。
 
 ## ライセンス
 
