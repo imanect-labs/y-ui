@@ -63,7 +63,9 @@ The same layout drives both outputs, so what you export is what you saw. Every S
 ## Theming
 
 Colors are CSS custom properties: `--yui-s1` … `--yui-s8` (series), `--yui-ink`, `--yui-ink2`, `--yui-muted`, `--yui-grid`, `--yui-axis`, `--yui-surface`, `--yui-surface2`, `--yui-border`, `--yui-accentWash`, `--yui-accentLine`.
-Set them on any ancestor to match your design system. The defaults are a colorblind-validated palette with separate light and dark steps.
+Set them on any ancestor to match your design system; `--yui-font` sets the typeface. The defaults are muted, seasonal hues on cool neutrals, validated for color-vision deficiencies with separate light and dark steps.
+
+In `auto` mode Yui follows the page first — `<html class="dark">` (Tailwind, next-themes) or `<html data-theme="dark">`, and `light` likewise — and falls back to `prefers-color-scheme`.
 
 ## Parser only
 

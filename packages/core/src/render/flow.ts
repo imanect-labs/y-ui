@@ -259,7 +259,7 @@ function layoutOnce(ctx: Ctx, f: FlowFigure, dir: "TB" | "LR"): { items: Ctx["it
     if (b.shape === "decision") {
       items.push({ t: "path", d: `M${cx},${y}L${x + b.w},${cy}L${cx},${y + b.h}L${x},${cy}Z`, fill: "accentWash", stroke: "accentLine", strokeWidth: 1, hint });
     } else {
-      items.push({ t: "rect", x, y, w: b.w, h: b.h, r: b.shape === "terminal" ? b.h / 2 : 8, fill: "surface2", hint });
+      items.push({ t: "rect", x: x + 0.5, y: y + 0.5, w: b.w - 1, h: b.h - 1, r: b.shape === "terminal" ? b.h / 2 : 8, fill: "surface2", stroke: "border", strokeWidth: 1, hint });
     }
     const y0 = cy - ((b.lines.length - 1) * LINE_H) / 2 + NODE_SIZE * 0.35;
     b.lines.forEach((l, k) => items.push({ t: "text", x: cx, y: y0 + k * LINE_H, text: l, size: NODE_SIZE, fill: "ink", anchor: "middle" }));

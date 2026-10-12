@@ -140,7 +140,7 @@ renderSVG(figure, { theme: "light", width: 720 }); // export: colors and size ba
 toText(figure);                                    // plain-Markdown fallback (tables / lists)
 ```
 
-One layout drives both SVG and React output, so exports look exactly like the screen. The default palette is colorblind-validated in both light and dark; override it with CSS variables (`--yui-s1` … `--yui-s8`, `--yui-ink`, …).
+One layout drives both SVG and React output, so exports look exactly like the screen. The default look is quiet — outlined cards, dashed grid lines, muted seasonal hues — and the palette is validated for color-vision deficiencies in both light and dark. Dark mode follows `<html class="dark">` or `data-theme`, then the OS. Override anything with CSS variables (`--yui-s1` … `--yui-s8`, `--yui-ink`, `--yui-font`, …).
 
 ## Does it work with small models?
 

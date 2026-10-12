@@ -41,7 +41,7 @@ export function makeCtx(opts: LayoutOptions): Ctx {
   return { width, pad: width < 400 ? 12 : 16, locale, labels, measure: opts.measure ?? estimate, items: [] };
 }
 
-export const TITLE_SIZE = 15;
+export const TITLE_SIZE = 14;
 export const BODY_SIZE = 12;
 export const SMALL_SIZE = 11;
 
@@ -68,7 +68,7 @@ export function drawLegend(ctx: Ctx, names: string[], y: number, mark: "box" | "
     }
     const cy = y + 8 + row * 20;
     const token = SERIES[i % SERIES.length]!;
-    if (mark === "box") ctx.items.push({ t: "rect", x, y: cy - 5, w: 10, h: 10, r: 2, fill: token });
+    if (mark === "box") ctx.items.push({ t: "circle", cx: x + 5, cy, r: 4, fill: token });
     else ctx.items.push({ t: "path", d: `M${x},${cy}H${x + 12}`, stroke: token, strokeWidth: 2 });
     ctx.items.push({ t: "text", x: x + 16, y: cy + 4, text: label, size: BODY_SIZE, fill: "ink2" });
     x += w;

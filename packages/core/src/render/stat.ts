@@ -1,4 +1,4 @@
-/** stat: 数値カードを格子に並べる。値は大きく、項目名と補足は控えめに。 */
+/** stat: 数値カードを格子に並べる。枠線と淡い地のカードに、値は大きく、項目名と補足は控えめに。 */
 
 import type { StatFigure } from "../ir.js";
 import { BODY_SIZE, type Ctx } from "./frame.js";
@@ -29,8 +29,8 @@ export function layoutStat(ctx: Ctx, f: StatFigure, top: number): number {
     const x = ctx.pad + c * (cardW + GAP);
     const y = top + r * (cardH + GAP);
     const refs = it.refs.length ? ` ${it.refs.map((n) => `[${n}]`).join("")}` : "";
-    ctx.items.push({ t: "rect", x, y, w: cardW, h: cardH, r: 8, fill: "surface2", hint: `${it.label}: ${it.value}${it.sub ? `（${it.sub}）` : ""}` });
-    ctx.items.push({ t: "text", x: x + pad, y: y + pad + 12, text: fit(it.label + refs, cardW - pad * 2, BODY_SIZE, ctx.measure), size: BODY_SIZE, fill: "ink2" });
+    ctx.items.push({ t: "rect", x: x + 0.5, y: y + 0.5, w: cardW - 1, h: cardH - 1, r: 12, fill: "surface2", stroke: "border", strokeWidth: 1, hint: `${it.label}: ${it.value}${it.sub ? `（${it.sub}）` : ""}` });
+    ctx.items.push({ t: "text", x: x + pad, y: y + pad + 12, text: fit(it.label + refs, cardW - pad * 2, BODY_SIZE, ctx.measure, 600), size: BODY_SIZE, weight: 600, fill: "muted" });
     const vy = y + pad + 14 + 8 + valueSize * 0.85;
     ctx.items.push({ t: "text", x: x + pad, y: vy, text: fit(it.value, cardW - pad * 2, valueSize, ctx.measure, 600), size: valueSize, weight: 600, fill: "ink" });
     subLines[i]!.forEach((l, k) => ctx.items.push({ t: "text", x: x + pad, y: vy + valueSize * 0.15 + 6 + 12 + k * 16, text: l, size: BODY_SIZE, fill: "muted" }));

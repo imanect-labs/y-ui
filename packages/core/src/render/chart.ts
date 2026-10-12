@@ -14,6 +14,8 @@ import { SERIES } from "./theme.js";
 const PLOT_HEIGHT = 220;
 const MAX_BAR = 24;
 const GAP = 2;
+/** 目盛り線は細かい破線にして、データより目立たせない（基線は実線）。 */
+const GRID_DASH = "2 4";
 
 function seriesNames(f: ChartFigure): string[] {
   return f.columns.slice(1);
@@ -78,7 +80,7 @@ function vertical(ctx: Ctx, f: ChartFigure, top: number): number {
   // 目盛り線と基線
   ticks.forEach((t, i) => {
     const yy = Math.round(yOf(t)) + 0.5;
-    ctx.items.push({ t: "path", d: `M${left},${yy}H${right}`, stroke: t === 0 ? "axis" : "grid", strokeWidth: 1 });
+    ctx.items.push({ t: "path", d: `M${left},${yy}H${right}`, stroke: t === 0 ? "axis" : "grid", strokeWidth: 1, ...(t === 0 ? {} : { dash: GRID_DASH }) });
     ctx.items.push({ t: "text", x: left - 8, y: yy + 4, text: tickLabels[i]!, size: SMALL_SIZE, fill: "muted", anchor: "end", tabular: true });
   });
 
@@ -207,7 +209,7 @@ function horizontalBars(ctx: Ctx, f: ChartFigure, top: number): number {
 
   ticks.forEach((t) => {
     const xx = Math.round(xOf(t)) + 0.5;
-    ctx.items.push({ t: "path", d: `M${xx},${plotTop}V${plotBottom}`, stroke: t === 0 ? "axis" : "grid", strokeWidth: 1 });
+    ctx.items.push({ t: "path", d: `M${xx},${plotTop}V${plotBottom}`, stroke: t === 0 ? "axis" : "grid", strokeWidth: 1, ...(t === 0 ? {} : { dash: GRID_DASH }) });
     ctx.items.push({ t: "text", x: xx, y: plotBottom + 14, text: formatTick(t, ctx.locale), size: SMALL_SIZE, fill: "muted", anchor: "middle", tabular: true });
   });
 

@@ -106,7 +106,7 @@ for (const lang of ["en", "ja"] as const) {
     const r = parseBlock(src, { final: true });
     if (!r.figure) throw new Error(`${lang}/${kind}: ${JSON.stringify(r.diagnostics)}`);
     const svg = renderSVG(r.figure, { width: 640, locale: lang === "ja" ? "ja-JP" : "en-US" });
-    await page.setContent(`<!doctype html><meta charset="utf-8"><body style="margin:0;padding:12px;background:#fff"><div id="f" style="width:640px;background:#fcfcfb;border-radius:12px">${svg}</div>`);
+    await page.setContent(`<!doctype html><meta charset="utf-8"><body style="margin:0;padding:12px;background:#fff"><div id="f" style="width:640px;background:#fcfcfc;border-radius:12px">${svg}</div>`);
     await page.locator("#f").screenshot({ path: join(out, `${lang}-${kind}.png`) });
   }
 }

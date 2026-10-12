@@ -71,19 +71,19 @@ export function layoutStack(ctx: Ctx, f: StackFigure, top: number): number {
       const w = (inner - ROW_GAP * (row.length - 1)) / row.length;
       const ms = row.map((b) => measureBox(ctx, b, w));
       const h = Math.max(...ms.map((m) => m.h));
-      ms.forEach((m, k) => drawBox(ctx, m, ctx.pad + k * (w + ROW_GAP), y, w, h, ti));
+      ms.forEach((m, k) => drawBox(ctx, m, ctx.pad + k * (w + ROW_GAP), y, w, h));
       y += h + (start + perRow < n ? ROW_GAP : 0);
     }
   });
   return y + 12;
 }
 
-function drawBox(ctx: Ctx, m: Measured, x: number, y: number, w: number, h: number, tierIndex: number): void {
+function drawBox(ctx: Ctx, m: Measured, x: number, y: number, w: number, h: number): void {
   const hasChildren = m.box.children.length > 0;
-  const fill: Token = hasChildren ? "accentWash" : tierIndex === 0 ? "surface2" : "surface";
+  const fill: Token = hasChildren ? "accentWash" : "surface2";
   const stroke: Token = hasChildren ? "accentLine" : "border";
   const hint = [m.box.title, m.box.desc, ...m.box.children.map((c) => c.title)].filter(Boolean).join(" / ");
-  ctx.items.push({ t: "rect", x, y, w, h, r: 10, fill, ...(tierIndex === 0 && !hasChildren ? {} : { stroke, strokeWidth: 1 }), hint });
+  ctx.items.push({ t: "rect", x: x + 0.5, y: y + 0.5, w: w - 1, h: h - 1, r: 10, fill, stroke, strokeWidth: 1, hint });
   const cx = x + w / 2;
   let yy = y + 14;
   m.titleLines.forEach((l) => {
@@ -112,7 +112,7 @@ function drawBox(ctx: Ctx, m: Measured, x: number, y: number, w: number, h: numb
     const offset = ((cols - kids.length) * (cw + CHILD_GAP)) / 2;
     kids.forEach((c, k) => {
       const kx = x + 12 + offset + k * (cw + CHILD_GAP);
-      ctx.items.push({ t: "rect", x: kx, y: yy, w: cw, h: ch, r: 8, fill: "surface", hint: c.desc ? `${c.title}: ${c.desc}` : c.title });
+      ctx.items.push({ t: "rect", x: kx, y: yy, w: cw, h: ch, r: 8, fill: "surface", stroke: "border", strokeWidth: 1, hint: c.desc ? `${c.title}: ${c.desc}` : c.title });
       let ty = yy + 9 + 13;
       lines[k]!.forEach((l) => {
         ctx.items.push({ t: "text", x: kx + cw / 2, y: ty, text: l, size: 13, fill: "ink", anchor: "middle" });

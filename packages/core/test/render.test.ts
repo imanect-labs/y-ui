@@ -6,6 +6,7 @@ import { parseBlock, type Figure } from "../src/index.js";
 import { YuiBlock, YuiFigure, isYuiLanguage } from "../src/react/index.js";
 import { estimate } from "../src/render/measure.js";
 import { layout, renderSVG } from "../src/svg.js";
+import { DARK, LIGHT } from "../src/render/theme.js";
 
 // 評価の課題の正解（141 件中 121 件に図がある）をそのまま描画の検査に使う
 const golds: [string, Figure][] = readFileSync(new URL("../../../eval/tasks/tasks.jsonl", import.meta.url), "utf8")
@@ -67,8 +68,15 @@ describe("SVG", () => {
     expect(renderSVG(f)).toContain("var(--yui-s1, var(--yui-default-s1))");
     const baked = renderSVG(f, { theme: "light" });
     expect(baked).not.toContain("var(");
-    expect(baked).toContain('fill="#2a78d6"');
+    expect(baked).toContain(`fill="${LIGHT.s1}"`);
     expect(baked).toMatch(/^<svg [^>]*width="\d+" height="\d+"/);
+  });
+
+  it("ページの明示（class=\"dark\" / data-theme）を OS の設定より優先する", () => {
+    const css = renderSVG(f).match(/<style>([^<]*)<\/style>/)![1]!;
+    expect(css).toContain(':root:where([data-theme="dark"],.dark)');
+    expect(css).toContain(':root:where(:not([data-theme="light"]):not(.light))');
+    expect(css).toContain("font-family:var(--yui-font,");
   });
 
   it("読み上げ用に、表にした内容を desc に入れる", () => {
@@ -97,7 +105,7 @@ describe("React", () => {
   });
 
   it("YuiFigure とコードブロックの言語名の判定", () => {
-    expect(renderToStaticMarkup(createElement(YuiFigure, { figure: fig("stat x\n売上 | 3,200万円\n"), theme: "dark", width: 320 }))).toContain('fill:#262624');
+    expect(renderToStaticMarkup(createElement(YuiFigure, { figure: fig("stat x\n売上 | 3,200万円\n"), theme: "dark", width: 320 }))).toContain(`fill:${DARK.surface2}`);
     expect(isYuiLanguage("language-ui")).toBe(true);
     expect(isYuiLanguage("hljs language-yui")).toBe(true);
     expect(isYuiLanguage("language-uix")).toBe(false);
