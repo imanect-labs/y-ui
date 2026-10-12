@@ -24,49 +24,84 @@ npm: [`@imanect/yui`](https://www.npmjs.com/package/@imanect/yui)
 
 ## Figure kinds
 
-<table>
-<tr><th>Kind</th><th>You write</th><th>You get</th></tr>
-<tr>
-<td><code>bar</code></td>
-<td><pre>bar Revenue and profit by quarter
+### `bar`
+
+Bar chart. Negative values grow below the baseline; many rows or long labels turn it horizontal.
+
+<img src="docs/images/en-bar.png" width="640" alt="bar">
+
+````md
+```ui
+bar Revenue and profit by quarter
 unit: $M
 Quarter | Revenue | Profit
 Q1 | 120 | 30
 Q2 | 150 | -5
 Q3 | 135 | 12
-Q4 | 210 | 44</pre></td>
-<td><img src="docs/images/en-bar.png" width="400" alt="bar chart"></td>
-</tr>
-<tr>
-<td><code>line</code></td>
-<td><pre>line Weekly active users
+Q4 | 210 | 44
+```
+````
+
+### `line`
+
+Line chart. Two or more series get a legend.
+
+<img src="docs/images/en-line.png" width="640" alt="line">
+
+````md
+```ui
+line Weekly active users
 Week | Web | App
 W1 | 1200 | 800
 W2 | 1350 | 950
-…</pre></td>
-<td><img src="docs/images/en-line.png" width="400" alt="line chart"></td>
-</tr>
-<tr>
-<td><code>stat</code></td>
-<td><pre>stat This month
+W3 | 1280 | 1100
+W4 | 1500 | 1300
+W5 | 1620 | 1250
+W6 | 1580 | 1420
+```
+````
+
+### `stat`
+
+KPI cards. Values are shown as written; the third column is a note.
+
+<img src="docs/images/en-stat.png" width="640" alt="stat">
+
+````md
+```ui
+stat This month
 Revenue | $3.2M | +18% YoY
 New customers | 165
 Churn | 2.2% | 2.6% last month
-ARPU | $19.4K</pre></td>
-<td><img src="docs/images/en-stat.png" width="400" alt="KPI cards"></td>
-</tr>
-<tr>
-<td><code>flow</code></td>
-<td><pre>flow Expense approval
+ARPU | $19.4K
+```
+````
+
+### `flow`
+
+Flowchart. Branches become diamonds, labels sit where the edge leaves, and loops route around the side.
+
+<img src="docs/images/en-flow.png" width="640" alt="flow">
+
+````md
+```ui
+flow Expense approval
 Submit report -> Manager review
 Manager review -approve-> Finance check -> Payment
 Manager review -reject-> Revise
-Revise -> Submit report</pre></td>
-<td><img src="docs/images/en-flow.png" width="400" alt="flowchart"></td>
-</tr>
-<tr>
-<td><code>stack</code></td>
-<td><pre>stack System architecture
+Revise -> Submit report
+```
+````
+
+### `stack`
+
+Layered architecture diagram. Indented items go inside a layer; `|` puts boxes side by side.
+
+<img src="docs/images/en-stack.png" width="640" alt="stack">
+
+````md
+```ui
+stack System architecture
 - Clients: Web / Electron / external chat
 - Product API: tasks, conversations, users, auth
 - Agent runtime: Elixir / Erlang OTP
@@ -74,10 +109,11 @@ Revise -> Submit report</pre></td>
   - Session / journal
   - Scheduler / loop
   - Lean kernel
-- LLM: OpenAI / Anthropic | Tools: external APIs | Storage: DB / object store</pre></td>
-<td><img src="docs/images/en-stack.png" width="400" alt="architecture diagram"></td>
-</tr>
-</table>
+- LLM: OpenAI / Anthropic | Tools: external APIs | Storage: DB / object store
+note: Logical view based on public material.
+```
+````
+
 
 Bar charts with many rows turn horizontal, flowcharts mark branches as diamonds and route loops around the side, and every figure re-lays out to its width and follows light/dark mode. Full notation: [docs/spec.md](docs/spec.md) (Japanese).
 

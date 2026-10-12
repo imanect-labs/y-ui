@@ -24,49 +24,84 @@ npm: [`@imanect/yui`](https://www.npmjs.com/package/@imanect/yui)
 
 ## 図の種類
 
-<table>
-<tr><th>種類</th><th>書くもの</th><th>描かれるもの</th></tr>
-<tr>
-<td><code>bar</code></td>
-<td><pre>bar 四半期ごとの売上と利益
+### `bar`
+
+棒グラフ。負の値は基線の下に伸びる。行が多い・項目名が長いときは横向きになる。
+
+<img src="docs/images/ja-bar.png" width="640" alt="bar">
+
+````md
+```ui
+bar 四半期ごとの売上と利益
 unit: 百万円
 四半期 | 売上 | 利益
 Q1 | 120 | 30
 Q2 | 150 | -5
 Q3 | 135 | 12
-Q4 | 210 | 44</pre></td>
-<td><img src="docs/images/ja-bar.png" width="400" alt="棒グラフ"></td>
-</tr>
-<tr>
-<td><code>line</code></td>
-<td><pre>line 週次アクティブユーザー
+Q4 | 210 | 44
+```
+````
+
+### `line`
+
+折れ線グラフ。系列が 2 つ以上なら凡例が付く。
+
+<img src="docs/images/ja-line.png" width="640" alt="line">
+
+````md
+```ui
+line 週次アクティブユーザー
 週 | Web | アプリ
 第1週 | 1200 | 800
 第2週 | 1350 | 950
-…</pre></td>
-<td><img src="docs/images/ja-line.png" width="400" alt="折れ線グラフ"></td>
-</tr>
-<tr>
-<td><code>stat</code></td>
-<td><pre>stat 今月の営業実績
+第3週 | 1280 | 1100
+第4週 | 1500 | 1300
+第5週 | 1620 | 1250
+第6週 | 1580 | 1420
+```
+````
+
+### `stat`
+
+数値カード。値は書いたまま表示し、3 列目は補足。
+
+<img src="docs/images/ja-stat.png" width="640" alt="stat">
+
+````md
+```ui
+stat 今月の営業実績
 売上 | 3,200万円 | 前年比 +18%
 新規顧客数 | 165社
 解約率 | 2.2% | 前月 2.6%
-平均単価 | 19.4万円</pre></td>
-<td><img src="docs/images/ja-stat.png" width="400" alt="数値カード"></td>
-</tr>
-<tr>
-<td><code>flow</code></td>
-<td><pre>flow 経費精算
+平均単価 | 19.4万円
+```
+````
+
+### `flow`
+
+流れ図。分岐はひし形、ラベルは分かれた直後に置き、ループは脇を回す。
+
+<img src="docs/images/ja-flow.png" width="640" alt="flow">
+
+````md
+```ui
+flow 経費精算
 精算書提出 -> 上長承認
 上長承認 -承認-> 経理確認 -> 支払
 上長承認 -差戻し-> 修正
-修正 -> 精算書提出</pre></td>
-<td><img src="docs/images/ja-flow.png" width="400" alt="流れ図"></td>
-</tr>
-<tr>
-<td><code>stack</code></td>
-<td><pre>stack システム構成
+修正 -> 精算書提出
+```
+````
+
+### `stack`
+
+層構成図。字下げした項目は層の中に入り、`|` で横に並ぶ。
+
+<img src="docs/images/ja-stack.png" width="640" alt="stack">
+
+````md
+```ui
+stack システム構成
 - クライアント層: Web / Electron / 外部チャット
 - Product API: タスク・会話・ユーザー・認証
 - エージェント実行基盤: Elixir / Erlang OTP
@@ -74,10 +109,11 @@ Q4 | 210 | 44</pre></td>
   - Session / Journal
   - Scheduler / Loop
   - Lean Kernel
-- LLM: OpenAI / Anthropic | Tools: 外部API | Storage: DB / Object Store</pre></td>
-<td><img src="docs/images/ja-stack.png" width="400" alt="構成図"></td>
-</tr>
-</table>
+- LLM: OpenAI / Anthropic | Tools: 外部API | Storage: DB / Object Store
+note: 公開資料を基にした論理構成図。
+```
+````
+
 
 行の多い棒グラフは横向きに、流れ図の分岐はひし形に、ループは脇を回して描きます。どの図も幅に合わせて組み直し、ライト・ダークに追従します。記法の詳細は [docs/spec.md](docs/spec.md)。
 
