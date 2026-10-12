@@ -154,4 +154,4 @@ pnpm eval report eval/results/<run-id>
 
 - Gemini API は、HTTP 200 のままストリームの途中で `data: {"error": {"code": 500, …}}` を送ることがある。クライアントがこれを読み飛ばしていたため、思考の途中で切れた応答が「図を出さなかった」として記録されていた（531 件中 130 件。方式による偏りは無い）。
 - 直したこと: ストリーム中のエラーは HTTP エラーとして投げ、終わり方（finishReason）の無いまま切れたストリームも再送の対象にする（OpenAI 互換のクライアントも同様）。
-- 該当の 130 件は無効（`ok: false`、元の採点は `invalidated` に残す）にしてやり直した。直す前の記録は `results.before-truncation-fix.jsonl` に残す。
+- 該当の 130 件は無効（`ok: false`、元の採点は `invalidated` に残す）にしてやり直した。直す前の記録は `eval/runs/2026-10-12-gemma-api/results.before-truncation-fix.jsonl` に残す。
