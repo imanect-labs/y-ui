@@ -1,6 +1,6 @@
 name: Publish
 
-# v0.1.0 のようなタグを push すると、@imanect/yui を npm に公開する。
+# v0.1.0 のようなタグを push するか、Actions の画面から手動で起動すると、@imanect/yui を npm に公開する。
 # 認証は npm の Trusted Publishing（OIDC）。リポジトリに npm のトークンは置かない。
 # 事前に npmjs.com の @imanect/yui の設定で、Trusted Publisher として
 # このリポジトリ（imanect-labs/y-ui）とワークフロー（publish.yml）を登録しておくこと。
@@ -8,6 +8,8 @@ name: Publish
 on:
   push:
     tags: ["v*"]
+  # タグを push できない環境向けに、Actions の画面からも起動できる（その版が未公開のときだけ公開する）
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -28,10 +30,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
-      - name: タグと package.json の版が一致するか
+      - name: 版の確認（タグなら一致、手動ならその版が未公開であること）
         working-directory: packages/core
         run: |
           version="$(node -p 'require("./package.json").version')"
-          test "v${version}" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != v${version}"; exit 1; }
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            test "v${version}" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != v${version}"; exit 1; }
+          else
+            if npm view "@imanect/yui@${version}" version >/dev/null 2>&1; then echo "@imanect/yui@${version} は公開済み"; exit 1; fi
+          fi
       - run: npm publish
         working-directory: packages/core
