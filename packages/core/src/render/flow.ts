@@ -65,7 +65,9 @@ export function layoutFlow(ctx: Ctx, f: FlowFigure, top: number): number {
   const plan = wantLR && lr.width > ctx.width * 1.05 ? layoutOnce(ctx, f, "TB") : lr;
   const dx = Math.max(ctx.pad, (ctx.width - plan.width) / 2);
   for (const it of plan.items) shift(it, dx, top);
+  for (const t of plan.targets) ((t.hit.x += dx), (t.hit.y += top));
   ctx.items.push(...plan.items);
+  ctx.targets.push(...plan.targets);
   ctx.width = Math.max(ctx.width, plan.width + ctx.pad * 2);
   return top + plan.height + 8;
 }
@@ -77,8 +79,9 @@ function shift(it: Ctx["items"][number], dx: number, dy: number): void {
   else it.d = it.d.replace(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g, (_, x: string, y: string) => `${+(+x + dx).toFixed(2)},${+(+y + dy).toFixed(2)}`);
 }
 
-function layoutOnce(ctx: Ctx, f: FlowFigure, dir: "TB" | "LR"): { items: Ctx["items"]; width: number; height: number } {
+function layoutOnce(ctx: Ctx, f: FlowFigure, dir: "TB" | "LR"): { items: Ctx["items"]; targets: Ctx["targets"]; width: number; height: number } {
   const items: Ctx["items"] = [];
+  const targets: Ctx["targets"] = [];
   const maxText = dir === "TB" ? Math.min(168, (ctx.width - ctx.pad * 2) / 2.6) : 120;
 
   // 出る辺の数で分岐を判定する
@@ -219,7 +222,7 @@ function layoutOnce(ctx: Ctx, f: FlowFigure, dir: "TB" | "LR"): { items: Ctx["it
   const xy = (c: number, r: number): Pt => (dir === "TB" ? [c, r] : [r, c]);
 
   // 6. 辺
-  const labels: { at: Pt; text: string }[] = [];
+  const labels: { at: Pt; text: string; group: string }[] = [];
   for (const { edge, ids } of chains) {
     const pts: Pt[] = [];
     for (let k = 0; k + 1 < ids.length; k++) {
@@ -235,10 +238,10 @@ function layoutOnce(ctx: Ctx, f: FlowFigure, dir: "TB" | "LR"): { items: Ctx["it
         const straight = a.c === b.c;
         // 縦向き: 曲がった直後の縦線の上。横向き: 曲がった後の横線の少し上（ノードに重ならないように）
         const at = dir === "TB" ? xy(b.c, straight ? (r1 + rm) / 2 : rm + 12) : xy(b.c - (straight ? 0 : 11), straight ? (r1 + rm) / 2 : (rm + r2) / 2);
-        labels.push({ at, text: edge.label });
+        labels.push({ at, text: edge.label, group: `e${edge.i}` });
       }
     }
-    items.push({ t: "path", d: polyline(pts), stroke: "muted", strokeWidth: 1.5, arrow: true });
+    items.push({ t: "path", d: polyline(pts), stroke: "muted", strokeWidth: 1.5, arrow: true, group: `e${edge.i}` });
   }
   // ループ: 交差方向の外側を回す
   let lane = 0;
@@ -249,8 +252,8 @@ function layoutOnce(ctx: Ctx, f: FlowFigure, dir: "TB" | "LR"): { items: Ctx["it
     const side = maxC + 16 + lane * 12;
     lane++;
     const pts: Pt[] = [xy(a.c + across(a) / 2, a.r), xy(side, a.r), xy(side, b.r), xy(b.c + across(b) / 2 + 1, b.r)];
-    items.push({ t: "path", d: polyline(pts), stroke: "muted", strokeWidth: 1.5, arrow: true });
-    if (e.label) labels.push({ at: xy(side, (a.r + b.r) / 2), text: e.label });
+    items.push({ t: "path", d: polyline(pts), stroke: "muted", strokeWidth: 1.5, arrow: true, group: `e${i}` });
+    if (e.label) labels.push({ at: xy(side, (a.r + b.r) / 2), text: e.label, group: `e${i}` });
   });
   if (lane > 0) maxC += 16 + lane * 12;
 
@@ -261,25 +264,35 @@ function layoutOnce(ctx: Ctx, f: FlowFigure, dir: "TB" | "LR"): { items: Ctx["it
     const x = cx - b.w / 2;
     const y = cy - b.h / 2;
     const hint = b.lines.join("");
+    const group = `n:${b.id}`;
     if (b.shape === "decision") {
-      items.push({ t: "path", d: `M${cx},${y}L${x + b.w},${cy}L${cx},${y + b.h}L${x},${cy}Z`, fill: "accentWash", stroke: "accentLine", strokeWidth: 1, hint });
+      items.push({ t: "path", d: `M${cx},${y}L${x + b.w},${cy}L${cx},${y + b.h}L${x},${cy}Z`, fill: "accentWash", stroke: "accentLine", strokeWidth: 1, hint, group });
     } else {
-      items.push({ t: "rect", x: x + 0.5, y: y + 0.5, w: b.w - 1, h: b.h - 1, r: b.shape === "terminal" ? b.h / 2 : 8, fill: "surface2", stroke: "border", strokeWidth: 1, hint });
+      items.push({ t: "rect", x: x + 0.5, y: y + 0.5, w: b.w - 1, h: b.h - 1, r: b.shape === "terminal" ? b.h / 2 : 8, fill: "surface2", stroke: "border", strokeWidth: 1, hint, group });
     }
     const y0 = cy - ((b.lines.length - 1) * LINE_H) / 2 + NODE_SIZE * 0.35;
-    b.lines.forEach((l, k) => items.push({ t: "text", x: cx, y: y0 + k * LINE_H, text: l, size: NODE_SIZE, fill: "ink", anchor: "middle" }));
+    b.lines.forEach((l, k) => items.push({ t: "text", x: cx, y: y0 + k * LINE_H, text: l, size: NODE_SIZE, fill: "ink", anchor: "middle", group }));
+    // ホバー: この箱と、つながる線・前後の箱だけを残して薄くする（流れを追いやすくする）
+    const keep = new Set([group]);
+    f.edges.forEach((e, i) => {
+      if (e.from !== b.id && e.to !== b.id) return;
+      keep.add(`e${i}`);
+      keep.add(`n:${e.from}`);
+      keep.add(`n:${e.to}`);
+    });
+    targets.push({ hit: { x, y, w: b.w, h: b.h }, keep: [...keep] });
   }
 
   // 辺のラベル（線の上に背景色の札を敷く）
-  for (const { at, text } of labels) {
+  for (const { at, text, group } of labels) {
     const w = ctx.measure(text, SMALL_SIZE) + 10;
-    items.push({ t: "rect", x: at[0] - w / 2, y: at[1] - 9, w, h: 18, r: 4, fill: "surface" });
-    items.push({ t: "text", x: at[0], y: at[1] + 4, text, size: SMALL_SIZE, fill: "ink2", anchor: "middle" });
+    items.push({ t: "rect", x: at[0] - w / 2, y: at[1] - 9, w, h: 18, r: 4, fill: "surface", group });
+    items.push({ t: "text", x: at[0], y: at[1] + 4, text, size: SMALL_SIZE, fill: "ink2", anchor: "middle", group });
   }
 
   const extentR = rPos - RANK_GAP[dir];
   const [width, height] = dir === "TB" ? [maxC, extentR] : [extentR, maxC];
-  return { items, width, height };
+  return { items, targets, width, height };
 }
 
 function makeBox(ctx: Ctx, n: FlowNode, maxText: number, branch: boolean): Box {

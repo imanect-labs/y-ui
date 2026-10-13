@@ -100,6 +100,15 @@ describe("React", () => {
     expect(svg).not.toContain("2月");
   });
 
+  it("ホバーの受け口: 図の上に重ね、キーボードでも辿れる（書き出しの SVG には出さない）", () => {
+    const out = renderToStaticMarkup(createElement(YuiFigure, { figure: fig("bar 売上\n月 | 金額\n1月 | 120\n2月 | 150\n"), width: 480 }));
+    expect(out).toMatch(/<div class="yui[^"]*" style="position:relative" tabindex="0" role="group"/);
+    expect(out.match(/fill="transparent"/g)?.length).toBe(2);
+    const off = renderToStaticMarkup(createElement(YuiFigure, { figure: fig("bar 売上\n月 | 金額\n1月 | 120\n"), width: 480, interactive: false }));
+    expect(off).not.toContain("tabindex");
+    expect(renderSVG(fig("bar 売上\n月 | 金額\n1月 | 120\n"))).not.toContain("transparent");
+  });
+
   it("図にできないソースはそのまま表示する", () => {
     expect(renderToStaticMarkup(createElement(YuiBlock, { source: "pie x\nA | 1\n" }))).toContain("<pre");
   });
@@ -109,5 +118,53 @@ describe("React", () => {
     expect(isYuiLanguage("language-ui")).toBe(true);
     expect(isYuiLanguage("hljs language-yui")).toBe(true);
     expect(isYuiLanguage("language-uix")).toBe(false);
+  });
+});
+
+describe("ホバーの対象", () => {
+  it("棒: 行ごとに全系列の値と単位を出し、その行の棒だけを残す", () => {
+    const sc = layout(fig("bar 売上\nunit: 百万円\n四半期 | 売上 | 利益\nQ1 | 120 | 30\nQ2 | 150 | -5\n"), { width: 640 });
+    expect(sc.targets).toHaveLength(2);
+    const t = sc.targets[1]!;
+    expect(t.tip?.title).toBe("Q2");
+    expect(t.tip?.rows.map((r) => [r.label, r.value])).toEqual([["売上", "150"], ["利益", "-5"]]);
+    expect(t.tip?.footer).toBe("単位: 百万円");
+    expect(t.keep).toEqual(["r1"]);
+    const bars = sc.items.filter((it) => it.group === "r1");
+    expect(bars.length).toBeGreaterThanOrEqual(2);
+    // 指す位置は高いほうの棒の上端（当たり判定の中）
+    expect(t.tip!.y).toBeGreaterThanOrEqual(t.hit.y);
+    expect(t.tip!.y).toBeLessThan(t.hit.y + t.hit.h);
+  });
+
+  it("折れ線: 縦線と全系列の点を出し、何も薄くしない", () => {
+    const sc = layout(fig("line 利用者\n週 | Web | App\nW1 | 10 | 5\nW2 | 12 | 8\n"), { width: 640 });
+    const t = sc.targets[0]!;
+    expect(t.keep).toEqual([]);
+    expect(t.guide).toBeDefined();
+    expect(t.points).toHaveLength(2);
+    expect(t.tip?.rows).toHaveLength(2);
+  });
+
+  it("横向きの棒も行ごとに出す", () => {
+    const rows = Array.from({ length: 16 }, (_, i) => `項目${i} | ${i + 1}`).join("\n");
+    const sc = layout(fig(`bar 多い\n項目 | 値\n${rows}\n`), { width: 480 });
+    expect(sc.targets).toHaveLength(16);
+    expect(sc.targets[3]!.tip?.rows[0]?.value).toBe("4");
+  });
+
+  it("流れ図: 箱ごとに、つながる線と前後の箱を残す（ツールチップは出さない）", () => {
+    const sc = layout(fig("flow 承認\n申請 -> 承認\n承認 -> 完了\n"), { width: 480 });
+    expect(sc.targets).toHaveLength(3);
+    // ノードの id は登場順（n1 = 申請, n2 = 承認, n3 = 完了）
+    const mid = sc.targets.find((t) => t.keep[0] === "n:n2")!;
+    expect(mid.tip).toBeUndefined();
+    expect([...mid.keep].sort()).toEqual(["e0", "e1", "n:n1", "n:n2", "n:n3"]);
+    expect(sc.targets.find((t) => t.keep[0] === "n:n1")!.keep).not.toContain("n:n3");
+  });
+
+  it("数値カード・構成図は対象を持たない", () => {
+    expect(layout(fig("stat x\n売上 | 1\n"), { width: 480 }).targets).toEqual([]);
+    expect(layout(fig("stack x\n- A\n- B\n"), { width: 480 }).targets).toEqual([]);
   });
 });

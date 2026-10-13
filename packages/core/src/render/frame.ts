@@ -2,7 +2,7 @@
 
 import type { Figure } from "../ir.js";
 import { estimate, wrap, type Measure } from "./measure.js";
-import type { Item } from "./scene.js";
+import type { Item, Target } from "./scene.js";
 import { SERIES } from "./theme.js";
 
 export interface LayoutOptions {
@@ -32,13 +32,14 @@ export interface Ctx {
   labels: Labels;
   measure: Measure;
   items: Item[];
+  targets: Target[];
 }
 
 export function makeCtx(opts: LayoutOptions): Ctx {
   const width = Math.max(240, Math.round(opts.width ?? 640));
   const locale = opts.locale ?? "ja-JP";
   const labels = opts.labels ?? (locale.toLowerCase().startsWith("ja") ? LABELS_JA : LABELS_EN);
-  return { width, pad: width < 400 ? 12 : 16, locale, labels, measure: opts.measure ?? estimate, items: [] };
+  return { width, pad: width < 400 ? 12 : 16, locale, labels, measure: opts.measure ?? estimate, items: [], targets: [] };
 }
 
 export const TITLE_SIZE = 14;

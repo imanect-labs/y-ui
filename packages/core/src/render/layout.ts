@@ -30,5 +30,5 @@ export function layout(f: Figure, opts: LayoutOptions = {}): Scene {
       break;
   }
   y = drawNote(ctx, f, y);
-  return { width: ctx.width, height: Math.ceil(y + ctx.pad - 6), items: ctx.items, title: f.title, desc: toText(f) };
+  return { width: ctx.width, height: Math.ceil(y + ctx.pad - 6), items: ctx.items, title: f.title, desc: toText(f), targets: ctx.targets };
 }

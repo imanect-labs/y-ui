@@ -9,6 +9,33 @@ interface Common {
   /** マウスを載せたときの説明（SVG の <title>）。 */
   hint?: string;
   opacity?: number;
+  /** 強調のまとまり。ホバー中は、対象の keep に無いまとまりの要素を薄くする（まとまりの無い要素はそのまま）。 */
+  group?: string;
+}
+
+/** ツールチップの 1 行（系列名と値）。 */
+export interface TipRow {
+  label: string;
+  value: string;
+  /** 系列の色（行頭の印）。 */
+  token?: Token;
+}
+
+/**
+ * ホバー・フォーカスの対象（画面用。書き出しの SVG には出さない）。
+ * 当たり判定・強調するまとまり・ツールチップの中身を、レイアウトと同じ座標で持つ。
+ */
+export interface Target {
+  /** 当たり判定。 */
+  hit: { x: number; y: number; w: number; h: number };
+  /** 強調するまとまり（これ以外のまとまりを薄くする）。空なら何も薄くしない。 */
+  keep: string[];
+  /** ツールチップ。x, y は指す位置（マークの上端の中央）。無ければ強調だけ。 */
+  tip?: { title: string; rows: TipRow[]; footer?: string; x: number; y: number };
+  /** 縦の補助線（折れ線）。 */
+  guide?: { x: number; y1: number; y2: number };
+  /** 大きくして強調する点（折れ線）。 */
+  points?: { x: number; y: number; token: Token }[];
 }
 
 export type Item =
@@ -35,6 +62,8 @@ export interface Scene {
   /** 読み上げ用の見出しと説明（テキスト化した図）。 */
   title: string;
   desc: string;
+  /** ホバー・フォーカスの対象（画面用）。 */
+  targets: Target[];
 }
 
 /** 上の角だけ丸い棒（下向きなら下の角）。 */

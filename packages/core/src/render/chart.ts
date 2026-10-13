@@ -8,7 +8,7 @@
 import type { ChartFigure } from "../ir.js";
 import { BODY_SIZE, type Ctx, drawLegend, formatTick, formatValue, niceTicks, SMALL_SIZE } from "./frame.js";
 import { fit } from "./measure.js";
-import { barPath } from "./scene.js";
+import { barPath, type TipRow } from "./scene.js";
 import { SERIES } from "./theme.js";
 
 const PLOT_HEIGHT = 220;
@@ -43,6 +43,25 @@ function extent(f: ChartFigure): [number, number] {
     }
   }
   return [lo, hi];
+}
+
+/** ホバーで出す、行のすべての系列の値。 */
+function tipRows(ctx: Ctx, f: ChartFigure, values: (number | null)[]): TipRow[] {
+  const names = seriesNames(f);
+  const rows: TipRow[] = [];
+  values.forEach((v, s) => {
+    if (v !== null && v !== undefined) rows.push({ label: names[s] ?? "", value: formatValue(v, ctx.locale), token: SERIES[s % 8]! });
+  });
+  return rows;
+}
+
+/** 行の値が描く範囲の端（積み上げは正と負の合計、それ以外は値そのもの）。 */
+function rowExtent(f: ChartFigure, values: (number | null)[]): [number, number] {
+  const vs = values.filter((v): v is number => v !== null && v !== undefined);
+  if (f.stacked && f.kind === "bar") {
+    return [vs.filter((v) => v < 0).reduce((a, v) => a + v, 0), vs.filter((v) => v > 0).reduce((a, v) => a + v, 0)];
+  }
+  return [Math.min(0, ...vs), Math.max(0, ...vs)];
 }
 
 export function layoutChart(ctx: Ctx, f: ChartFigure, y0: number): number {
@@ -94,6 +113,23 @@ function vertical(ctx: Ctx, f: ChartFigure, top: number): number {
 
   if (f.kind === "bar") verticalBars(ctx, f, { left, band, yOf, S });
   else lines(ctx, f, { left, band, yOf, S });
+
+  // ホバー: 行（横軸の 1 区画）ごとに、全系列の値を出す。棒はその行以外を薄くし、折れ線は縦線と点で示す
+  const footer = f.unit ? ctx.labels.unit(f.unit) : undefined;
+  f.rows.forEach((r, i) => {
+    const rows = tipRows(ctx, f, r.values);
+    if (rows.length === 0) return;
+    const x = left + band * (i + 0.5);
+    const [lo2, hi2] = rowExtent(f, r.values);
+    const line = f.kind === "line";
+    const vs = r.values.map((v, s) => [v, s] as const).filter((p): p is readonly [number, number] => p[0] !== null && p[0] !== undefined);
+    ctx.targets.push({
+      hit: { x: left + band * i, y: plotTop, w: band, h: plotBottom - plotTop },
+      keep: line ? [] : [`r${i}`],
+      tip: { title: r.label, rows, footer, x, y: line ? Math.min(...vs.map(([v]) => yOf(v))) - 6 : yOf(hi2 > 0 ? hi2 : lo2 < 0 ? 0 : hi2) },
+      ...(line ? { guide: { x, y1: plotTop, y2: plotBottom }, points: vs.map(([v, s]) => ({ x, y: yOf(v), token: SERIES[s % 8]! })) } : {}),
+    });
+  });
   return plotBottom + 24;
 }
 
@@ -131,7 +167,7 @@ function verticalBars(ctx: Ctx, f: ChartFigure, g: Geo): void {
         // 積み重ねの切れ目に 2px の背景色の隙間
         const h = Math.max(0.5, y2 - y1 - (isEnd ? 0 : GAP));
         const yy = v > 0 ? y2 - h : y1;
-        ctx.items.push({ t: "path", d: isEnd ? barPath(gx, yy, bw, h, 4, v > 0 ? "top" : "bottom") : `M${gx},${yy}h${bw}v${h}h${-bw}Z`, fill: SERIES[s % 8]!, hint: hint(f, r.label, s, v, ctx) });
+        ctx.items.push({ t: "path", d: isEnd ? barPath(gx, yy, bw, h, 4, v > 0 ? "top" : "bottom") : `M${gx},${yy}h${bw}v${h}h${-bw}Z`, fill: SERIES[s % 8]!, hint: hint(f, r.label, s, v, ctx), group: `r${i}` });
       });
       return;
     }
@@ -140,11 +176,11 @@ function verticalBars(ctx: Ctx, f: ChartFigure, g: Geo): void {
       const x = gx + s * (bw + GAP);
       const yv = yOf(v);
       const h = Math.max(1, Math.abs(zero - yv));
-      ctx.items.push({ t: "path", d: barPath(x, Math.min(zero, yv), bw, h, 4, v >= 0 ? "top" : "bottom"), fill: SERIES[s % 8]!, hint: hint(f, r.label, s, v, ctx) });
+      ctx.items.push({ t: "path", d: barPath(x, Math.min(zero, yv), bw, h, 4, v >= 0 ? "top" : "bottom"), fill: SERIES[s % 8]!, hint: hint(f, r.label, s, v, ctx), group: `r${i}` });
       if (showValues) {
         const text = formatValue(v, ctx.locale);
         if (ctx.measure(text, SMALL_SIZE) <= band - 2) {
-          ctx.items.push({ t: "text", x: x + bw / 2, y: v >= 0 ? yv - 5 : yv + 13, text, size: SMALL_SIZE, fill: "ink2", anchor: "middle", tabular: true });
+          ctx.items.push({ t: "text", x: x + bw / 2, y: v >= 0 ? yv - 5 : yv + 13, text, size: SMALL_SIZE, fill: "ink2", anchor: "middle", tabular: true, group: `r${i}` });
         }
       }
     });
@@ -227,7 +263,7 @@ function horizontalBars(ctx: Ctx, f: ChartFigure, top: number): number {
         else neg = to;
         const x1 = Math.min(xOf(from), xOf(to));
         const w = Math.max(0.5, Math.abs(xOf(to) - xOf(from)) - GAP);
-        ctx.items.push({ t: "rect", x: v > 0 ? x1 : x1 + GAP, y: cy - thick / 2, w, h: thick, fill: SERIES[s % 8]!, hint: hint(f, r.label, s, v, ctx) });
+        ctx.items.push({ t: "rect", x: v > 0 ? x1 : x1 + GAP, y: cy - thick / 2, w, h: thick, fill: SERIES[s % 8]!, hint: hint(f, r.label, s, v, ctx), group: `r${i}` });
       });
       return;
     }
@@ -237,10 +273,23 @@ function horizontalBars(ctx: Ctx, f: ChartFigure, top: number): number {
       const yy = cy - groupH / 2 + s * (thick + GAP);
       const xv = xOf(v);
       const w = Math.max(1, Math.abs(xv - zero));
-      ctx.items.push({ t: "path", d: barPath(Math.min(zero, xv), yy, w, thick, 4, v >= 0 ? "right" : "left"), fill: SERIES[s % 8]!, hint: hint(f, r.label, s, v, ctx) });
+      ctx.items.push({ t: "path", d: barPath(Math.min(zero, xv), yy, w, thick, 4, v >= 0 ? "right" : "left"), fill: SERIES[s % 8]!, hint: hint(f, r.label, s, v, ctx), group: `r${i}` });
       if (S === 1) {
-        ctx.items.push({ t: "text", x: v >= 0 ? xv + 6 : xv - 6, y: cy + 4, text: formatValue(v, ctx.locale), size: SMALL_SIZE, fill: "ink2", anchor: v >= 0 ? "start" : "end", tabular: true });
+        ctx.items.push({ t: "text", x: v >= 0 ? xv + 6 : xv - 6, y: cy + 4, text: formatValue(v, ctx.locale), size: SMALL_SIZE, fill: "ink2", anchor: v >= 0 ? "start" : "end", tabular: true, group: `r${i}` });
       }
+    });
+  });
+  // ホバー: 行ごとに全系列の値を出し、その行以外を薄くする
+  const footer = f.unit ? ctx.labels.unit(f.unit) : undefined;
+  f.rows.forEach((r, i) => {
+    const rows = tipRows(ctx, f, r.values);
+    if (rows.length === 0) return;
+    const [lo2, hi2] = rowExtent(f, r.values);
+    const end = hi2 > 0 ? xOf(hi2) : xOf(lo2);
+    ctx.targets.push({
+      hit: { x: ctx.pad, y: plotTop + rowH * i, w: ctx.width - ctx.pad * 2, h: rowH },
+      keep: [`r${i}`],
+      tip: { title: r.label, rows, footer, x: (Math.min(zero, end) + Math.max(zero, end)) / 2, y: plotTop + rowH * i + 2 },
     });
   });
   return plotBottom + 24;

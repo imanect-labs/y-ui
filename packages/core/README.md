@@ -47,6 +47,8 @@ import { YuiBlock, isYuiLanguage } from "@imanect/yui/react";
 
 `YuiBlock` re-lays out to its container width, follows the page's light/dark theme, and while `streaming` draws only completed lines — a figure grows and never shows a half-written value.
 
+Charts are interactive on screen: hovering (or tapping) a category shows every series' value in a tooltip and dims the other categories; line charts add a guide line. Flowcharts highlight the hovered box with its edges and neighbors. The figure is one tab stop — arrow keys step through the values, Escape hides them, and a live region reads them out. Pass `interactive={false}` to turn this off. Exported SVG is never interactive.
+
 ## SVG (browser or server)
 
 ```ts
