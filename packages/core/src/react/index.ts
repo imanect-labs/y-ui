@@ -119,6 +119,9 @@ export function SceneSvg(props: { scene: Scene; theme?: ThemeMode; fluid?: boole
   const fluid = props.fluid ?? mode === "auto";
   const interactive = (props.interactive ?? false) && scene.targets.length > 0;
   const [active, setActive] = useState<number | null>(null);
+  // 直前に押したポインタの種類。タッチ・ペンはタップ（click）が確定してから出す
+  // （押した瞬間に出すと、スクロールしようと指を置くたびに値が出てしまう）。
+  const pointer = useRef<string>("mouse");
   const target = active === null ? null : (scene.targets[active] ?? null);
   const keep = target && target.keep.length ? new Set(target.keep) : null;
 
@@ -161,7 +164,10 @@ export function SceneSvg(props: { scene: Scene; theme?: ThemeMode; fluid?: boole
               style: { cursor: t.tip ? "default" : "pointer" },
               onPointerEnter: (e: PointerEvent) => e.pointerType === "mouse" && setActive(i),
               onPointerLeave: (e: PointerEvent) => e.pointerType === "mouse" && setActive((cur) => (cur === i ? null : cur)),
-              onPointerDown: (e: PointerEvent) => e.pointerType !== "mouse" && setActive((cur) => (cur === i ? null : i)),
+              onPointerDown: (e: PointerEvent) => {
+                pointer.current = e.pointerType;
+              },
+              onClick: () => pointer.current !== "mouse" && setActive((cur) => (cur === i ? null : i)),
             }),
           ),
         )
