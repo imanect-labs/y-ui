@@ -2,7 +2,12 @@
 
 Yui の図を含む Markdown を、Yui に対応していない場所へ持ち出すときの扱い。
 
-実装状況: テキスト化（`toText` / `transformMarkdown`）と正規形のソース（`toSource`）は `packages/core` に実装済み。画像の出力（SVG / PNG）とクリップボード処理は未実装（レンダラーと一緒に作る）。
+実装状況（0.5.0）:
+- テキスト化（`toText` / `transformMarkdown`）と正規形のソース（`toSource`）は `@imanect/yui` にある。
+- 画像の出力とクリップボードは `@imanect/yui/export` にある。
+  - `exportSVG`（色を焼き込んだ SVG）、`renderPNG`（Canvas で描く。ブラウザのみ）、`copyFigure`（§2 の 3 形式に `image/png` を加えて一度に書く）、`downloadFigure`（SVG / PNG）。
+  - 貼り付け用の HTML（`clipboardHTML`）は、画像・見出し・データの表に加え、`data-yui-source` にソースを持つ。
+- §3 の zip・docx・PDF の書き出しは未実装。ホスト（Shiki）側で、文書全体の書き出しと一緒に作る。
 
 ## 1. 方針
 

@@ -140,6 +140,16 @@ renderSVG(figure, { theme: "light", width: 720 }); // 書き出し用: 色と寸
 toText(figure);                                    // Yui 非対応の場所向けの表・箇条書き
 ```
 
+```ts
+// 書き出し（画像としてコピー・SVG / PNG で保存。ブラウザ）
+import { copyFigure, downloadFigure } from "@imanect/yui/export";
+
+button.onclick = () => copyFigure(figure);         // PNG・HTML（画像とデータの表）・テキスト・Yui のソースを一度に
+downloadFigure(figure, "png", { scale: 2 });       // "svg" も可。色は焼き込み（既定は theme: "light"）
+```
+
+`copyFigure` は複数の形式をまとめてクリップボードに入れます。Word・Google ドキュメント・Gmail・Notion には画像として、Slack やテキストエディタには Markdown の表として、Yui 対応のアプリには編集できるソースとして貼れます。クリック操作の中で呼んでください（Safari は操作の中でしか書き込めません）。
+
 描画は 1 本のレイアウトから SVG と React の両方を作るので、画面と書き出しの見た目がずれません。画面では、グラフにカーソルを載せる（または矢印キーで動かす）と値が出てその項目が強調され、流れ図は載せた箱とつながりが強調されます。既定の見た目は控えめで（枠線のカード・破線の目盛り・彩度を抑えた四季の色）、系列の色は色覚多様性のシミュレーションで明暗それぞれ検証しています。ダークモードは `<html class="dark">` か `data-theme` に、無ければ OS の設定に従います。`--yui-s1`〜`--yui-s8`・`--yui-ink`・`--yui-font` などの CSS 変数で差し替えられます。
 
 ## 小さなモデルで書けるか

@@ -140,6 +140,16 @@ renderSVG(figure, { theme: "light", width: 720 }); // export: colors and size ba
 toText(figure);                                    // plain-Markdown fallback (tables / lists)
 ```
 
+```ts
+// Export — copy as an image, or save as SVG / PNG (browser)
+import { copyFigure, downloadFigure } from "@imanect/yui/export";
+
+button.onclick = () => copyFigure(figure);         // PNG + HTML (image and data table) + text + Yui source
+downloadFigure(figure, "png", { scale: 2 });       // or "svg"; colors baked in (theme: "light" by default)
+```
+
+`copyFigure` puts several formats on the clipboard at once, so Word, Google Docs, Gmail and Notion get an image, Slack and plain editors get a Markdown table, and Yui-aware apps get the editable source back. Call it inside a click handler (Safari only allows clipboard writes there).
+
 One layout drives both SVG and React output, so exports look exactly like the screen. On screen, charts show values on hover (or with arrow keys) and highlight the category; flowcharts highlight the hovered box and its connections. The default look is quiet — outlined cards, dashed grid lines, muted seasonal hues — and the palette is validated for color-vision deficiencies in both light and dark. Dark mode follows `<html class="dark">` or `data-theme`, then the OS. Override anything with CSS variables (`--yui-s1` … `--yui-s8`, `--yui-ink`, `--yui-font`, …).
 
 ## Does it work with small models?
