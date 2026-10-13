@@ -22,8 +22,8 @@ export interface ChatRequest {
 }
 
 export interface Endpoint {
-  /** API の形式。既定は OpenAI 互換。 */
-  api?: "openai" | "gemini";
+  /** API の形式。既定は OpenAI 互換（Chat Completions）。 */
+  api?: "openai" | "gemini" | "responses";
   baseUrl: string;
   apiKey?: string;
   model: string;
@@ -34,6 +34,10 @@ export interface Endpoint {
   timeoutMs: number;
   /** 1 分あたりのリクエスト数の上限（無料枠のレート制限に合わせる）。 */
   rpm?: number;
+  /** 追加で送るヘッダ（名乗りを求めるプロバイダの User-Agent など）。 */
+  headers?: Record<string, string>;
+  /** 呼び出しごとの会話 ID を載せるヘッダ名（OpenCode Go の `x-opencode-session` など）。 */
+  sessionHeader?: string;
 }
 
 export interface ChatResult {

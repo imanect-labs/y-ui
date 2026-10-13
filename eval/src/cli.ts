@@ -47,7 +47,7 @@ const str = (v: string | true | undefined, d: string) => (typeof v === "string" 
 const list = (v: string | true | undefined, d: string) => str(v, d).split(",").map((s) => s.trim()).filter(Boolean);
 
 function shikiFrom(opts: Record<string, string | true>, arms: readonly ArmId[]): ShikiTool | null {
-  if (!arms.includes("A") && !arms.includes("A2")) return null;
+  if (!arms.includes("A") && !arms.includes("A2") && !arms.includes("F")) return null;
   const root = str(opts["shiki-root"], process.env.SHIKI_ROOT ?? resolve(ROOT, "../shiki-platform"));
   return loadShikiTool(root);
 }
@@ -69,7 +69,7 @@ async function main(): Promise<void> {
       console.log(`Shiki commit: ${shiki?.commit}`);
       console.log("| 方式 | system の文字数 | ツール定義の文字数 |\n|---|---:|---:|");
       for (const arm of ARMS) {
-        const sys = buildMessages(arm, sample)[0]!.content!.length;
+        const sys = buildMessages(arm, sample, undefined, shiki)[0]!.content!.length;
         const tool = arm === "A" || arm === "A2" ? JSON.stringify(shiki!.tool).length : 0;
         console.log(`| ${arm} | ${sys} | ${tool} |`);
       }

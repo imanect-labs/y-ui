@@ -1,7 +1,7 @@
 /** 方式ごとのプロンプトの組み立て。 */
 
 import { execFileSync } from "node:child_process";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ChatMessage, ToolDef } from "./client.js";
@@ -11,7 +11,7 @@ import type { EvalTask } from "./tasks/types.js";
 const PROMPTS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../prompts");
 const read = (name: string) => readFileSync(join(PROMPTS_DIR, name), "utf8").trim();
 
-export const ARMS = ["A", "A2", "B", "C", "D", "E"] as const;
+export const ARMS = ["A", "A2", "B", "C", "D", "E", "F"] as const;
 export type ArmId = (typeof ARMS)[number];
 
 export const ARM_LABELS: Record<ArmId, string> = {
@@ -21,6 +21,7 @@ export const ARM_LABELS: Record<ArmId, string> = {
   C: "Yui 本文中（完全版の説明）",
   D: "短い JSON を本文中のフェンスに",
   E: "Mermaid（flow / stack のみ）",
+  F: "Yui 本文中（Shiki の yui_guide.md）",
 };
 
 /** その方式で評価する課題か。 */
@@ -65,6 +66,8 @@ export interface ShikiTool {
   tool: ToolDef;
   /** 読み込んだ Shiki のコミット。 */
   commit: string;
+  /** Shiki がチャットの system に足す Yui の説明（`crates/chat/src/worker/yui_guide.md`）。方式 F で使う。 */
+  yuiGuide?: string;
 }
 
 export function loadShikiTool(shikiRoot: string): ShikiTool {
@@ -79,8 +82,11 @@ export function loadShikiTool(shikiRoot: string): ShikiTool {
   } catch {
     // git が無い環境でも評価は続ける
   }
+  const guidePath = join(shikiRoot, "crates/chat/src/worker/yui_guide.md");
+  const yuiGuide = existsSync(guidePath) ? readFileSync(guidePath, "utf8").trim() : undefined;
   return {
     commit,
+    ...(yuiGuide ? { yuiGuide } : {}),
     tool: {
       type: "function",
       function: {
@@ -143,7 +149,7 @@ export function userMessage(task: EvalTask, pad?: Padding): string {
   return `# 参考資料\n\n${refs}\n\n# 質問\n${task.question}`;
 }
 
-export function systemPrompt(arm: ArmId, task: EvalTask): string {
+export function systemPrompt(arm: ArmId, task: EvalTask, shiki?: ShikiTool | null): string {
   const base = read("base.md");
   switch (arm) {
     case "A":
@@ -157,13 +163,17 @@ export function systemPrompt(arm: ArmId, task: EvalTask): string {
       return `${base}\n\n${read("jsonui.md")}`;
     case "E":
       return `${base}\n\n${read("mermaid.md")}`;
+    case "F":
+      // Shiki が実際に使う説明をそのまま読む（説明を直した効果を、出荷する文面で測る）。
+      if (!shiki?.yuiGuide) throw new Error("方式 F には Shiki のソース（--shiki-root）の yui_guide.md が必要です");
+      return `${base}\n\n${shiki.yuiGuide}`;
   }
   void task;
 }
 
-export function buildMessages(arm: ArmId, task: EvalTask, pad?: Padding): ChatMessage[] {
+export function buildMessages(arm: ArmId, task: EvalTask, pad?: Padding, shiki?: ShikiTool | null): ChatMessage[] {
   return [
-    { role: "system", content: systemPrompt(arm, task) },
+    { role: "system", content: systemPrompt(arm, task, shiki) },
     { role: "user", content: userMessage(task, pad) },
   ];
 }

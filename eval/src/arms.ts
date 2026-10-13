@@ -3,6 +3,7 @@
 import { isEmpty, parseMarkdown } from "@imanect/yui";
 import { chat, type ChatMessage, type ChatRequest, type ChatResult, type Endpoint } from "./client.js";
 import { chatGemini } from "./gemini.js";
+import { chatResponses } from "./responses.js";
 import { extractJsonui } from "./extract/jsonui.js";
 import { extractMermaid } from "./extract/mermaid.js";
 import { extractYui } from "./extract/yui.js";
@@ -17,7 +18,9 @@ const SHIKI_MAX_REPAIRS = 2;
 export type ChatFn = (req: ChatRequest, figureReady?: (text: string) => boolean) => Promise<ChatResult>;
 
 export function endpointChat(ep: Endpoint): ChatFn {
-  return ep.api === "gemini" ? (req, figureReady) => chatGemini(ep, req, figureReady) : (req, figureReady) => chat(ep, req, figureReady);
+  if (ep.api === "gemini") return (req, figureReady) => chatGemini(ep, req, figureReady);
+  if (ep.api === "responses") return (req, figureReady) => chatResponses(ep, req, figureReady);
+  return (req, figureReady) => chat(ep, req, figureReady);
 }
 
 export interface ArmOutcome {
@@ -53,7 +56,7 @@ function addUsage(acc: ArmOutcome["usage"], r: ChatResult): void {
 }
 
 export async function runArm(arm: ArmId, task: EvalTask, call: ChatFn, shiki: ShikiTool | null, pad?: Padding): Promise<ArmOutcome> {
-  const messages = buildMessages(arm, task, pad);
+  const messages = buildMessages(arm, task, pad, shiki);
   const promptChars = messages.reduce((n, m) => n + (m.content?.length ?? 0), 0) + (arm === "A" || arm === "A2" ? JSON.stringify(shiki?.tool ?? {}).length : 0);
   const usage = { promptTokens: 0, completionTokens: 0, reasoningTokens: 0 };
 
@@ -110,11 +113,12 @@ export async function runArm(arm: ArmId, task: EvalTask, call: ChatFn, shiki: Sh
     return out;
   }
 
-  const ready = arm === "B" || arm === "C" ? yuiReady : arm === "D" ? fenceClosed("uijson") : fenceClosed("mermaid");
+  const yui = arm === "B" || arm === "C" || arm === "F";
+  const ready = yui ? yuiReady : arm === "D" ? fenceClosed("uijson") : fenceClosed("mermaid");
   const r = await call({ messages }, ready);
   addUsage(usage, r);
   const extraction =
-    arm === "B" || arm === "C" ? extractYui(r.text) : arm === "D" ? extractJsonui(r.text) : extractMermaid(r.text, task.category === "stack");
+    yui ? extractYui(r.text) : arm === "D" ? extractJsonui(r.text) : extractMermaid(r.text, task.category === "stack");
   const out: ArmOutcome = {
     extraction,
     firstTrySyntaxOk: extraction.syntaxOk,

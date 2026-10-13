@@ -13,9 +13,13 @@ import type { EvalTask } from "./tasks/types.js";
 const MODELS_PATH = join(dirname(fileURLToPath(import.meta.url)), "../models.json");
 
 interface ModelConfig {
-  api?: "openai" | "gemini";
+  api?: "openai" | "gemini" | "responses";
   /** 1 分あたりのリクエスト数の上限。 */
   rpm?: number;
+  /** 追加で送るヘッダ（秘密情報は書かない）。 */
+  headers?: Record<string, string>;
+  /** 呼び出しごとの会話 ID を載せるヘッダ名。 */
+  sessionHeader?: string;
   baseUrlEnv: string;
   baseUrlDefault?: string;
   apiKeyEnv: string;
@@ -54,6 +58,8 @@ export function resolveEndpoint(name: string, effort: string): Endpoint {
   };
   if (cfg.api) ep.api = cfg.api;
   if (cfg.rpm) ep.rpm = cfg.rpm;
+  if (cfg.headers) ep.headers = cfg.headers;
+  if (cfg.sessionHeader) ep.sessionHeader = cfg.sessionHeader;
   if (apiKey) ep.apiKey = apiKey;
   return ep;
 }

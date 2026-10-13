@@ -164,8 +164,9 @@ describe("模範解答モデルで配線を確かめる", () => {
     C: () => true,
     D: () => true,
     E: (t) => t.category === "flow",
+    F: () => true,
   };
-  const fakeShiki = { commit: "test", tool: { type: "function" as const, function: { name: "emit_ui", description: "", parameters: {} } } };
+  const fakeShiki = { commit: "test", yuiGuide: "# 図の書き方", tool: { type: "function" as const, function: { name: "emit_ui", description: "", parameters: {} } } };
 
   for (const arm of Object.keys(supported) as ArmId[]) {
     it(`${arm} は表現できる課題で満点`, async () => {

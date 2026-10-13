@@ -54,7 +54,7 @@ export function exportPrompts(tasks: EvalTask[], arms: ArmId[], dir: string, shi
     const ts = tasks.filter((t) => armApplies(arm, t) && arm !== "A2");
     if (ts.length === 0) continue;
     // system は方式ごとに全課題で同じなので、先頭に 1 回だけ書く。
-    const sys = buildMessages(arm, ts[0]!)[0]!.content!;
+    const sys = buildMessages(arm, ts[0]!, undefined, shiki)[0]!.content!;
     const system = arm === "A" ? `${sys}\n\n${toolInstruction(shiki!)}` : sys;
     const blocks = ts.map((t) => [SEP(t.id), "", "[user]", buildMessages(arm, t)[1]!.content!, ""].join("\n"));
     const path = join(dir, `prompts-${arm}.md`);

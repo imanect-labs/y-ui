@@ -32,6 +32,7 @@ Yui の記法を Shiki の図の出し方の標準にするかを、実測で決
 | C | Yui を本文中に書く。完全版の説明 | 約 950 字 | 全課題 |
 | D | 短い JSON を本文中の ` ```uijson ` に書く | 約 1,050 字 | 全課題 |
 | E | Mermaid の flowchart | 約 450 字 | flow / stack のみ |
+| F | Yui を本文中に書く。説明は Shiki が実際に使う `crates/chat/src/worker/yui_guide.md` を毎回読む（A と同じく Shiki のソースから） | 約 1,300 字 | 全課題 |
 
 文字数は `pnpm eval prompts` の出力（system メッセージ＋ツール定義）。共通の system は `eval/prompts/base.md`。利用者メッセージは「# 参考資料」（課題の資料を `[1]` として）と「# 質問」。
 
@@ -103,6 +104,9 @@ pnpm eval run --mock --seeds 1    # 配線の確認（API を呼ばない）
 # 本番（Shiki のソースを方式 A の説明文として読むため、隣に shiki-platform を置くか --shiki-root で指定）
 pnpm eval run --models gemma --efforts low --seeds 3 --run-id gemma-low
 pnpm eval run --models luna  --efforts low --seeds 3 --run-id luna-low
+# OpenCode Go の gpt-6-luna（Responses API）。プロキシ越しなら Node にプロキシと CA を使わせる
+NODE_USE_ENV_PROXY=1 NODE_EXTRA_CA_CERTS=<CA> LUNA_GO_API_KEY=<キー> \
+  pnpm eval run --models luna-go --efforts low --seeds 1 --run-id luna-go-s1
 pnpm eval report eval/results/<run-id>
 ```
 
@@ -155,3 +159,13 @@ pnpm eval report eval/results/<run-id>
 - Gemini API は、HTTP 200 のままストリームの途中で `data: {"error": {"code": 500, …}}` を送ることがある。クライアントがこれを読み飛ばしていたため、思考の途中で切れた応答が「図を出さなかった」として記録されていた（531 件中 130 件。方式による偏りは無い）。
 - 直したこと: ストリーム中のエラーは HTTP エラーとして投げ、終わり方（finishReason）の無いまま切れたストリームも再送の対象にする（OpenAI 互換のクライアントも同様）。
 - 該当の 130 件は無効（`ok: false`、元の採点は `invalidated` に残す）にしてやり直した。直す前の記録は `eval/runs/2026-10-12-gemma-api/results.before-truncation-fix.jsonl` に残す。
+
+### 2026-10-13（Luna を Responses API で呼べるようにした。採点は変えていない）
+
+- OpenCode Go の `gpt-6-luna` は Chat Completions を受け付けない（`ModelProtocolUnsupported`）。Responses API（`/responses`）のクライアントを足し、`luna-go` として使えるようにした。
+  - 会話はサーバーに持たせない（`store: false`）。思考は本文に含めず、トークン数だけ数える。
+  - ツール定義は `strict: false`（既定の strict は任意の引数まで必須に書き換える）。`max_output_tokens` は下限 16。
+  - 終わり方は Chat Completions と同じ名前（`stop` / `tool_calls` / `length`）に揃える。
+  - OpenCode Go が求める名乗り（User-Agent）と会話 ID（`x-opencode-session`、呼び出しごとに振る）を送る。
+- 方式 F を足した。Shiki が出荷する説明（`yui_guide.md`）で測るため。C の説明（`eval/prompts/miniui-full.md`）とは、Shiki 向けの言い換え（「参考資料」→「検索結果や会話」）、種類ごとの使いどころの 1 行、emit_ui との使い分けの注意が違う。
+
