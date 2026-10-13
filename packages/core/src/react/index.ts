@@ -254,7 +254,10 @@ function Interactive(props: {
       role: "group",
       "aria-label": `${scene.title}（矢印キーで値を順に表示）`,
       onKeyDown,
-      onFocus: () => setActive((cur) => cur ?? 0),
+      // キーボードで入ったときだけ最初の値を出す（クリック・タップでのフォーカスでは出さない）
+      onFocus: (e: { currentTarget: HTMLElement }) => {
+        if (e.currentTarget.matches(":focus-visible")) setActive((cur) => cur ?? 0);
+      },
       onBlur: () => setActive(null),
       onPointerLeave: (e: PointerEvent) => e.pointerType === "mouse" && setActive(null),
     },
