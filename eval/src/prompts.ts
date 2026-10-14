@@ -11,7 +11,7 @@ import type { EvalTask } from "./tasks/types.js";
 const PROMPTS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../prompts");
 const read = (name: string) => readFileSync(join(PROMPTS_DIR, name), "utf8").trim();
 
-export const ARMS = ["A", "A2", "B", "C", "D", "E", "F"] as const;
+export const ARMS = ["A", "A2", "B", "C", "D", "E", "F", "G", "H"] as const;
 export type ArmId = (typeof ARMS)[number];
 
 export const ARM_LABELS: Record<ArmId, string> = {
@@ -22,6 +22,8 @@ export const ARM_LABELS: Record<ArmId, string> = {
   D: "短い JSON を本文中のフェンスに",
   E: "Mermaid（flow / stack のみ）",
   F: "Yui 本文中（Shiki の yui_guide.md）",
+  G: "Yui 本文中（説明は必要なときにツールで読む）",
+  H: "Yui 本文中（必要なときに読む＋種類の早見）",
 };
 
 /** その方式で評価する課題か。 */
@@ -167,6 +169,10 @@ export function systemPrompt(arm: ArmId, task: EvalTask, shiki?: ShikiTool | nul
       // Shiki が実際に使う説明をそのまま読む（説明を直した効果を、出荷する文面で測る）。
       if (!shiki?.yuiGuide) throw new Error("方式 F には Shiki のソース（--shiki-root）の yui_guide.md が必要です");
       return `${base}\n\n${shiki.yuiGuide}`;
+    case "G":
+      return `${base}\n\n${read("yui-ondemand.md")}`;
+    case "H":
+      return `${base}\n\n${read("yui-ondemand-kinds.md")}`;
   }
   void task;
 }

@@ -33,6 +33,8 @@ Yui の記法を Shiki の図の出し方の標準にするかを、実測で決
 | D | 短い JSON を本文中の ` ```uijson ` に書く | 約 1,050 字 | 全課題 |
 | E | Mermaid の flowchart | 約 450 字 | flow / stack のみ |
 | F | Yui を本文中に書く。説明は Shiki が実際に使う `crates/chat/src/worker/yui_guide.md` を毎回読む（A と同じく Shiki のソースから） | 約 1,300 字 | 全課題 |
+| G | Yui を本文中に書く。system には 2 行の案内だけを置き、書き方の全文は `yui_guide` ツールで返す（必要なときだけ読み込む方式） | 約 200 字＋ツール | 全課題 |
+| H | G の案内に、種類の早見（4 行）を足したもの | 約 320 字＋ツール | 全課題 |
 
 文字数は `pnpm eval prompts` の出力（system メッセージ＋ツール定義）。共通の system は `eval/prompts/base.md`。利用者メッセージは「# 参考資料」（課題の資料を `[1]` として）と「# 質問」。
 
@@ -168,4 +170,9 @@ pnpm eval report eval/results/<run-id>
   - 終わり方は Chat Completions と同じ名前（`stop` / `tool_calls` / `length`）に揃える。
   - OpenCode Go が求める名乗り（User-Agent）と会話 ID（`x-opencode-session`、呼び出しごとに振る）を送る。
 - 方式 F を足した。Shiki が出荷する説明（`yui_guide.md`）で測るため。C の説明（`eval/prompts/miniui-full.md`）とは、Shiki 向けの言い換え（「参考資料」→「検索結果や会話」）、種類ごとの使いどころの 1 行、emit_ui との使い分けの注意が違う。
+
+### 2026-10-14（必要なときだけ説明を読み込む方式 G・H を足した。採点は変えていない）
+
+- G・H は、system に短い案内だけを置き、`yui_guide` ツールを呼ばれたら Shiki の `yui_guide.md` をそのまま返す。最大 3 ターン（読む → 書く、に 1 回の余裕）。
+- 図を取り出すのは全ターンの本文をつないだもの。トークンと時間は全ターンの合計。
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseBlock, type Figure } from "@imanect/yui";
-import { runArm } from "../src/arms.js";
+import { runArm, type ChatFn } from "../src/arms.js";
+import type { ChatRequest } from "../src/client.js";
 import { extractJsonui } from "../src/extract/jsonui.js";
 import { extractMermaid } from "../src/extract/mermaid.js";
 import { extractYui } from "../src/extract/yui.js";
@@ -165,6 +166,8 @@ describe("模範解答モデルで配線を確かめる", () => {
     D: () => true,
     E: (t) => t.category === "flow",
     F: () => true,
+    G: () => true,
+    H: () => true,
   };
   const fakeShiki = { commit: "test", yuiGuide: "# 図の書き方", tool: { type: "function" as const, function: { name: "emit_ui", description: "", parameters: {} } } };
 
@@ -185,5 +188,28 @@ describe("生成途中で切れたとき", () => {
       .map(checkCase)
       .filter((r) => r.exceptions || r.inconsistent || r.shrinks);
     expect(bad).toEqual([]);
+  });
+});
+
+describe("必要なときに書き方を読む方式（G・H）", () => {
+  it("yui_guide を呼んだら書き方を返し、次のターンの本文から図を取る", async () => {
+    const task = tasks.find((t) => t.category === "bar")!;
+    const seen: ChatRequest[] = [];
+    let turn = 0;
+    const call: ChatFn = async (req) => {
+      seen.push(structuredClone(req));
+      turn++;
+      const base = { usage: { promptTokens: 10, completionTokens: 5 }, totalMs: 100, finishReason: "stop" };
+      if (turn === 1) return { ...base, text: "", toolCalls: [{ id: "c1", name: "yui_guide", arguments: "{}" }], finishReason: "tool_calls" };
+      return { ...(await mockChat("C", task)({ messages: [] })), ...base };
+    };
+    const shiki = { commit: "t", yuiGuide: "# 図の書き方（本文）", tool: { type: "function" as const, function: { name: "emit_ui", description: "", parameters: {} } } };
+    const out = await runArm("G", task, call, shiki);
+    expect(out.turns).toBe(2);
+    expect(out.toolCalls.map((c) => c.name)).toEqual(["yui_guide"]);
+    expect(seen[1]!.messages.at(-1)).toMatchObject({ role: "tool", tool_call_id: "c1", content: "# 図の書き方（本文）" });
+    expect(seen[0]!.messages[0]!.content).not.toContain("図の書き方（本文）");
+    expect(out.usage.promptTokens).toBe(20);
+    expect(scoreTask(task, out.extraction).pass).toBe(true);
   });
 });

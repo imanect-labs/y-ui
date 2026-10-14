@@ -1,7 +1,7 @@
 /** 1 課題 × 1 方式を実行し、抽出結果を返す。 */
 
 import { isEmpty, parseMarkdown } from "@imanect/yui";
-import { chat, type ChatMessage, type ChatRequest, type ChatResult, type Endpoint } from "./client.js";
+import { chat, type ChatMessage, type ChatRequest, type ChatResult, type Endpoint, type ToolDef } from "./client.js";
 import { chatGemini } from "./gemini.js";
 import { chatResponses } from "./responses.js";
 import { extractJsonui } from "./extract/jsonui.js";
@@ -113,6 +113,8 @@ export async function runArm(arm: ArmId, task: EvalTask, call: ChatFn, shiki: Sh
     return out;
   }
 
+  if (arm === "G" || arm === "H") return runOnDemand(messages, call, shiki, usage, promptChars);
+
   const yui = arm === "B" || arm === "C" || arm === "F";
   const ready = yui ? yuiReady : arm === "D" ? fenceClosed("uijson") : fenceClosed("mermaid");
   const r = await call({ messages }, ready);
@@ -134,3 +136,74 @@ export async function runArm(arm: ArmId, task: EvalTask, call: ChatFn, shiki: Sh
   if (r.firstFigureMs !== undefined && extraction.figures.length > 0) out.firstFigureMs = r.firstFigureMs;
   return out;
 }
+
+/** 方式 G・H で、書き方の全文を返すツール（Shiki の yui_guide.md をそのまま返す）。 */
+export const YUI_GUIDE_TOOL: ToolDef = {
+  type: "function",
+  function: {
+    name: "yui_guide",
+    description: "回答の中に図（```ui ブロック）を書くための書き方を返す。図を書く前に 1 回呼ぶ。",
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+  },
+};
+
+/** 書き方を読みに行くための往復の上限（読む → 書く、に 1 回の余裕）。 */
+const ON_DEMAND_MAX_TURNS = 3;
+
+/**
+ * 方式 G・H: system には短い案内だけを置き、書き方の全文はモデルが yui_guide を呼んだときに返す。
+ * 「必要なときだけ読み込む」方式の品質（読みに行くか・読まずに書いて崩れないか）と往復の増分を測る。
+ */
+async function runOnDemand(
+  messages: ChatMessage[],
+  call: ChatFn,
+  shiki: ShikiTool | null,
+  usage: ArmOutcome["usage"],
+  promptChars: number,
+): Promise<ArmOutcome> {
+  if (!shiki?.yuiGuide) throw new Error("方式 G・H には Shiki のソース（--shiki-root）の yui_guide.md が必要です");
+  const guide = shiki.yuiGuide;
+  let elapsed = 0;
+  let text = "";
+  let ttftMs: number | undefined;
+  let firstFigureMs: number | undefined;
+  const allCalls: { id: string; name: string; arguments: string }[] = [];
+  const finishReasons: string[] = [];
+  let turns = 0;
+  for (let i = 0; i < ON_DEMAND_MAX_TURNS; i++) {
+    turns++;
+    const r = await call({ messages, tools: [YUI_GUIDE_TOOL] }, yuiReady);
+    if (ttftMs === undefined && r.ttftMs !== undefined) ttftMs = elapsed + r.ttftMs;
+    if (firstFigureMs === undefined && r.firstFigureMs !== undefined) firstFigureMs = elapsed + r.firstFigureMs;
+    elapsed += r.totalMs;
+    addUsage(usage, r);
+    finishReasons.push(r.finishReason ?? "");
+    text += r.text;
+    allCalls.push(...r.toolCalls);
+    if (r.toolCalls.length === 0) break;
+    messages.push({
+      role: "assistant",
+      content: r.text || null,
+      tool_calls: r.toolCalls.map((c, j) => ({ id: c.id || `call_${i}_${j}`, type: "function" as const, function: { name: c.name, arguments: c.arguments || "{}" } })),
+    });
+    r.toolCalls.forEach((c, j) => {
+      messages.push({ role: "tool", tool_call_id: c.id || `call_${i}_${j}`, content: c.name === "yui_guide" ? guide : `不明なツール: ${c.name}` });
+    });
+  }
+  const extraction = extractYui(text);
+  const out: ArmOutcome = {
+    extraction,
+    firstTrySyntaxOk: extraction.syntaxOk,
+    text,
+    toolCalls: allCalls,
+    turns,
+    usage,
+    totalMs: elapsed,
+    promptChars: promptChars + JSON.stringify(YUI_GUIDE_TOOL).length,
+    finishReasons,
+  };
+  if (ttftMs !== undefined) out.ttftMs = ttftMs;
+  if (firstFigureMs !== undefined && extraction.figures.length > 0) out.firstFigureMs = firstFigureMs;
+  return out;
+}
+

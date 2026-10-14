@@ -47,7 +47,7 @@ const str = (v: string | true | undefined, d: string) => (typeof v === "string" 
 const list = (v: string | true | undefined, d: string) => str(v, d).split(",").map((s) => s.trim()).filter(Boolean);
 
 function shikiFrom(opts: Record<string, string | true>, arms: readonly ArmId[]): ShikiTool | null {
-  if (!arms.includes("A") && !arms.includes("A2") && !arms.includes("F")) return null;
+  if (!arms.some((a) => a === "A" || a === "A2" || a === "F" || a === "G" || a === "H")) return null;
   const root = str(opts["shiki-root"], process.env.SHIKI_ROOT ?? resolve(ROOT, "../shiki-platform"));
   return loadShikiTool(root);
 }
