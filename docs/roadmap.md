@@ -1,6 +1,6 @@
 # Yui ロードマップ
 
-今の位置は 0.5.0（次は 0.6.0）。対応する図は 10 種類（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree。うち pie・scatter・timeline・steps・tree は npm に未公開）で、パーサ・SVG・React（ホバーとキーボード）・書き出し（PNG / SVG / クリップボード）がある。Shiki のチャットでは既定で有効（imanect-labs/shiki-platform#560）。
+今の位置は 0.6.0。対応する図は 10 種類（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree）で、パーサ・SVG・React（ホバーとキーボード）・書き出し（PNG / SVG / クリップボード）がある。Shiki のチャットでは既定で有効（imanect-labs/shiki-platform#560）。
 
 この文書の順番で進める。v0.6・v0.7・Shiki 側の組み込みは並行する。
 
