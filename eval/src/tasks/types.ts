@@ -30,4 +30,6 @@ export interface EvalTask {
   acceptKinds: Kind[];
   /** 正解の中間表現。expect=none では無い。 */
   gold?: Figure;
+  /** 別の種類で描いた場合の正解（構成図の課題を流れ図で描いてもよい場合など）。acceptKinds にその種類があること。 */
+  altGolds?: Figure[];
 }

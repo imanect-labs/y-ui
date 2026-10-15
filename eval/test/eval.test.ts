@@ -65,7 +65,10 @@ describe("採点", () => {
   it("構成図は層の順序と層の中の要素を見る", () => {
     const gold = task("stack x\n- Web\n- API\n  - 認証\n  - 検索\n- DB | Cache\n", ["stack"]);
     expect(scoreTask(gold, ex([fig("stack y\n- Web 画面\n- API サーバ\n  - 認証\n  - 検索\n- DB | Cache\n")])).pass).toBe(true);
-    expect(scoreTask(gold, ex([fig("stack y\n- DB | Cache\n- API\n  - 認証\n  - 検索\n- Web\n")])).pass).toBe(false);
+    // 上下が逆: 資料が向きを決めていなければ許し、「上から」と決めていれば誤り
+    expect(scoreTask(gold, ex([fig("stack y\n- DB | Cache\n- API\n  - 認証\n  - 検索\n- Web\n")])).pass).toBe(true);
+    const fixed = { ...gold, context: "上から Web、API、DB の順。" };
+    expect(scoreTask(fixed, ex([fig("stack y\n- DB | Cache\n- API\n  - 認証\n  - 検索\n- Web\n")])).pass).toBe(false);
   });
 
   it("言い換えたノード名を対応付ける（経理確認／経理部が内容を確認）", () => {

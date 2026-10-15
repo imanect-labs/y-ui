@@ -8,6 +8,8 @@ export interface Handwritten {
   question: string;
   context: string;
   gold: string;
+  /** 別の種類で描いてもよい場合の正解（Yui のソース）。 */
+  alt?: string[];
 }
 
 export const FLOW_TASKS: Handwritten[] = [
@@ -223,6 +225,8 @@ export const STACK_TASKS: Handwritten[] = [
     question: "機械学習パイプラインの構成を図にしてください。",
     context: "機械学習パイプライン: データ収集、前処理を経て学習工程に入る。学習工程は特徴量作成、モデル学習、評価からなる。評価を通過したモデルをデプロイし、推論 API として提供する。",
     gold: "stack 機械学習パイプライン\n- データ収集\n- 前処理\n- 学習\n  - 特徴量作成\n  - モデル学習\n  - 評価\n- デプロイ\n- 推論 API\n",
+    // 資料が工程の順序そのものなので、流れ図で描いても正しい
+    alt: ["flow 機械学習パイプライン\nデータ収集 -> 前処理 -> 特徴量作成 -> モデル学習 -> 評価 -> デプロイ -> 推論 API\n"],
   },
   {
     id: "stack-016",

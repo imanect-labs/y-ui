@@ -17,7 +17,14 @@ function linearFlow(f: Figure): boolean {
   return from.size === f.edges.length && to.size === f.edges.length;
 }
 
+function parseGold(id: string, src: string): Figure {
+  const r = parseBlock(src, { final: true });
+  if (!r.figure || r.diagnostics.some((d) => d.severity !== "info")) throw new Error(`${id}: 正解のソースが解析できません: ${JSON.stringify(r.diagnostics)}`);
+  return r.figure;
+}
+
 function fromHandwritten(h: Handwritten, category: "flow" | "stack" | "timeline" | "steps" | "tree"): EvalTask {
+  const alt = (h.alt ?? []).map((s) => parseGold(h.id, s));
   const r = parseBlock(h.gold, { final: true });
   const problems = r.diagnostics.filter((d) => d.severity !== "info");
   if (!r.figure || problems.length > 0) {
@@ -30,8 +37,9 @@ function fromHandwritten(h: Handwritten, category: "flow" | "stack" | "timeline"
     context: h.context,
     expect: "figure",
     // 手順は一本道の流れ図でも、一本道の流れ図は手順でも正しい
-    acceptKinds: category === "steps" ? ["steps", "flow"] : linearFlow(r.figure) ? ["flow", "steps"] : [category],
+    acceptKinds: [...new Set([...(category === "steps" ? ["steps", "flow"] as const : linearFlow(r.figure) ? ["flow", "steps"] as const : [category]), ...alt.map((a) => a.kind)])],
     gold: r.figure as Figure,
+    ...(alt.length ? { altGolds: alt } : {}),
   };
 }
 

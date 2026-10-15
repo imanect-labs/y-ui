@@ -58,9 +58,10 @@ export function scoreTask(task: EvalTask, ex: Extraction): Score {
     return { pass, semantic: pass ? 1 : 0, syntaxOk: ex.syntaxOk, produced, kindOk: true, fabricated, detail: { figures: ex.figures.length } };
   }
 
-  const gold = task.gold!;
   let best: Score | null = null;
   for (const f of ex.figures) {
+    // 図の種類に合う正解（無ければ主の正解）と比べる
+    const gold = [task.gold!, ...(task.altGolds ?? [])].find((g) => g.kind === f.kind) ?? task.gold!;
     const s = scoreFigure(task, gold, f);
     if (!best || s.semantic + (s.pass ? 1 : 0) > best.semantic + (best.pass ? 1 : 0)) best = s;
   }
@@ -374,6 +375,7 @@ function scoreStack(gold: StackFigure, f0: StackFigure, context: string): Omit<S
   // 層の順序: 対応した組のすべての対で、上下関係（同じ層かどうかも含む）が一致する割合。
   const pairs = [...map.entries()];
   let concordant = 0;
+  let reversed = 0;
   let total = 0;
   for (let i = 0; i < pairs.length; i++) {
     for (let j = i + 1; j < pairs.length; j++) {
@@ -383,9 +385,14 @@ function scoreStack(gold: StackFigure, f0: StackFigure, context: string): Omit<S
       const ms = Math.sign(m[mi]!.tier - m[mj]!.tier);
       total++;
       if (gs === ms) concordant++;
+      // 同じ層どうし（0 と 0）は、逆向きでも一致として数える
+      if (gs === -ms) reversed++;
     }
   }
-  const order = total === 0 ? (map.size > 0 ? 1 : 0) : concordant / total;
+  // 上下の向きは、資料が「上から」「最上位」のように決めていなければ、逆（利用側を上・下のどちらに置くか）も許す
+  const fixedDirection = /上から|下から|最上位|最下層|その下に|一番上|一番下/.test(context);
+  const ordered = total === 0 ? (map.size > 0 ? 1 : 0) : concordant / total;
+  const order = fixedDirection || total === 0 ? ordered : Math.max(ordered, reversed / total);
 
   // 層の中の要素: 対応した親どうしで子を比べる。親が対応しなかった子は取りこぼし扱い。
   let childTp = 0;
