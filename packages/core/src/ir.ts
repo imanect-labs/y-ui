@@ -5,7 +5,7 @@
  * LLM が書くソースは寛容に受けるが、IR は常にこの形に正規化されている。
  */
 
-export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree", "cards", "progress", "funnel"] as const;
+export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree", "cards", "progress", "funnel", "quadrant", "gantt"] as const;
 export type Kind = (typeof KINDS)[number];
 
 /** 全図に共通する項目。 */
@@ -196,6 +196,44 @@ export interface FunnelFigure extends FigureBase {
   unit?: string;
 }
 
+/** 2 軸の位置づけ（2×2）の項目。x・y は 0〜100。 */
+export interface QuadrantItem {
+  label: string;
+  x: number;
+  y: number;
+  refs: number[];
+}
+
+export interface QuadrantFigure extends FigureBase {
+  kind: "quadrant";
+  /** 軸の名前（`x: 効果`）。 */
+  xLabel: string;
+  yLabel: string;
+  /** 象限の名前（右上・左上・左下・右下の順。無ければ空文字）。 */
+  quadrants: [string, string, string, string];
+  items: QuadrantItem[];
+}
+
+/** 工程表のタスク。日付は 1970-01-01 からの日数（年の書かれていない日付は仮の年で数える）。 */
+export interface GanttTask {
+  label: string;
+  start: number;
+  end: number;
+  /** 書かれたままの開始・終了。 */
+  startText: string;
+  endText: string;
+  /** 終了が無い 1 日だけのもの（マイルストーン）。 */
+  milestone?: boolean;
+  refs: number[];
+}
+
+export interface GanttFigure extends FigureBase {
+  kind: "gantt";
+  tasks: GanttTask[];
+  /** どの日付にも年が書かれていない（目盛りに年を出さない）。 */
+  noYear: boolean;
+}
+
 export type Figure =
   | ChartFigure
   | ScatterFigure
@@ -207,7 +245,9 @@ export type Figure =
   | TreeFigure
   | CardsFigure
   | ProgressFigure
-  | FunnelFigure;
+  | FunnelFigure
+  | QuadrantFigure
+  | GanttFigure;
 
 /** 表形式のデータを持つ図（bar / line / pie）。 */
 export function isChart(f: Figure): f is ChartFigure {

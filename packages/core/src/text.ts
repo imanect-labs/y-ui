@@ -5,7 +5,7 @@
  * - toText: Yui 非対応の場所に貼るためのテキスト化 Markdown（表・リスト）。
  */
 
-import type { ChartFigure, Figure, FlowFigure, FunnelFigure, ScatterFigure, StackBox, StackFigure, StatFigure, StepsFigure, TimelineFigure, TreeNode } from "./ir.js";
+import type { ChartFigure, Figure, FlowFigure, FunnelFigure, QuadrantFigure, ScatterFigure, StackBox, StackFigure, StatFigure, StepsFigure, TimelineFigure, TreeNode } from "./ir.js";
 import { parseMarkdown } from "./markdown.js";
 
 function refsText(refs: number[]): string {
@@ -71,6 +71,15 @@ export function toSource(f: Figure): string {
     case "funnel":
       if (f.unit !== undefined) lines.push(`unit: ${f.unit}`);
       for (const s of f.stages) lines.push(withRefs(`${esc(s.label)} | ${s.value}`, s.refs));
+      break;
+    case "quadrant":
+      if (f.xLabel) lines.push(`x: ${f.xLabel}`);
+      if (f.yLabel) lines.push(`y: ${f.yLabel}`);
+      ["右上", "左上", "左下", "右下"].forEach((q, i) => f.quadrants[i] && lines.push(`${q}: ${f.quadrants[i]}`));
+      for (const it of f.items) lines.push(withRefs(`${esc(it.label)} | ${it.x} | ${it.y}`, it.refs));
+      break;
+    case "gantt":
+      for (const t of f.tasks) lines.push(withRefs([esc(t.label), esc(t.startText), ...(t.endText ? [esc(t.endText)] : [])].join(" | "), t.refs));
       break;
   }
   if (f.src !== undefined) lines.push(`src: ${f.src}`);
@@ -172,6 +181,13 @@ export function toText(f: Figure): string {
     case "funnel":
       funnelText(f, out);
       break;
+    case "quadrant":
+      if (f.xLabel || f.yLabel) out.push(`（横軸: ${f.xLabel || "-"}、縦軸: ${f.yLabel || "-"}。0〜100）`, "");
+      for (const it of f.items) out.push(`- ${withRefs(`${it.label}: 横 ${it.x}・縦 ${it.y}${quadrantName(f, it.x, it.y)}`, it.refs)}`);
+      break;
+    case "gantt":
+      for (const t of f.tasks) out.push(`- ${withRefs(`${t.label}: ${t.endText ? `${t.startText} 〜 ${t.endText}` : t.startText}`, t.refs)}`);
+      break;
   }
   if (f.note !== undefined) out.push("", `※ ${f.note}`);
   return out.join("\n");
@@ -234,6 +250,12 @@ function stackText(f: StackFigure, out: string[]): void {
       for (const c of b.children) out.push(`  - ${withRefs(c.desc === undefined ? c.title : `${c.title}（${c.desc}）`, c.refs)}`);
     }
   });
+}
+
+/** 項目が入る象限の名前（`（すぐやる）`）。名前が無ければ空文字。 */
+function quadrantName(f: QuadrantFigure, x: number, y: number): string {
+  const i = y >= 50 ? (x >= 50 ? 0 : 1) : x >= 50 ? 3 : 2;
+  return f.quadrants[i] ? `（${f.quadrants[i]}）` : "";
 }
 
 function funnelText(f: FunnelFigure, out: string[]): void {

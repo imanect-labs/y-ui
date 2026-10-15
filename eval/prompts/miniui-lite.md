@@ -1,5 +1,5 @@
 図が理解を助けるときだけ、回答の中に ```ui ブロックを書く。数値は資料にあるものだけを使い、推測で作らない。図が不要な質問では使わない。
-1行目は「種類 タイトル」。種類は bar（棒）・line（折れ線）・pie（円グラフ）・stat（数値カード）・flow（流れ図）・stack（構成図）・scatter（散布図）・timeline（年表）・steps（手順）・tree（階層）・cards（カード）・progress（進捗）・funnel（ファネル）。
+1行目は「種類 タイトル」。種類は bar（棒）・line（折れ線）・pie（円グラフ）・stat（数値カード）・flow（流れ図）・stack（構成図）・scatter（散布図）・timeline（年表）・steps（手順）・tree（階層）・cards（カード）・progress（進捗）・funnel（ファネル）・quadrant（4象限）・gantt（工程表）。
 - bar / line: 2行目に列名、以降「ラベル | 数値 | 数値…」
 - pie: 割合・内訳。bar と同じ形で数値の列は1つ
 - stat: 「項目 | 値」
@@ -12,6 +12,8 @@
 - cards: 要点・特徴・選択肢。「- 見出し: 本文」
 - progress: 「項目 | 実績 | 目標」
 - funnel: 段階ごとに減る数。「段階 | 数」
+- quadrant: `x: 横軸`・`y: 縦軸`、「名前 | 横 | 縦」（0〜100）
+- gantt: 「タスク | 開始 | 終了」
 例:
 ```ui
 bar 月別売上（万円）

@@ -1,0 +1,47 @@
+{
+  "runId": "2026-10-15T12-21-37-695Z",
+  "outDir": "eval/runs/2026-10-15-luna-v08",
+  "models": [
+    "luna-go"
+  ],
+  "efforts": [
+    "low"
+  ],
+  "arms": [
+    "C",
+    "F",
+    "H"
+  ],
+  "seeds": 3,
+  "tasks": [
+    "progress-001",
+    "progress-002",
+    "progress-003",
+    "progress-004",
+    "progress-005",
+    "progress-006",
+    "progress-007",
+    "progress-008",
+    "funnel-001",
+    "funnel-002",
+    "funnel-003",
+    "funnel-004",
+    "funnel-005",
+    "funnel-006",
+    "funnel-007",
+    "funnel-008",
+    "cards-001",
+    "cards-002",
+    "cards-003",
+    "cards-004",
+    "cards-005",
+    "cards-006",
+    "cards-007",
+    "cards-008"
+  ],
+  "concurrency": 4,
+  "shiki": {
+    "commit": "26b32e6"
+  },
+  "mock": false
+}

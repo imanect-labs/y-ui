@@ -80,6 +80,10 @@ function units(f: Figure): string[] {
       return f.items.map((i) => JSON.stringify(i));
     case "funnel":
       return f.stages.map((s) => JSON.stringify(s));
+    case "quadrant":
+      return f.items.map((i) => JSON.stringify(i));
+    case "gantt":
+      return f.tasks.map((t) => JSON.stringify(t));
     case "tree": {
       const out: string[] = [];
       const walk = (ns: typeof f.roots, d: number) => ns.forEach((n) => (out.push(`${d}:${n.title}`), walk(n.children, d + 1)));

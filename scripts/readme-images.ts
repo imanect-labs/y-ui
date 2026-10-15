@@ -116,6 +116,23 @@ Passed first interview | 150
 Passed final interview | 48
 Accepted | 30
 `,
+    quadrant: `quadrant Initiative priorities
+x: Impact
+y: Ease
+右上: Do now
+Contact form revamp | 70 | 85
+Faster search | 85 | 40
+Multilingual support | 60 | 20
+Digital newsletter | 25 | 75
+`,
+    gantt: `gantt Rollout plan
+Task | Start | End
+Requirements | 2025/4/1 | 2025/4/30
+Design | 5/1 | 6/15
+Build | 6/1 | 8/31
+System test | 9/1 | 9/30
+Go-live | 10/1
+`,
   },
   ja: {
     bar: `bar 四半期ごとの売上と利益
@@ -222,6 +239,24 @@ unit: 人
 一次面接通過 | 150
 最終面接通過 | 48
 内定承諾 | 30
+`,
+    quadrant: `quadrant 改善施策の優先度
+x: 効果
+y: 実現しやすさ
+右上: すぐやる
+左下: 見送り
+問い合わせフォームの改善 | 70 | 85
+検索の高速化 | 85 | 40
+多言語対応 | 60 | 20
+社内報の電子化 | 25 | 75
+`,
+    gantt: `gantt 新システム導入の工程
+タスク | 開始 | 終了
+要件定義 | 2025/4/1 | 2025/4/30
+設計 | 5/1 | 6/15
+開発 | 6/1 | 8/31
+総合テスト | 9/1 | 9/30
+本番稼働 | 10/1
 `,
   },
 };

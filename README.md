@@ -259,6 +259,43 @@ Accepted | 30
 ```
 ````
 
+### `quadrant`
+
+Two-axis positioning (2×2) for priorities and positioning maps. Positions are 0–100; quadrant names are optional.
+
+<img src="docs/images/en-quadrant.png" width="640" alt="quadrant">
+
+````md
+```ui
+quadrant Initiative priorities
+x: Impact
+y: Ease
+右上: Do now
+Contact form revamp | 70 | 85
+Faster search | 85 | 40
+Multilingual support | 60 | 20
+Digital newsletter | 25 | 75
+```
+````
+
+### `gantt`
+
+Schedule bars. A single date becomes a milestone; ticks switch between months and weeks by span.
+
+<img src="docs/images/en-gantt.png" width="640" alt="gantt">
+
+````md
+```ui
+gantt Rollout plan
+Task | Start | End
+Requirements | 2025/4/1 | 2025/4/30
+Design | 5/1 | 6/15
+Build | 6/1 | 8/31
+System test | 9/1 | 9/30
+Go-live | 10/1
+```
+````
+
 
 Bar charts with many rows turn horizontal, flowcharts mark branches as diamonds and route loops around the side, and every figure re-lays out to its width and follows light/dark mode. Full notation: [docs/spec.md](docs/spec.md) (Japanese).
 

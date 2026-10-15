@@ -14,6 +14,8 @@ export const CATEGORIES = [
   "cards",
   "progress",
   "funnel",
+  "quadrant",
+  "gantt",
   "long",
   "jpnum",
   "none-unneeded",

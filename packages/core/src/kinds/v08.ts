@@ -78,14 +78,20 @@ function readRows(fig: { note?: string; src?: string; unit?: string }, body: Lin
 
 // ---------------------------------------------------------------- progress
 
+/** セルの前に付いた「目標」「実績」のような語（`目標 40画面`・`目標: 40`）を外す。 */
+const ROLE_PREFIX = /^(?:目標|実績|現在|達成|計画|予定|target|goal|actual|current)\s*[:：]?\s*/i;
+/** 後ろの括弧書き（`660人（達成率 108%）`）も外す。達成率はレンダラーが計算する。 */
+const stripRole = (s: string) => s.replace(ROLE_PREFIX, "").replace(/\s*[（(][^)）]*[)）]\s*$/, "").trim();
+
 export function parseProgress(fig: ProgressFigure, body: Line[], diags: Diagnostics): void {
   readRows(fig, body, diags, (cells, line) => {
     const label = takeRefs(cells[0] ?? "");
     const v = takeRefs(cells[1] ?? "");
     // `75 / 100` や `75/100` の 1 セルも受ける
     const slash = cells.length === 2 ? /^(.+?)\s*[/／]\s*(.+)$/.exec(v.text) : null;
-    const valueText = slash ? slash[1]! : v.text;
-    const tg = takeRefs(slash ? slash[2]! : (cells[2] ?? ""));
+    const valueText = stripRole(slash ? slash[1]! : v.text);
+    const tgRaw = takeRefs(slash ? slash[2]! : (cells[2] ?? ""));
+    const tg = { ...tgRaw, text: stripRole(tgRaw.text) };
     const value = parseNumber(valueText);
     if (!value) {
       diags.add(line, "warning", "bad_number", `「${label.text}」の実績「${valueText}」は数値として読めないため、この行を表示しません`);

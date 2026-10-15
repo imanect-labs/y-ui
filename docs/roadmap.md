@@ -1,6 +1,6 @@
 # Yui ロードマップ
 
-今の位置は 0.6.0。対応する図は 10 種類（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree）で、パーサ・SVG・React（ホバーとキーボード）・書き出し（PNG / SVG / クリップボード）がある。Shiki のチャットでは既定で有効（imanect-labs/shiki-platform#560）。
+今の位置は 0.6.0（10 種類）。次の 0.7.0 で 15 種類（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt）で、パーサ・SVG・React（ホバーとキーボード）・書き出し（PNG / SVG / クリップボード）がある。Shiki のチャットでは既定で有効（imanect-labs/shiki-platform#560）。
 
 この文書の順番で進める。v0.6・v0.7・Shiki 側の組み込みは並行する。
 
@@ -36,10 +36,10 @@
 | 種類 | 用途 | 記法の草案 |
 |---|---|---|
 | `cards` | 要点・特徴・選択肢の一覧 | `- 見出し: 本文`。**実装済み**（§5.10） |
-| `gantt` | 工程表 | `タスク \| 開始 \| 終了`（日付か月） |
+| `gantt` | 工程表 | `タスク \| 開始 \| 終了`（日付か月）。**実装済み**（§5.14） |
 | `funnel` | 段階ごとの減り方（営業・採用） | `段階 \| 数`。**実装済み**（§5.12） |
 | `progress` | 目標に対する進捗 | `項目 \| 実績 \| 目標`。**実装済み**（§5.11） |
-| `quadrant` | 2 軸の位置づけ（2×2） | `x: 低 → 高`・`y: 低 → 高` と `項目 \| x \| y`（0〜100） |
+| `quadrant` | 2 軸の位置づけ（2×2） | `x: 低 → 高`・`y: 低 → 高` と `項目 \| x \| y`（0〜100）。**実装済み**（§5.13） |
 
 `area`（面グラフ）は種類を増やさず、`line` の `stacked: true` として扱う（種類が増えるほど選び間違いが増えるため）。
 

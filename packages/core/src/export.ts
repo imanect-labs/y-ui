@@ -117,6 +117,10 @@ function otherHTML(f: Exclude<Figure, ChartFigure>): string {
       return `<ul>${f.cards.map((c) => `<li><strong>${esc(c.title + refs(c.refs))}</strong>${c.body ? ` ${esc(c.body)}` : ""}</li>`).join("")}</ul>`;
     case "progress":
       return `<table><tbody>${f.items.map((it) => `<tr><th scope="row">${esc(it.label + refs(it.refs))}</th><td style="text-align:right">${esc(it.valueText)}</td><td style="text-align:right">${esc(it.targetText)}</td><td style="text-align:right">${esc(share(it.value, it.target))}</td></tr>`).join("")}</tbody></table>`;
+    case "quadrant":
+      return `<table><thead><tr><th scope="col"></th><th scope="col">${esc(f.xLabel || "横")}</th><th scope="col">${esc(f.yLabel || "縦")}</th></tr></thead><tbody>${f.items.map((it) => `<tr><th scope="row">${esc(it.label + refs(it.refs))}</th><td style="text-align:right">${it.x}</td><td style="text-align:right">${it.y}</td></tr>`).join("")}</tbody></table>`;
+    case "gantt":
+      return `<ul>${f.tasks.map((t) => `<li>${esc(t.label + refs(t.refs))}: ${esc(t.endText ? `${t.startText} 〜 ${t.endText}` : t.startText)}</li>`).join("")}</ul>`;
     case "funnel":
       return `<table><tbody>${f.stages.map((s) => `<tr><th scope="row">${esc(s.label + refs(s.refs))}</th><td style="text-align:right">${esc(nf.format(s.value))}${f.unit ? esc(f.unit) : ""}</td></tr>`).join("")}</tbody></table>`;
   }

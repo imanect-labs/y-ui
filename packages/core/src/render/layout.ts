@@ -10,6 +10,7 @@ import { layoutScatter } from "./scatter.js";
 import { layoutSeq } from "./seq.js";
 import { layoutTree } from "./tree.js";
 import { layoutCards, layoutFunnel, layoutProgress } from "./v08.js";
+import { layoutGantt, layoutQuadrant } from "./v08b.js";
 import type { Scene } from "./scene.js";
 import { layoutStack } from "./stack.js";
 import { layoutStat } from "./stat.js";
@@ -54,6 +55,12 @@ export function layout(f: Figure, opts: LayoutOptions = {}): Scene {
       break;
     case "funnel":
       y = layoutFunnel(ctx, f, y + 12);
+      break;
+    case "quadrant":
+      y = layoutQuadrant(ctx, f, y);
+      break;
+    case "gantt":
+      y = layoutGantt(ctx, f, y);
       break;
   }
   y = drawNote(ctx, f, y);

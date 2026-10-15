@@ -9,6 +9,7 @@ import { parseScatter } from "./kinds/scatter.js";
 import { parseSteps, parseTimeline } from "./kinds/seq.js";
 import { parseTree } from "./kinds/tree.js";
 import { parseCards, parseFunnel, parseProgress } from "./kinds/v08.js";
+import { parseGantt, parseQuadrant } from "./kinds/v08b.js";
 import { parseStack } from "./kinds/stack.js";
 import { parseStat } from "./kinds/stat.js";
 
@@ -51,6 +52,15 @@ const KIND_ALIASES: Record<string, Kind> = {
   funnel: "funnel",
   ファネル: "funnel",
   歩留まり: "funnel",
+  quadrant: "quadrant",
+  matrix: "quadrant",
+  "4象限": "quadrant",
+  四象限: "quadrant",
+  マトリクス: "quadrant",
+  gantt: "gantt",
+  ガント: "gantt",
+  ガントチャート: "gantt",
+  工程表: "gantt",
   stat: "stat",
   stats: "stat",
   kpi: "stat",
@@ -111,7 +121,7 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
       title = first.text.trim();
       body = lines.slice(1);
     } else if (!kind) {
-      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel）`);
+      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt）`);
       return { figure: null, diagnostics: diags.list, pending };
     }
   }
@@ -161,6 +171,12 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
     case "funnel":
       parseFunnel(figure, body, diags);
       break;
+    case "quadrant":
+      parseQuadrant(figure, body, diags);
+      break;
+    case "gantt":
+      parseGantt(figure, body, diags);
+      break;
   }
 
   if (opts.final && isEmpty(figure)) {
@@ -200,6 +216,10 @@ function emptyFigure(kind: Kind, title: string, refs: number[]): Figure {
       return { kind, title, refs, items: [] };
     case "funnel":
       return { kind, title, refs, stages: [] };
+    case "quadrant":
+      return { kind, title, refs, xLabel: "", yLabel: "", quadrants: ["", "", "", ""], items: [] };
+    case "gantt":
+      return { kind, title, refs, tasks: [], noYear: true };
   }
 }
 
@@ -229,5 +249,9 @@ export function isEmpty(f: Figure): boolean {
       return f.items.length === 0;
     case "funnel":
       return f.stages.length === 0;
+    case "quadrant":
+      return f.items.length === 0;
+    case "gantt":
+      return f.tasks.length === 0;
   }
 }

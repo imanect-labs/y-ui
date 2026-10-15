@@ -33,8 +33,8 @@ describe("課題セット", () => {
     expect(JSON.parse(JSON.stringify(buildTasks()))).toEqual(tasks);
   });
 
-  it("223 件・id は一意", () => {
-    expect(tasks).toHaveLength(223);
+  it("235 件・id は一意", () => {
+    expect(tasks).toHaveLength(235);
     expect(new Set(tasks.map((t) => t.id)).size).toBe(tasks.length);
   });
 });

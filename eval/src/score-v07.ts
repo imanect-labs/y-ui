@@ -3,7 +3,7 @@
  * （対応付けはテキストの類似度、数値は相対誤差 0.5% と単位の倍率を吸収）。
  */
 
-import type { CardsFigure, FlowFigure, FunnelFigure, ProgressFigure, ScatterFigure, StepsFigure, TimelineFigure, TreeFigure, TreeNode } from "@imanect/yui";
+import type { CardsFigure, FlowFigure, FunnelFigure, GanttFigure, ProgressFigure, QuadrantFigure, ScatterFigure, StepsFigure, TimelineFigure, TreeFigure, TreeNode } from "@imanect/yui";
 import { matchByText, norm, similarity } from "./similarity.js";
 
 export interface PartScore {
@@ -210,4 +210,37 @@ export function scoreFunnel(gold: FunnelFigure, f: FunnelFigure): PartScore {
   const order = concordance(map).same;
   const extra = f.stages.length - map.size;
   return { pass: recall === 1 && extra === 0 && fabricated === 0 && order >= 0.95, semantic: recall * order, fabricated, detail: { recall, order, extra } };
+}
+
+/** 位置の一致は ±5（0〜100 の目盛り）。軸の入れ替え（効果を縦に書く）も許す。 */
+export function scoreQuadrant(gold: QuadrantFigure, f: QuadrantFigure): PartScore {
+  const map = matchByText(gold.items.map((i) => i.label), f.items.map((i) => i.label));
+  const near = (a: number, b: number) => Math.abs(a - b) <= 5;
+  const count = (swap: boolean) => [...map].filter(([gi, mi]) => {
+    const g = gold.items[gi]!;
+    const m = f.items[mi]!;
+    return swap ? near(g.x, m.y) && near(g.y, m.x) : near(g.x, m.x) && near(g.y, m.y);
+  }).length;
+  const ok = Math.max(count(false), count(true));
+  const recall = gold.items.length === 0 ? 1 : ok / gold.items.length;
+  const extra = f.items.length - map.size;
+  return { pass: recall === 1 && extra === 0, semantic: recall, fabricated: 0, detail: { recall, extra } };
+}
+
+/** タスクごとに開始・終了の日が一致すること（年の書き方の違いは、月日で比べる）。 */
+export function scoreGantt(gold: GanttFigure, f: GanttFigure): PartScore {
+  const map = matchByText(gold.tasks.map((t) => t.label), f.tasks.map((t) => t.label));
+  const md = (d: number) => {
+    const t = new Date(d * 86_400_000);
+    return `${t.getUTCMonth()}-${t.getUTCDate()}`;
+  };
+  let ok = 0;
+  for (const [gi, mi] of map) {
+    const g = gold.tasks[gi]!;
+    const m = f.tasks[mi]!;
+    if (md(g.start) === md(m.start) && md(g.end) === md(m.end)) ok++;
+  }
+  const recall = gold.tasks.length === 0 ? 1 : ok / gold.tasks.length;
+  const extra = f.tasks.length - map.size;
+  return { pass: recall === 1 && extra === 0, semantic: recall, fabricated: 0, detail: { recall, extra } };
 }

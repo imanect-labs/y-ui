@@ -25,12 +25,14 @@ describe("cards", () => {
 
 describe("progress", () => {
   it("実績と目標、% だけなら目標は 100、`実績 / 目標` の 1 セル", () => {
-    const r = parse("進捗 今期\n項目 | 実績 | 目標\n売上 | 8,200万円 | 1億円\n受講率: 64%\n新規 | 132 / 120\n件数 | 30\n");
+    const r = parse("進捗 今期\n項目 | 実績 | 目標\n売上 | 8,200万円 | 1億円\n受講率: 64%\n新規 | 132 / 120\n設計 | 29画面 | 目標 40画面\n研修 | 660人（達成率 108%） | 610人\n件数 | 30\n");
     const p = r.figure as ProgressFigure;
     expect(p.items.map((i) => [i.label, i.value, i.target, i.valueText, i.targetText])).toEqual([
       ["売上", 82_000_000, 100_000_000, "8,200万円", "1億円"],
       ["受講率", 64, 100, "64%", "100%"],
       ["新規", 132, 120, "132", "120"],
+      ["設計", 29, 40, "29画面", "40画面"],
+      ["研修", 660, 610, "660人", "610人"],
     ]);
     // 目標の無い数値は表示しない
     expect(r.diagnostics.map((d) => d.code)).toEqual(["unrecognized_line"]);

@@ -27,6 +27,8 @@ export const LIMITS = {
   cards: 12,
   progressItems: 20,
   funnelStages: 10,
+  quadrantItems: 30,
+  ganttTasks: 30,
 } as const;
 
 export class Diagnostics {

@@ -27,7 +27,7 @@ export const ARM_LABELS: Record<ArmId, string> = {
 };
 
 /** その方式で評価する課題か。 */
-export const V07_CATEGORIES: string[] = ["scatter", "timeline", "steps", "tree", "cards", "progress", "funnel"];
+export const V07_CATEGORIES: string[] = ["scatter", "timeline", "steps", "tree", "cards", "progress", "funnel", "quadrant", "gantt"];
 
 export function armApplies(arm: ArmId, task: EvalTask): boolean {
   if (arm === "A2") return task.expect === "figure";
