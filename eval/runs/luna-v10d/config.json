@@ -1,0 +1,27 @@
+{
+  "runId": "2026-10-15T23-25-45-123Z",
+  "outDir": "eval/runs/luna-v10d",
+  "models": [
+    "luna-go"
+  ],
+  "efforts": [
+    "low"
+  ],
+  "arms": [
+    "F"
+  ],
+  "seeds": 3,
+  "tasks": [
+    "compare-001",
+    "compare-002",
+    "compare-003",
+    "compare-004",
+    "compare-005",
+    "compare-006"
+  ],
+  "concurrency": 4,
+  "shiki": {
+    "commit": "eb436aa"
+  },
+  "mock": false
+}

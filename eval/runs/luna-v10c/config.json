@@ -1,0 +1,54 @@
+{
+  "runId": "2026-10-15T23-24-29-625Z",
+  "outDir": "eval/runs/luna-v10c",
+  "models": [
+    "luna-go"
+  ],
+  "efforts": [
+    "low"
+  ],
+  "arms": [
+    "F"
+  ],
+  "seeds": 3,
+  "tasks": [
+    "cards-001",
+    "cards-002",
+    "cards-003",
+    "cards-004",
+    "cards-005",
+    "cards-006",
+    "cards-007",
+    "cards-008",
+    "quadrant-001",
+    "quadrant-002",
+    "quadrant-003",
+    "quadrant-004",
+    "quadrant-005",
+    "quadrant-006",
+    "calc-001",
+    "calc-002",
+    "calc-003",
+    "calc-004",
+    "calc-005",
+    "calc-006",
+    "calc-007",
+    "calc-008",
+    "compare-001",
+    "compare-002",
+    "compare-003",
+    "compare-004",
+    "compare-005",
+    "compare-006",
+    "app-001",
+    "app-002",
+    "app-003",
+    "app-004",
+    "app-005"
+  ],
+  "concurrency": 4,
+  "shiki": {
+    "commit": "eb436aa"
+  },
+  "mock": false
+}
