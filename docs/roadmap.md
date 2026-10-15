@@ -1,6 +1,6 @@
 # Yui ロードマップ
 
-今の位置は 0.7.0（未公開）。対応する図は 20 種類（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt / compare / proscons / swot / checklist と、計算の calc）で、パーサ・SVG・React（ホバーとキーボード）・書き出し（PNG / SVG / クリップボード）がある。Shiki のチャットでは既定で有効（imanect-labs/shiki-platform#560）。
+今の位置は 0.8.0（公開待ち。0.6・0.7 は公開せずに 0.8.0 にまとめた）。対応する種類は 27（グラフ: bar / line / pie / scatter / radar / treemap、数値: stat / progress / funnel、流れ・時間: flow / steps / timeline / gantt、構造・整理: stack / tree / quadrant / cards / callout / map、比較・判断: compare / proscons / swot / checklist、操作: calc / app / ask / plan）で、パーサ・SVG・React（ホバーとキーボード・操作）・書き出し（PNG / SVG / クリップボード）がある。Shiki の emit_ui を Yui に置き換える計画: [emit-ui-replacement.md](emit-ui-replacement.md)（imanect-labs/shiki-platform#604）。
 
 この文書の順番で進める。v0.6・v0.7・Shiki 側の組み込みは並行する。
 
