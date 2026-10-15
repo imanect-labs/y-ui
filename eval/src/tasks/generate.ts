@@ -269,6 +269,91 @@ function scatterTasks(count: number, seed: number): EvalTask[] {
   return out;
 }
 
+// ------------------------------------------------------------ progress（目標に対する進捗）
+
+const PROGRESS_SETS: { title: string; items: { label: string; unit: string; target: [number, number] }[] }[] = [
+  { title: "今期の営業目標の達成状況", items: [{ label: "売上", unit: "万円", target: [5000, 12000] }, { label: "新規顧客数", unit: "社", target: [40, 150] }, { label: "商談件数", unit: "件", target: [200, 600] }] },
+  { title: "研修の受講状況", items: [{ label: "情報セキュリティ研修", unit: "人", target: [300, 800] }, { label: "コンプライアンス研修", unit: "人", target: [300, 800] }, { label: "管理職研修", unit: "人", target: [20, 80] }] },
+  { title: "プロジェクトの作業の進み具合", items: [{ label: "設計", unit: "画面", target: [20, 60] }, { label: "実装", unit: "画面", target: [20, 60] }, { label: "テスト", unit: "件", target: [300, 900] }, { label: "マニュアル", unit: "ページ", target: [40, 120] }] },
+  { title: "店舗ごとの月間売上目標の達成状況", items: [{ label: "新宿店", unit: "万円", target: [800, 2000] }, { label: "横浜店", unit: "万円", target: [600, 1500] }, { label: "大宮店", unit: "万円", target: [400, 1200] }] },
+];
+
+function progressTasks(count: number, seed: number): EvalTask[] {
+  const r = rng(seed);
+  const out: EvalTask[] = [];
+  for (let i = 0; i < count; i++) {
+    const set = PROGRESS_SETS[i % PROGRESS_SETS.length]!;
+    const items = set.items.map((it) => {
+      const target = Math.round(between(r, it.target[0], it.target[1]) / 10) * 10;
+      const value = Math.round(target * (0.35 + r() * 0.8));
+      return { ...it, target, value };
+    });
+    const style = i % 3;
+    const context =
+      style === 0
+        ? `${set.title}\n\n| 項目 | 実績 | 目標 |\n|---|---:|---:|\n${items.map((it) => `| ${it.label} | ${ja(it.value)}${it.unit} | ${ja(it.target)}${it.unit} |`).join("\n")}`
+        : style === 1
+          ? `${set.title}です。${items.map((it) => `${it.label}は目標${ja(it.target)}${it.unit}に対して${ja(it.value)}${it.unit}`).join("、")}となっています。`
+          : `${set.title}\n${items.map((it) => `- ${it.label}: ${ja(it.value)}${it.unit}（目標 ${ja(it.target)}${it.unit}）`).join("\n")}`;
+    const question = i % 4 === 3 ? `${set.title}を、目標に対してどこまで進んだかがわかる図にして。` : pick(r, [`${set.title}を進捗バーで見せてください。`, `${set.title}を、達成率がわかるように図にして。`]);
+    out.push({
+      id: `progress-${String(i + 1).padStart(3, "0")}`,
+      category: "progress",
+      question,
+      context,
+      expect: "figure",
+      acceptKinds: ["progress"],
+      gold: {
+        kind: "progress",
+        title: set.title,
+        refs: [],
+        items: items.map((it) => ({ label: it.label, value: it.value, valueText: `${ja(it.value)}${it.unit}`, target: it.target, targetText: `${ja(it.target)}${it.unit}`, refs: [] })),
+      },
+    });
+  }
+  return out;
+}
+
+// ------------------------------------------------------------ funnel（段階ごとの数）
+
+const FUNNEL_SETS: { title: string; unit: string; stages: string[]; start: [number, number] }[] = [
+  { title: "採用の選考状況", unit: "人", stages: ["応募", "書類選考通過", "一次面接通過", "最終面接通過", "内定承諾"], start: [400, 1500] },
+  { title: "営業の商談の進み具合", unit: "件", stages: ["リード", "商談化", "提案", "見積提出", "受注"], start: [300, 1200] },
+  { title: "Web サイトの購入までの流れ", unit: "人", stages: ["訪問", "商品ページ閲覧", "カート追加", "購入手続き", "購入完了"], start: [5000, 40000] },
+  { title: "無料体験から有料契約までの状況", unit: "社", stages: ["無料体験の申込", "初回ログイン", "機能を3つ以上利用", "有料契約"], start: [200, 900] },
+];
+
+function funnelTasks(count: number, seed: number): EvalTask[] {
+  const r = rng(seed);
+  const out: EvalTask[] = [];
+  for (let i = 0; i < count; i++) {
+    const set = FUNNEL_SETS[i % FUNNEL_SETS.length]!;
+    let v = Math.round(between(r, set.start[0], set.start[1]) / 10) * 10;
+    const stages = set.stages.map((label, k) => {
+      if (k > 0) v = Math.max(1, Math.round(v * (0.2 + r() * 0.55)));
+      return { label, value: v };
+    });
+    const style = i % 3;
+    const context =
+      style === 0
+        ? `${set.title}\n\n| 段階 | ${set.unit === "件" ? "件数" : "人数"} |\n|---|---:|\n${stages.map((s) => `| ${s.label} | ${ja(s.value)}${set.unit} |`).join("\n")}`
+        : style === 1
+          ? `${set.title}をまとめました。${stages.map((s) => `${s.label}が${ja(s.value)}${set.unit}`).join("、")}でした。`
+          : `${set.title}\n${stages.map((s) => `- ${s.label}: ${ja(s.value)}${set.unit}`).join("\n")}`;
+    const question = i % 4 === 3 ? `${set.title}で、どの段階で大きく減っているかがわかる図にして。` : pick(r, [`${set.title}をファネルで見せて。`, `${set.title}を段階ごとの歩留まりがわかるファネル図にしてください。`]);
+    out.push({
+      id: `funnel-${String(i + 1).padStart(3, "0")}`,
+      category: "funnel",
+      question,
+      context,
+      expect: "figure",
+      acceptKinds: i % 4 === 3 ? ["funnel", "bar"] : ["funnel"],
+      gold: { kind: "funnel", title: set.title, refs: [], unit: set.unit, stages: stages.map((s) => ({ ...s, refs: [] })) },
+    });
+  }
+  return out;
+}
+
 // ------------------------------------------------------------ long（大量の行）
 
 const PREFECTURES = "北海道 青森県 岩手県 宮城県 秋田県 山形県 福島県 茨城県 栃木県 群馬県 埼玉県 千葉県 東京都 神奈川県 新潟県 富山県 石川県 福井県 山梨県 長野県 岐阜県 静岡県 愛知県 三重県 滋賀県 京都府 大阪府 兵庫県 奈良県 和歌山県 鳥取県 島根県 岡山県 広島県 山口県 徳島県 香川県 愛媛県 高知県 福岡県 佐賀県 長崎県 熊本県 大分県 宮崎県 鹿児島県 沖縄県".split(" ");
@@ -494,6 +579,8 @@ export function generatedTasks(): EvalTask[] {
     ...chartTasks("line", 20, 202),
     ...pieTasks(18, 606),
     ...scatterTasks(10, 707),
+    ...progressTasks(8, 808),
+    ...funnelTasks(8, 909),
     ...statTasks(20, 303),
     ...longTasks(10, 404),
     ...jpnumTasks(10, 505),

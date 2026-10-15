@@ -8,6 +8,7 @@ import { parsePie } from "./kinds/pie.js";
 import { parseScatter } from "./kinds/scatter.js";
 import { parseSteps, parseTimeline } from "./kinds/seq.js";
 import { parseTree } from "./kinds/tree.js";
+import { parseCards, parseFunnel, parseProgress } from "./kinds/v08.js";
 import { parseStack } from "./kinds/stack.js";
 import { parseStat } from "./kinds/stat.js";
 
@@ -40,6 +41,16 @@ const KIND_ALIASES: Record<string, Kind> = {
   ツリー: "tree",
   階層: "tree",
   組織図: "tree",
+  cards: "cards",
+  card: "cards",
+  カード: "cards",
+  要点: "cards",
+  progress: "progress",
+  進捗: "progress",
+  達成率: "progress",
+  funnel: "funnel",
+  ファネル: "funnel",
+  歩留まり: "funnel",
   stat: "stat",
   stats: "stat",
   kpi: "stat",
@@ -100,7 +111,7 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
       title = first.text.trim();
       body = lines.slice(1);
     } else if (!kind) {
-      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree）`);
+      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel）`);
       return { figure: null, diagnostics: diags.list, pending };
     }
   }
@@ -141,6 +152,15 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
     case "tree":
       parseTree(figure, body, diags);
       break;
+    case "cards":
+      parseCards(figure, body, diags);
+      break;
+    case "progress":
+      parseProgress(figure, body, diags);
+      break;
+    case "funnel":
+      parseFunnel(figure, body, diags);
+      break;
   }
 
   if (opts.final && isEmpty(figure)) {
@@ -174,6 +194,12 @@ function emptyFigure(kind: Kind, title: string, refs: number[]): Figure {
       return { kind, title, refs, steps: [] };
     case "tree":
       return { kind, title, refs, roots: [] };
+    case "cards":
+      return { kind, title, refs, cards: [] };
+    case "progress":
+      return { kind, title, refs, items: [] };
+    case "funnel":
+      return { kind, title, refs, stages: [] };
   }
 }
 
@@ -197,5 +223,11 @@ export function isEmpty(f: Figure): boolean {
       return f.steps.length === 0;
     case "tree":
       return f.roots.length === 0;
+    case "cards":
+      return f.cards.length === 0;
+    case "progress":
+      return f.items.length === 0;
+    case "funnel":
+      return f.stages.length === 0;
   }
 }

@@ -5,7 +5,7 @@
  */
 
 import { isChart, parseNumber, type ChartFigure, type Figure, type FlowFigure, type StackFigure, type StatFigure } from "@imanect/yui";
-import { flowAsSteps, scoreScatter, scoreSteps, scoreTimeline, scoreTree } from "./score-v07.js";
+import { flowAsSteps, scoreCards, scoreFunnel, scoreProgress, scoreScatter, scoreSteps, scoreTimeline, scoreTree } from "./score-v07.js";
 import { matchByText, norm, similarity } from "./similarity.js";
 import type { EvalTask } from "./tasks/types.js";
 
@@ -46,6 +46,8 @@ function numericValues(f: Figure): number[] {
   if (isChart(f)) return f.rows.flatMap((r) => r.values.filter((v): v is number => v !== null));
   if (f.kind === "stat") return f.items.flatMap((i) => (i.num === undefined ? [] : [i.num]));
   if (f.kind === "scatter") return f.points.flatMap((p) => [p.x, p.y]);
+  if (f.kind === "funnel") return f.stages.map((s) => s.value);
+  if (f.kind === "progress") return f.items.flatMap((i) => [i.value, i.target]);
   return [];
 }
 
@@ -86,6 +88,9 @@ function scoreFigure(task: EvalTask, gold: Figure, f: Figure): Score {
   if (gold.kind === "scatter" && f.kind === "scatter") return { ...base, ...scoreScatter(gold, f) };
   if (gold.kind === "timeline" && f.kind === "timeline") return { ...base, ...scoreTimeline(gold, f) };
   if (gold.kind === "tree" && f.kind === "tree") return { ...base, ...scoreTree(gold, f, task.context) };
+  if (gold.kind === "cards" && f.kind === "cards") return { ...base, ...scoreCards(gold, f) };
+  if (gold.kind === "progress" && f.kind === "progress") return { ...base, ...scoreProgress(gold, f) };
+  if (gold.kind === "funnel" && f.kind === "funnel") return { ...base, ...scoreFunnel(gold, f) };
   // 手順と一本道の流れ図は、受ける種類に入っていれば互いに比べる
   if (kindOk && (gold.kind === "steps" || gold.kind === "flow") && (f.kind === "steps" || f.kind === "flow")) {
     const g = gold.kind === "steps" ? gold : flowAsSteps(gold);

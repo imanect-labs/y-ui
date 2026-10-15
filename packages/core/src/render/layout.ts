@@ -9,6 +9,7 @@ import { layoutPie } from "./pie.js";
 import { layoutScatter } from "./scatter.js";
 import { layoutSeq } from "./seq.js";
 import { layoutTree } from "./tree.js";
+import { layoutCards, layoutFunnel, layoutProgress } from "./v08.js";
 import type { Scene } from "./scene.js";
 import { layoutStack } from "./stack.js";
 import { layoutStat } from "./stat.js";
@@ -44,6 +45,15 @@ export function layout(f: Figure, opts: LayoutOptions = {}): Scene {
       break;
     case "tree":
       y = layoutTree(ctx, f, y + 4);
+      break;
+    case "cards":
+      y = layoutCards(ctx, f, y + 2);
+      break;
+    case "progress":
+      y = layoutProgress(ctx, f, y);
+      break;
+    case "funnel":
+      y = layoutFunnel(ctx, f, y + 12);
       break;
   }
   y = drawNote(ctx, f, y);

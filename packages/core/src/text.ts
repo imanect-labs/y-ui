@@ -5,7 +5,7 @@
  * - toText: Yui 非対応の場所に貼るためのテキスト化 Markdown（表・リスト）。
  */
 
-import type { ChartFigure, Figure, FlowFigure, ScatterFigure, StackBox, StackFigure, StatFigure, StepsFigure, TimelineFigure, TreeNode } from "./ir.js";
+import type { ChartFigure, Figure, FlowFigure, FunnelFigure, ScatterFigure, StackBox, StackFigure, StatFigure, StepsFigure, TimelineFigure, TreeNode } from "./ir.js";
 import { parseMarkdown } from "./markdown.js";
 
 function refsText(refs: number[]): string {
@@ -61,6 +61,16 @@ export function toSource(f: Figure): string {
       break;
     case "tree":
       treeSource(f.roots, 0, lines);
+      break;
+    case "cards":
+      for (const c of f.cards) lines.push(withRefs(`- ${stepSource(c.title, c.body)}`, c.refs));
+      break;
+    case "progress":
+      for (const it of f.items) lines.push(withRefs([esc(it.label), esc(it.valueText), esc(it.targetText)].join(" | "), it.refs));
+      break;
+    case "funnel":
+      if (f.unit !== undefined) lines.push(`unit: ${f.unit}`);
+      for (const s of f.stages) lines.push(withRefs(`${esc(s.label)} | ${s.value}`, s.refs));
       break;
   }
   if (f.src !== undefined) lines.push(`src: ${f.src}`);
@@ -153,6 +163,15 @@ export function toText(f: Figure): string {
     case "tree":
       treeText(f.roots, 0, out);
       break;
+    case "cards":
+      for (const c of f.cards) out.push(`- **${c.title}**${c.body ? `: ${c.body}` : ""}${c.refs.length ? ` ${refsText(c.refs)}` : ""}`);
+      break;
+    case "progress":
+      for (const it of f.items) out.push(`- ${withRefs(`${it.label}: ${it.valueText} / ${it.targetText}（${share(it.value, it.target)}）`, it.refs)}`);
+      break;
+    case "funnel":
+      funnelText(f, out);
+      break;
   }
   if (f.note !== undefined) out.push("", `※ ${f.note}`);
   return out.join("\n");
@@ -214,6 +233,15 @@ function stackText(f: StackFigure, out: string[]): void {
     for (const b of t.boxes) {
       for (const c of b.children) out.push(`  - ${withRefs(c.desc === undefined ? c.title : `${c.title}（${c.desc}）`, c.refs)}`);
     }
+  });
+}
+
+function funnelText(f: FunnelFigure, out: string[]): void {
+  const first = f.stages[0]?.value ?? 0;
+  out.push(`| 段階 | ${f.unit ? `数（${f.unit}）` : "数"} | 前の段階から | 最初から |`, "| --- | ---: | ---: | ---: |");
+  f.stages.forEach((s, i) => {
+    const prev = i === 0 ? "-" : share(s.value, f.stages[i - 1]!.value);
+    out.push(`| ${withRefs(esc(s.label), s.refs)} | ${fmt.format(s.value)} | ${prev} | ${i === 0 ? "-" : share(s.value, first)} |`);
   });
 }
 

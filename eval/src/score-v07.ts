@@ -3,7 +3,7 @@
  * （対応付けはテキストの類似度、数値は相対誤差 0.5% と単位の倍率を吸収）。
  */
 
-import type { FlowFigure, ScatterFigure, StepsFigure, TimelineFigure, TreeFigure, TreeNode } from "@imanect/yui";
+import type { CardsFigure, FlowFigure, FunnelFigure, ProgressFigure, ScatterFigure, StepsFigure, TimelineFigure, TreeFigure, TreeNode } from "@imanect/yui";
 import { matchByText, norm, similarity } from "./similarity.js";
 
 export interface PartScore {
@@ -169,4 +169,45 @@ export function scoreTree(gold: TreeFigure, f: TreeFigure, context: string): Par
   });
   const parentAcc = parentTotal === 0 ? 0 : parentOk / parentTotal;
   return { pass: nodeF1 >= 0.85 && parentAcc >= 0.85, semantic: (nodeF1 + parentAcc) / 2, fabricated: 0, detail: { nodeF1, parentAcc, goldNodes: g.length, modelNodes: m.length } };
+}
+
+// ------------------------------------------------------------ cards / progress / funnel（v0.8）
+
+export function scoreCards(gold: CardsFigure, f: CardsFigure): PartScore {
+  const text = (c: { title: string; body?: string }) => (c.body ? `${c.title} ${c.body}` : c.title);
+  // 見出しで対応付け、だめなら本文込みで
+  const map = matchByText(gold.cards.map((c) => c.title), f.cards.map((c) => c.title), 0.5);
+  const rest = matchByText(
+    gold.cards.map((c, i) => (map.has(i) ? "" : text(c))),
+    f.cards.map((c, i) => ([...map.values()].includes(i) ? "" : text(c))),
+  );
+  for (const [g, m] of rest) if (gold.cards[g] && !map.has(g)) map.set(g, m);
+  const cardF1 = f1(map.size, gold.cards.length, f.cards.length);
+  return { pass: cardF1 >= 0.85, semantic: cardF1, fabricated: 0, detail: { cardF1, goldCards: gold.cards.length, modelCards: f.cards.length } };
+}
+
+export function scoreProgress(gold: ProgressFigure, f: ProgressFigure): PartScore {
+  const map = matchByText(gold.items.map((i) => i.label), f.items.map((i) => i.label));
+  let ok = 0;
+  for (const [gi, mi] of map) {
+    const g = gold.items[gi]!;
+    const m = f.items[mi]!;
+    // 割合が合っていれば、単位の取り方（`8,200万円` と `8200`）は問わない
+    if (Math.abs(g.value / g.target - m.value / m.target) < 0.005) ok++;
+  }
+  const recall = gold.items.length === 0 ? 1 : ok / gold.items.length;
+  const extra = f.items.length - map.size;
+  return { pass: recall === 1 && extra === 0, semantic: recall * (f.items.length ? map.size / f.items.length : 0), fabricated: 0, detail: { recall, extra } };
+}
+
+export function scoreFunnel(gold: FunnelFigure, f: FunnelFigure): PartScore {
+  const map = matchByText(gold.stages.map((s) => s.label), f.stages.map((s) => s.label));
+  let ok = 0;
+  for (const [gi, mi] of map) if (SCALES.some((k) => same(f.stages[mi]!.value, gold.stages[gi]!.value * k))) ok++;
+  const goldNums = gold.stages.map((s) => s.value);
+  const fabricated = f.stages.filter((s) => !SCALES.some((k) => goldNums.some((g) => same(s.value, g * k)))).length;
+  const recall = gold.stages.length === 0 ? 1 : ok / gold.stages.length;
+  const order = concordance(map).same;
+  const extra = f.stages.length - map.size;
+  return { pass: recall === 1 && extra === 0 && fabricated === 0 && order >= 0.95, semantic: recall * order, fabricated, detail: { recall, order, extra } };
 }

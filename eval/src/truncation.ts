@@ -73,6 +73,13 @@ function units(f: Figure): string[] {
       return f.events.map((e) => JSON.stringify([e.when, e.title]));
     case "steps":
       return f.steps.map((s) => s.title);
+    case "cards":
+      // 本文は字下げした次の行で後から伸びるので、見出しだけを単位にする
+      return f.cards.map((c) => c.title);
+    case "progress":
+      return f.items.map((i) => JSON.stringify(i));
+    case "funnel":
+      return f.stages.map((s) => JSON.stringify(s));
     case "tree": {
       const out: string[] = [];
       const walk = (ns: typeof f.roots, d: number) => ns.forEach((n) => (out.push(`${d}:${n.title}`), walk(n.children, d + 1)));

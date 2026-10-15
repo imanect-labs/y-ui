@@ -5,7 +5,7 @@
  * LLM が書くソースは寛容に受けるが、IR は常にこの形に正規化されている。
  */
 
-export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree"] as const;
+export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree", "cards", "progress", "funnel"] as const;
 export type Kind = (typeof KINDS)[number];
 
 /** 全図に共通する項目。 */
@@ -154,7 +154,60 @@ export interface TreeFigure extends FigureBase {
   roots: TreeNode[];
 }
 
-export type Figure = ChartFigure | ScatterFigure | StatFigure | FlowFigure | StackFigure | TimelineFigure | StepsFigure | TreeFigure;
+/** 要点・特徴・選択肢のカード。 */
+export interface Card {
+  title: string;
+  body?: string;
+  refs: number[];
+}
+
+export interface CardsFigure extends FigureBase {
+  kind: "cards";
+  cards: Card[];
+}
+
+/** 目標に対する進捗の 1 行。 */
+export interface ProgressItem {
+  label: string;
+  /** 実績（数値）と、書かれたままの表記。 */
+  value: number;
+  valueText: string;
+  /** 目標。書かれていなければ、実績が % なら 100。 */
+  target: number;
+  targetText: string;
+  refs: number[];
+}
+
+export interface ProgressFigure extends FigureBase {
+  kind: "progress";
+  items: ProgressItem[];
+}
+
+/** 段階ごとの数（営業・採用の歩留まり）。 */
+export interface FunnelStage {
+  label: string;
+  value: number;
+  refs: number[];
+}
+
+export interface FunnelFigure extends FigureBase {
+  kind: "funnel";
+  stages: FunnelStage[];
+  unit?: string;
+}
+
+export type Figure =
+  | ChartFigure
+  | ScatterFigure
+  | StatFigure
+  | FlowFigure
+  | StackFigure
+  | TimelineFigure
+  | StepsFigure
+  | TreeFigure
+  | CardsFigure
+  | ProgressFigure
+  | FunnelFigure;
 
 /** 表形式のデータを持つ図（bar / line / pie）。 */
 export function isChart(f: Figure): f is ChartFigure {

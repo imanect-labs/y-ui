@@ -7,7 +7,7 @@
 
 import type { ChartFigure } from "../ir.js";
 import { share } from "../text.js";
-import { BODY_SIZE, type Ctx, formatValue } from "./frame.js";
+import { BODY_SIZE, type Ctx, formatValue, withUnit } from "./frame.js";
 import { fit } from "./measure.js";
 import { SERIES, type Token } from "./theme.js";
 
@@ -63,14 +63,14 @@ export function layoutPie(ctx: Ctx, f: ChartFigure, top: number): number {
     wedges.push({ path, mid: a + sweep / 2 });
     if (path) {
       const label = f.rows[i]!.label;
-      ctx.items.push({ t: "path", d: path, fill: sliceColor(i), stroke: "surface", strokeWidth: 2, group: `s${i}`, hint: `${label}: ${formatValue(v, ctx.locale)}${unit}（${share(v, total)}）` });
+      ctx.items.push({ t: "path", d: path, fill: sliceColor(i), stroke: "surface", strokeWidth: 2, group: `s${i}`, hint: `${label}: ${withUnit(formatValue(v, ctx.locale), unit)}（${share(v, total)}）` });
     }
     a += sweep;
   });
 
   // 中央の合計
-  ctx.items.push({ t: "text", x: cx, y: cy - 6, text: "合計", size: BODY_SIZE, fill: "muted", anchor: "middle" });
-  const totalText = `${formatValue(total, ctx.locale)}${unit}`;
+  ctx.items.push({ t: "text", x: cx, y: cy - 6, text: ctx.labels.total, size: BODY_SIZE, fill: "muted", anchor: "middle" });
+  const totalText = withUnit(formatValue(total, ctx.locale), unit);
   let totalSize = 18;
   while (totalSize > 12 && ctx.measure(totalText, totalSize, 600) > r * 1.7) totalSize -= 1;
   ctx.items.push({ t: "text", x: cx, y: cy + totalSize * 0.75, text: fit(totalText, r * 1.8, totalSize, ctx.measure, 600), size: totalSize, weight: 600, fill: "ink", anchor: "middle", tabular: true });
@@ -105,8 +105,8 @@ export function layoutPie(ctx: Ctx, f: ChartFigure, top: number): number {
       tip: {
         title: row.label,
         rows: [
-          { label: valueName, value: `${valueTexts[i]}${unit}`, token: sliceColor(i) },
-          { label: "割合", value: shareTexts[i]! },
+          { label: valueName, value: withUnit(valueTexts[i]!, unit), token: sliceColor(i) },
+          { label: ctx.labels.share, value: shareTexts[i]! },
         ],
         x: tipX,
         y: tipY,

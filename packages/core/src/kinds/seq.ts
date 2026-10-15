@@ -19,7 +19,7 @@ interface Entry {
 }
 
 /** 2 行目以降の共通処理。項目を 1 行読む関数 read を受け、字下げ・オプション・上限を扱う。 */
-function readEntries<T extends Entry>(
+export function readEntries<T extends Entry>(
   fig: { note?: string; src?: string },
   body: Line[],
   diags: Diagnostics,
@@ -65,7 +65,7 @@ function readEntries<T extends Entry>(
   return out;
 }
 
-function entry(titleText: string, descText: string | undefined, line: number, diags: Diagnostics): Entry {
+export function entry(titleText: string, descText: string | undefined, line: number, diags: Diagnostics): Entry {
   const t = takeRefs(titleText);
   const e: Entry = { title: clip(t.text, line, diags), refs: t.refs };
   if (descText !== undefined && descText.trim() !== "") {

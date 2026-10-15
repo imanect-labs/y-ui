@@ -97,6 +97,25 @@ note: Logical view based on public material.
     - HR
     - Finance
 `,
+    cards: `cards New plan highlights
+- Easy sharing: set view and edit permissions per folder
+- Fast search: answers across internal documents with sources [1]
+- Audit ready: records who saw what and when
+`,
+    progress: `progress Quarterly targets
+Item | Actual | Target
+Revenue | $8.2M | $10M
+New customers | 132 | 120
+Training completion: 64%
+`,
+    funnel: `funnel Hiring pipeline
+unit: people
+Applied | 1200
+Passed screening | 420
+Passed first interview | 150
+Passed final interview | 48
+Accepted | 30
+`,
   },
   ja: {
     bar: `bar 四半期ごとの売上と利益
@@ -184,6 +203,25 @@ note: 公開資料を基にした論理構成図。
   - 管理本部
     - 人事部
     - 経理部
+`,
+    cards: `cards 新プランの特徴
+- 共有がかんたん: フォルダごとに閲覧・編集の権限を付けられます
+- 検索が速い: 社内文書を横断して、根拠付きで答えます [1]
+- 監査に強い: 誰がいつ何を見たかをすべて記録します
+`,
+    progress: `progress 今期の目標の達成状況
+項目 | 実績 | 目標
+売上 | 8,200万円 | 1億円
+新規顧客 | 132社 | 120社
+研修の受講率: 64%
+`,
+    funnel: `funnel 採用の選考状況
+unit: 人
+応募 | 1200
+書類選考通過 | 420
+一次面接通過 | 150
+最終面接通過 | 48
+内定承諾 | 30
 `,
   },
 };

@@ -24,6 +24,9 @@ export const LIMITS = {
   steps: 15,
   treeNodes: 80,
   treeDepth: 4,
+  cards: 12,
+  progressItems: 20,
+  funnelStages: 10,
 } as const;
 
 export class Diagnostics {

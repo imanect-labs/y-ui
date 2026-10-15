@@ -210,6 +210,55 @@ tree Organization
 ```
 ````
 
+### `cards`
+
+Cards for key points, features and options. Use `stat` to make numbers big.
+
+<img src="docs/images/en-cards.png" width="640" alt="cards">
+
+````md
+```ui
+cards New plan highlights
+- Easy sharing: set view and edit permissions per folder
+- Fast search: answers across internal documents with sources [1]
+- Audit ready: records who saw what and when
+```
+````
+
+### `progress`
+
+Progress toward targets. 100% or more changes color; percentages are computed.
+
+<img src="docs/images/en-progress.png" width="640" alt="progress">
+
+````md
+```ui
+progress Quarterly targets
+Item | Actual | Target
+Revenue | $8.2M | $10M
+New customers | 132 | 120
+Training completion: 64%
+```
+````
+
+### `funnel`
+
+Funnel for counts that shrink stage by stage (hiring, sales, checkout). Stage-to-stage rates are computed.
+
+<img src="docs/images/en-funnel.png" width="640" alt="funnel">
+
+````md
+```ui
+funnel Hiring pipeline
+unit: people
+Applied | 1200
+Passed screening | 420
+Passed first interview | 150
+Passed final interview | 48
+Accepted | 30
+```
+````
+
 
 Bar charts with many rows turn horizontal, flowcharts mark branches as diamonds and route loops around the side, and every figure re-lays out to its width and follows light/dark mode. Full notation: [docs/spec.md](docs/spec.md) (Japanese).
 

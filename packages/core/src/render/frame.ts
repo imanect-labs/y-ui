@@ -12,18 +12,35 @@ export interface LayoutOptions {
   locale?: string;
   /** 文字幅の計測（ブラウザなら canvas の measureText などに差し替えられる）。 */
   measure?: Measure;
-  /** 定型の文言。既定はロケールが ja なら日本語、それ以外は英語。 */
-  labels?: Labels;
+  /** 定型の文言。既定はロケールが ja なら日本語、それ以外は英語。渡した項目だけを上書きする。 */
+  labels?: Partial<Labels>;
 }
 
 /** 図の中に出る定型の文言（ロケールで切り替える）。 */
 export interface Labels {
   unit: (unit: string) => string;
   note: (note: string) => string;
+  /** 円グラフの中央・割合。 */
+  total: string;
+  share: string;
+  /** ファネルの右の列（前の段階からの割合）と、ツールチップの行。 */
+  stepRate: string;
+  count: string;
+  fromPrev: string;
+  fromFirst: string;
 }
 
-export const LABELS_JA: Labels = { unit: (u) => `単位: ${u}`, note: (n) => `※ ${n}` };
-export const LABELS_EN: Labels = { unit: (u) => `Unit: ${u}`, note: (n) => `Note: ${n}` };
+export const LABELS_JA: Labels = { unit: (u) => `単位: ${u}`, note: (n) => `※ ${n}`, total: "合計", share: "割合", stepRate: "前段比", count: "数", fromPrev: "前の段階から", fromFirst: "最初から" };
+export const LABELS_EN: Labels = { unit: (u) => `Unit: ${u}`, note: (n) => `Note: ${n}`, total: "Total", share: "Share", stepRate: "Step rate", count: "Count", fromPrev: "From previous", fromFirst: "From first" };
+
+/** 数値に単位を付ける（英字で始まる単位は空白を挟む: `1,200 people`、`1,200人`）。 */
+export function withUnit(value: string, unit: string | undefined): string {
+  if (!unit) return value;
+  // 通貨記号で始まる単位は前に置く（`$M` → `$350M`）
+  const cur = /^([$€£¥₹₩])(.*)$/.exec(unit);
+  if (cur) return `${cur[1]}${value}${cur[2]}`;
+  return /^[A-Za-z]/.test(unit) ? `${value} ${unit}` : `${value}${unit}`;
+}
 
 export interface Ctx {
   width: number;
@@ -38,7 +55,7 @@ export interface Ctx {
 export function makeCtx(opts: LayoutOptions): Ctx {
   const width = Math.max(240, Math.round(opts.width ?? 640));
   const locale = opts.locale ?? "ja-JP";
-  const labels = opts.labels ?? (locale.toLowerCase().startsWith("ja") ? LABELS_JA : LABELS_EN);
+  const labels = { ...(locale.toLowerCase().startsWith("ja") ? LABELS_JA : LABELS_EN), ...opts.labels };
   return { width, pad: width < 400 ? 12 : 16, locale, labels, measure: opts.measure ?? estimate, items: [], targets: [] };
 }
 
