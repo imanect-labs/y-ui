@@ -315,7 +315,7 @@ hide: MonthlyRate
 ````
 
 
-Bar charts with many rows turn horizontal, flowcharts mark branches as diamonds and route loops around the side, and every figure re-lays out to its width and follows light/dark mode. Full notation: [docs/spec.md](docs/spec.md) (Japanese).
+Bar charts with many rows turn horizontal, flowcharts mark branches as diamonds and route loops around the side, and every figure re-lays out to its width and follows light/dark mode. Full notation: [docs/spec.md](docs/spec.md) (Japanese). All kinds with when to use each, syntax, options and limits: [docs/kinds.md](docs/kinds.md) (Japanese).
 
 ## Usage
 

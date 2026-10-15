@@ -15,7 +15,7 @@ import { parseStack } from "./kinds/stack.js";
 import { parseStat } from "./kinds/stat.js";
 
 /** 種類の名前と別名。モデルが書きがちな表記を受ける。 */
-const KIND_ALIASES: Record<string, Kind> = {
+export const KIND_ALIASES: Readonly<Record<string, Kind>> = {
   bar: "bar",
   bars: "bar",
   column: "bar",
