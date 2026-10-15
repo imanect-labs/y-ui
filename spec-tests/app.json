@@ -1,0 +1,445 @@
+{
+  "note": "scripts/app-fixtures.ts で生成。TS 版と Rust 版の app のパーサ・検証が同じ結果を出すかを確かめる。",
+  "cases": [
+    {
+      "name": "full",
+      "source": "app 経費の処理\n## 経費の申請\n> 領収書の内容を入力してください。\n件名 = text 必須 例 4月 大阪出張の交通費\n金額 = number 1..1000000 円 必須 as amount\n区分 = choice 交通費 | 出張費 | 備品\n日付 = date 必須\n内容 = textarea\n立替 = toggle 初期 オン\nbutton 申請する -> workflow 経費申請\n\n## 月次の集計\n対象月 = month 必須\n部署 = choice 営業=sales | 開発=dev | 管理=admin multi 初期 sales\n人数 = count 1..10 初期 2\nbutton 集計する -> workflow 月次集計\nbutton 会話で相談する -> chat\nnote: 申請は上長の承認後に経理へ回ります。\n",
+      "figure": {
+        "kind": "app",
+        "title": "経費の処理",
+        "refs": [],
+        "sections": [
+          {
+            "title": "経費の申請",
+            "fields": [
+              {
+                "key": "件名",
+                "label": "件名",
+                "type": "text",
+                "required": true,
+                "placeholder": "4月 大阪出張の交通費"
+              },
+              {
+                "key": "amount",
+                "label": "金額",
+                "type": "number",
+                "required": true,
+                "min": 1,
+                "max": 1000000,
+                "unit": "円"
+              },
+              {
+                "key": "区分",
+                "label": "区分",
+                "type": "choice",
+                "required": false,
+                "options": [
+                  {
+                    "label": "交通費",
+                    "value": "交通費"
+                  },
+                  {
+                    "label": "出張費",
+                    "value": "出張費"
+                  },
+                  {
+                    "label": "備品",
+                    "value": "備品"
+                  }
+                ]
+              },
+              {
+                "key": "日付",
+                "label": "日付",
+                "type": "date",
+                "required": true
+              },
+              {
+                "key": "内容",
+                "label": "内容",
+                "type": "textarea",
+                "required": false
+              },
+              {
+                "key": "立替",
+                "label": "立替",
+                "type": "toggle",
+                "required": false,
+                "initial": true
+              }
+            ],
+            "actions": [
+              {
+                "id": "a1",
+                "label": "申請する",
+                "target": {
+                  "kind": "workflow",
+                  "name": "経費申請"
+                },
+                "confirm": true
+              }
+            ],
+            "desc": "領収書の内容を入力してください。"
+          },
+          {
+            "title": "月次の集計",
+            "fields": [
+              {
+                "key": "対象月",
+                "label": "対象月",
+                "type": "month",
+                "required": true
+              },
+              {
+                "key": "部署",
+                "label": "部署",
+                "type": "choice",
+                "required": false,
+                "options": [
+                  {
+                    "label": "営業",
+                    "value": "sales"
+                  },
+                  {
+                    "label": "開発",
+                    "value": "dev"
+                  },
+                  {
+                    "label": "管理",
+                    "value": "admin"
+                  }
+                ],
+                "multi": true,
+                "initial": [
+                  "sales"
+                ]
+              },
+              {
+                "key": "人数",
+                "label": "人数",
+                "type": "count",
+                "required": false,
+                "min": 1,
+                "max": 10,
+                "step": 1,
+                "initial": 2
+              }
+            ],
+            "actions": [
+              {
+                "id": "a2",
+                "label": "集計する",
+                "target": {
+                  "kind": "workflow",
+                  "name": "月次集計"
+                },
+                "confirm": true
+              },
+              {
+                "id": "a3",
+                "label": "会話で相談する",
+                "target": {
+                  "kind": "chat"
+                },
+                "confirm": false
+              }
+            ]
+          }
+        ],
+        "note": "申請は上長の承認後に経理へ回ります。"
+      },
+      "diagnostics": []
+    },
+    {
+      "name": "noHeading",
+      "source": "app 休暇\n開始日 = date 必須\n日数 = count 1..20 初期 1\n理由 = textarea 例 家族の行事\nbutton 申請 -> workflow 休暇申請\n",
+      "figure": {
+        "kind": "app",
+        "title": "休暇",
+        "refs": [],
+        "sections": [
+          {
+            "fields": [
+              {
+                "key": "開始日",
+                "label": "開始日",
+                "type": "date",
+                "required": true
+              },
+              {
+                "key": "日数",
+                "label": "日数",
+                "type": "count",
+                "required": false,
+                "min": 1,
+                "max": 20,
+                "step": 1,
+                "initial": 1
+              },
+              {
+                "key": "理由",
+                "label": "理由",
+                "type": "textarea",
+                "required": false,
+                "placeholder": "家族の行事"
+              }
+            ],
+            "actions": [
+              {
+                "id": "a1",
+                "label": "申請",
+                "target": {
+                  "kind": "workflow",
+                  "name": "休暇申請"
+                },
+                "confirm": true
+              }
+            ]
+          }
+        ]
+      },
+      "diagnostics": []
+    },
+    {
+      "name": "english",
+      "source": "app Expenses\n## Submit\nSubject = text required e.g. Taxi to the airport\nAmount = number 1..10000 USD required as amount\nbutton Submit -> workflow expense-approval\n",
+      "figure": {
+        "kind": "app",
+        "title": "Expenses",
+        "refs": [],
+        "sections": [
+          {
+            "title": "Submit",
+            "fields": [
+              {
+                "key": "Subject",
+                "label": "Subject",
+                "type": "text",
+                "required": true,
+                "placeholder": "Taxi to the airport"
+              },
+              {
+                "key": "amount",
+                "label": "Amount",
+                "type": "number",
+                "required": true,
+                "min": 1,
+                "max": 10000,
+                "unit": "USD"
+              }
+            ],
+            "actions": [
+              {
+                "id": "a1",
+                "label": "Submit",
+                "target": {
+                  "kind": "workflow",
+                  "name": "expense-approval"
+                },
+                "confirm": true
+              }
+            ]
+          }
+        ]
+      },
+      "diagnostics": []
+    },
+    {
+      "name": "rejected",
+      "source": "app x\n開始日 = date\n種類 = color\nbutton 送る -> https://example.com/x\nbutton 申請 -> workflow 休暇申請\nこれは説明ではない\nbutton 相談 -> chat confirm\n",
+      "figure": {
+        "kind": "app",
+        "title": "x",
+        "refs": [],
+        "sections": [
+          {
+            "fields": [
+              {
+                "key": "開始日",
+                "label": "開始日",
+                "type": "date",
+                "required": false
+              }
+            ],
+            "actions": [
+              {
+                "id": "a1",
+                "label": "申請",
+                "target": {
+                  "kind": "workflow",
+                  "name": "休暇申請"
+                },
+                "confirm": true
+              },
+              {
+                "id": "a2",
+                "label": "相談",
+                "target": {
+                  "kind": "chat"
+                },
+                "confirm": true
+              }
+            ]
+          }
+        ]
+      },
+      "diagnostics": [
+        {
+          "line": 3,
+          "code": "unrecognized_line"
+        },
+        {
+          "line": 4,
+          "code": "unrecognized_line"
+        },
+        {
+          "line": 6,
+          "code": "unrecognized_line"
+        }
+      ]
+    },
+    {
+      "name": "slider",
+      "source": "app 設定\n上限 = slider 0..100 step 5 初期 50 %\nbutton 保存 -> workflow 設定の保存\n",
+      "figure": {
+        "kind": "app",
+        "title": "設定",
+        "refs": [],
+        "sections": [
+          {
+            "fields": [
+              {
+                "key": "上限",
+                "label": "上限",
+                "type": "slider",
+                "required": false,
+                "min": 0,
+                "max": 100,
+                "step": 5
+              }
+            ],
+            "actions": [
+              {
+                "id": "a1",
+                "label": "保存",
+                "target": {
+                  "kind": "workflow",
+                  "name": "設定の保存"
+                },
+                "confirm": true
+              }
+            ]
+          }
+        ]
+      },
+      "diagnostics": []
+    }
+  ],
+  "values": [
+    {
+      "source": "full",
+      "action": "a1",
+      "input": {
+        "件名": "",
+        "amount": "0",
+        "区分": "家賃",
+        "日付": "2025-02-30",
+        "立替": "yes"
+      },
+      "expect": {
+        "ok": false,
+        "values": {},
+        "errors": {
+          "件名": "入力してください",
+          "amount": "1 以上にしてください",
+          "区分": "選択肢から選んでください",
+          "日付": "日付が正しくありません",
+          "立替": "オンかオフにしてください"
+        }
+      }
+    },
+    {
+      "source": "full",
+      "action": "a1",
+      "input": {
+        "件名": "出張",
+        "amount": "12,300",
+        "区分": "交通費",
+        "日付": "2025-04-01",
+        "内容": "",
+        "立替": false,
+        "余計": "x"
+      },
+      "expect": {
+        "ok": true,
+        "values": {
+          "件名": "出張",
+          "amount": 12300,
+          "区分": "交通費",
+          "日付": "2025-04-01",
+          "立替": false
+        },
+        "errors": {}
+      }
+    },
+    {
+      "source": "full",
+      "action": "a2",
+      "input": {
+        "対象月": "2025-13",
+        "部署": [
+          "hr"
+        ],
+        "人数": 2.5
+      },
+      "expect": {
+        "ok": false,
+        "values": {},
+        "errors": {
+          "対象月": "日付が正しくありません",
+          "部署": "選択肢から選んでください",
+          "人数": "整数で入力してください"
+        }
+      }
+    },
+    {
+      "source": "full",
+      "action": "a2",
+      "input": {
+        "対象月": "2025-04",
+        "部署": [
+          "sales",
+          "dev",
+          "dev"
+        ],
+        "人数": 3
+      },
+      "expect": {
+        "ok": true,
+        "values": {
+          "対象月": "2025-04",
+          "部署": [
+            "sales",
+            "dev"
+          ],
+          "人数": 3
+        },
+        "errors": {}
+      }
+    },
+    {
+      "source": "slider",
+      "action": "a1",
+      "input": {
+        "上限": 105
+      },
+      "expect": {
+        "ok": false,
+        "values": {},
+        "errors": {
+          "上限": "100 以下にしてください"
+        }
+      }
+    }
+  ]
+}
