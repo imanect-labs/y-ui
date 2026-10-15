@@ -1,0 +1,63 @@
+{
+  "runId": "2026-10-15T09-03-09-606Z",
+  "outDir": "eval/runs/2026-10-15-luna-v07",
+  "models": [
+    "luna-go"
+  ],
+  "efforts": [
+    "low"
+  ],
+  "arms": [
+    "C",
+    "F",
+    "H"
+  ],
+  "seeds": 3,
+  "tasks": [
+    "scatter-001",
+    "scatter-002",
+    "scatter-003",
+    "scatter-004",
+    "scatter-005",
+    "scatter-006",
+    "scatter-007",
+    "scatter-008",
+    "scatter-009",
+    "scatter-010",
+    "timeline-001",
+    "timeline-002",
+    "timeline-003",
+    "timeline-004",
+    "timeline-005",
+    "timeline-006",
+    "timeline-007",
+    "timeline-008",
+    "timeline-009",
+    "timeline-010",
+    "steps-001",
+    "steps-002",
+    "steps-003",
+    "steps-004",
+    "steps-005",
+    "steps-006",
+    "steps-007",
+    "steps-008",
+    "steps-009",
+    "steps-010",
+    "tree-001",
+    "tree-002",
+    "tree-003",
+    "tree-004",
+    "tree-005",
+    "tree-006",
+    "tree-007",
+    "tree-008",
+    "tree-009",
+    "tree-010"
+  ],
+  "concurrency": 4,
+  "shiki": {
+    "commit": "7911f6e"
+  },
+  "mock": false
+}
