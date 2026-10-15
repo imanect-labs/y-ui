@@ -244,8 +244,10 @@ export async function rescore(outDir: string, tasks: EvalTask[], shiki: ShikiToo
     if (rec.ok && rec.outcome && task) {
       const o = rec.outcome;
       const replay: ChatFn = async () => ({ text: o.text, toolCalls: o.toolCalls.map((c, i) => ({ id: `r${i}`, ...c })), totalMs: o.totalMs });
-      // A は修正ループの途中経過を保存していないので、最終出力だけで採点し直す。
-      const outcome = await runArm(rec.arm === "A2" ? "A" : rec.arm, task, replay, shiki);
+      // A は修正ループの途中経過を、G・H は説明を読みに行く往復を保存していないので、最終出力だけで採点し直す
+      // （G・H の最終出力は F と同じく本文中の ```ui ブロック）。
+      const arm = rec.arm === "A2" ? "A" : rec.arm === "G" || rec.arm === "H" ? "F" : rec.arm;
+      const outcome = await runArm(arm, task, replay, shiki);
       rec.score = scoreTask(task, outcome.extraction);
       n++;
     }

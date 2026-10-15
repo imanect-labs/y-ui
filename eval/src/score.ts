@@ -305,21 +305,42 @@ function scoreFlow(gold: FlowFigure, f0: FlowFigure, context: string): Omit<Scor
 
 // ------------------------------------------------------------ stack
 
+const boxText = (b: { title: string; desc?: string }) => (b.desc ? `${b.title} ${b.desc}` : b.title);
+
 /**
  * 横並びを「見出し付きのまとまり＋中の要素」で書いた層（`- データ保存` の下に `- PostgreSQL | Redis | S3`）を、
- * 横並びの層に開く。見出しが正解のどの箱とも対応しない、子を 2 つ以上持つ 1 箱だけの層に限る。
+ * 横並びの層に開く。1 箱だけの層で、見出しが正解の箱とほぼ同じ（0.85 以上）でなく、子の過半数が
+ * 正解の「層の中の要素」より「層の箱」に近い場合に限る。
+ * 見出しの似かたを 0.5 で切ると「データソース」と「データウェアハウス」のような別物を同じとみなし、開けなかった。
  */
 function unwrapGroups(gold: StackFigure, f: StackFigure): StackFigure {
-  const goldTitles = gold.tiers.flatMap((t) => t.boxes.map((b) => b.title));
+  const tops = gold.tiers.flatMap((t) => t.boxes.map(boxText));
+  const kids = gold.tiers.flatMap((t) => t.boxes.flatMap((b) => b.children.map(boxText)));
+  const best = (s: string, pool: string[]) => Math.max(0, ...pool.map((g) => similarity(g, s)));
   return {
     ...f,
     tiers: f.tiers.map((t) => {
       const b = t.boxes[0];
-      if (t.boxes.length !== 1 || !b || b.children.length < 2) return t;
-      if (goldTitles.some((g) => similarity(g, b.title) >= 0.5)) return t;
+      if (t.boxes.length !== 1 || !b || b.children.length === 0) return t;
+      if (tops.some((g) => similarity(g, b.title) >= 0.85)) return t;
+      const asTop = b.children.filter((c) => {
+        const s = best(boxText(c), tops);
+        return s >= 0.5 && s > best(boxText(c), kids);
+      }).length;
+      if (asTop * 2 <= b.children.length) return t;
       return { ...t, boxes: b.children.map((c) => ({ ...c, children: [] })) };
     }),
   };
+}
+
+/**
+ * 正解では説明（desc）に書いた中身を、モデルが子として書いた分を除く（`Web / モバイル` を子にするなど）。
+ * 説明しか持たない正解の箱に限る。
+ */
+function childrenAgainst(goldBox: StackFigure["tiers"][number]["boxes"][number], modelChildren: StackFigure["tiers"][number]["boxes"][number]["children"]) {
+  if (goldBox.children.length > 0 || !goldBox.desc) return modelChildren;
+  const d = norm(goldBox.desc);
+  return modelChildren.filter((c) => !(norm(c.title).length >= 2 && d.includes(norm(c.title))));
 }
 
 function scoreStack(gold: StackFigure, f0: StackFigure, context: string): Omit<Score, "syntaxOk" | "produced" | "kindOk"> {
@@ -327,7 +348,6 @@ function scoreStack(gold: StackFigure, f0: StackFigure, context: string): Omit<S
   const flat = (s: StackFigure) => s.tiers.flatMap((t, ti) => t.boxes.map((b) => ({ tier: ti, box: b })));
   const g = flat(gold);
   const m = flat(f);
-  const boxText = (b: { title: string; desc?: string }) => (b.desc ? `${b.title} ${b.desc}` : b.title);
   // 見出しで対応付け、だめなら説明込みで対応付ける（`IdP: SAML / OIDC` を `IdP（SAML / OIDC）` と書くなど）。
   const map = matchByText(
     g.map((x) => boxText(x.box)),
@@ -359,17 +379,21 @@ function scoreStack(gold: StackFigure, f0: StackFigure, context: string): Omit<S
   let childTp = 0;
   let childGold = 0;
   let childModel = 0;
+  const pairedModel = new Map([...map.entries()].map(([gi, mi]) => [mi, gi]));
   g.forEach((x, gi) => {
     childGold += x.box.children.length;
     const mi = map.get(gi);
     if (mi === undefined) return;
-    const mc = m[mi]!.box.children;
+    const mc = childrenAgainst(x.box, m[mi]!.box.children);
     childTp += matchByText(
       x.box.children.map(boxText),
       mc.map(boxText),
     ).size;
   });
-  for (const x of m) childModel += x.box.children.length;
+  m.forEach((x, mi) => {
+    const gi = pairedModel.get(mi);
+    childModel += gi === undefined ? x.box.children.length : childrenAgainst(g[gi]!.box, x.box.children).length;
+  });
   const childF1 = f1(childTp, childGold, childModel);
 
   return {

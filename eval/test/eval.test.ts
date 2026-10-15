@@ -100,6 +100,17 @@ describe("採点", () => {
     expect(scoreTask(gold, ex([fig("stack y\n- Web\n- API\n  - DB | Cache | S3\n")])).pass).toBe(false);
   });
 
+  it("構成図: 見出しが正解の別の箱に似ていても、中身が層の箱ならまとまりを開く", () => {
+    const gold = task("stack x\n- 基幹システム | SaaS | アクセスログ\n- データウェアハウス\n- BI\n", ["stack"]);
+    // 「データソース」と「データウェアハウス」は似ているが別物
+    expect(scoreTask(gold, ex([fig("stack y\n- データソース\n  - 基幹システム | SaaS | アクセスログ\n- データウェアハウス\n- BI\n")])).pass).toBe(true);
+  });
+
+  it("構成図: 正解では説明に書いた中身を子にしても余分な子としない", () => {
+    const gold = task("stack x\n- 画面: Web / モバイル\n- API\n", ["stack"]);
+    expect(scoreTask(gold, ex([fig("stack y\n- 画面\n  - Web\n  - モバイル\n- API\n")])).pass).toBe(true);
+  });
+
   it("図を出すべきでない課題", () => {
     const none = { ...task("bar x\nA | 1\n", []), expect: "none" as const, category: "none-nodata" as const };
     expect(scoreTask(none, ex([])).pass).toBe(true);
