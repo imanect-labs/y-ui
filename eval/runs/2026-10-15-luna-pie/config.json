@@ -1,0 +1,41 @@
+{
+  "runId": "2026-10-15T03-59-42-366Z",
+  "outDir": "eval/runs/2026-10-15-luna-pie",
+  "models": [
+    "luna-go"
+  ],
+  "efforts": [
+    "low"
+  ],
+  "arms": [
+    "A",
+    "C",
+    "F"
+  ],
+  "seeds": 3,
+  "tasks": [
+    "pie-001",
+    "pie-002",
+    "pie-003",
+    "pie-004",
+    "pie-005",
+    "pie-006",
+    "pie-007",
+    "pie-008",
+    "pie-009",
+    "pie-010",
+    "pie-011",
+    "pie-012",
+    "pie-013",
+    "pie-014",
+    "pie-015",
+    "pie-016",
+    "pie-017",
+    "pie-018"
+  ],
+  "concurrency": 4,
+  "shiki": {
+    "commit": "c154073"
+  },
+  "mock": false
+}
