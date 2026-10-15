@@ -1,0 +1,42 @@
+{
+  "runId": "2026-10-15T22-14-41-345Z",
+  "outDir": "eval/runs/luna-v09",
+  "models": [
+    "luna-go"
+  ],
+  "efforts": [
+    "low"
+  ],
+  "arms": [
+    "C",
+    "F"
+  ],
+  "seeds": 3,
+  "tasks": [
+    "compare-001",
+    "compare-002",
+    "compare-003",
+    "compare-004",
+    "compare-005",
+    "compare-006",
+    "proscons-001",
+    "proscons-002",
+    "proscons-003",
+    "proscons-004",
+    "proscons-005",
+    "swot-001",
+    "swot-002",
+    "swot-003",
+    "swot-004",
+    "checklist-001",
+    "checklist-002",
+    "checklist-003",
+    "checklist-004",
+    "checklist-005"
+  ],
+  "concurrency": 4,
+  "shiki": {
+    "commit": "d6b406d"
+  },
+  "mock": false
+}

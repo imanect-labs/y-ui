@@ -1,6 +1,6 @@
 # Yui ロードマップ
 
-今の位置は 0.7.0。対応する図は 16 種類（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt と、計算の calc）で、パーサ・SVG・React（ホバーとキーボード）・書き出し（PNG / SVG / クリップボード）がある。Shiki のチャットでは既定で有効（imanect-labs/shiki-platform#560）。
+今の位置は 0.7.0（未公開）。対応する図は 20 種類（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt / compare / proscons / swot / checklist と、計算の calc）で、パーサ・SVG・React（ホバーとキーボード）・書き出し（PNG / SVG / クリップボード）がある。Shiki のチャットでは既定で有効（imanect-labs/shiki-platform#560）。
 
 この文書の順番で進める。v0.6・v0.7・Shiki 側の組み込みは並行する。
 
@@ -40,6 +40,21 @@
 | `funnel` | 段階ごとの減り方（営業・採用） | `段階 \| 数`。**実装済み**（§5.12） |
 | `progress` | 目標に対する進捗 | `項目 \| 実績 \| 目標`。**実装済み**（§5.11） |
 | `quadrant` | 2 軸の位置づけ（2×2） | `x: 低 → 高`・`y: 低 → 高` と `項目 \| x \| y`（0〜100）。**実装済み**（§5.13） |
+
+### v0.9（比較・判断の図）
+
+| 種類 | 用途 | 記法 |
+|---|---|---|
+| `compare` | 製品・プラン・案の項目ごとの比較（✓ / ✗ / △） | 見出し行と `項目 \| セル \| セル`、`推奨: 名前`。**実装済み**（§5.16） |
+| `proscons` | 1 つの案の良い点と悪い点 | `メリット:` `デメリット:` の下に箇条書き。**実装済み**（§5.17） |
+| `swot` | 強み・弱み・機会・脅威 | `強み:` などの見出しの下に箇条書き。**実装済み**（§5.18） |
+| `checklist` | 確認事項・タスクの済・未 | `- [x]` `- [ ]` `- [~]`。**実装済み**（§5.19） |
+
+評価（Luna、Shiki の説明）: 新しい 4 種類で 98.3%、全課題で 95.1%（16 種類の説明では 93.6%）。[eval-results-2026-10-15-v09.md](eval-results-2026-10-15-v09.md)。
+
+あわせて、stack 以降の種類の見た目を整えた（文字と余白を大きく、線を控えめに、角を丸める）。cards は値（`見出し | ¥4,800 | 本文`）と ✓ の項目、steps・timeline は段落の説明を書ける。
+
+候補（未着手）: `waterfall`（増減の内訳）、`radar`（複数の観点の点数）、`heatmap`（曜日 × 時間などの表の濃淡）、概念図（パネルの中の比率のブロックと矢印）。
 
 `area`（面グラフ）は種類を増やさず、`line` の `stacked: true` として扱う（種類が増えるほど選び間違いが増えるため）。
 

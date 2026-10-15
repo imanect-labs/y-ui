@@ -31,7 +31,7 @@ export const COMPARE_TASKS: Handwritten[] = [
     id: "compare-005",
     question: "3つの移行案を、費用・期間・リスクで比べて。",
     context: "移行案: A案（改修）は費用が小さく期間は3か月だがリスクは高い。B案（SaaS）は費用が中程度で期間2か月、リスクは低い。C案（内製）は費用が大きく期間12か月、リスクは中程度。",
-    gold: "compare 移行案の比較\n項目 | A案（改修） | B案（SaaS） | C案（内製）\n費用 | 小 | 中 | 大\n期間 | 3か月 | 2か月 | 12か月\nリスク | 高 | 低 | 中\n",
+    gold: "compare 移行案の比較\n項目 | A案（改修） | B案（SaaS） | C案（内製）\n費用 | 小 | 中程度 | 大\n期間 | 3か月 | 2か月 | 12か月\nリスク | 高 | 低 | 中程度\n",
   },
   {
     id: "compare-006",
@@ -95,9 +95,9 @@ export const SWOT_TASKS: Handwritten[] = [
   },
   {
     id: "swot-004",
-    question: "Analyze our mobile app with a SWOT figure.",
-    context: "App review: Strengths are a fast onboarding flow and high ratings (4.7). Weaknesses are no offline mode and a small Android user base. Opportunities: expansion into Southeast Asia. Threats: new privacy rules on app tracking.",
-    gold: "swot Mobile app SWOT\nStrengths:\n- Fast onboarding flow\n- High ratings (4.7)\nWeaknesses:\n- No offline mode\n- Small Android user base\nOpportunities:\n- Expansion into Southeast Asia\nThreats:\n- New privacy rules on app tracking\n",
+    question: "モバイルアプリのレビュー結果を SWOT の図にして。",
+    context: "アプリのレビュー: 強みは初回設定が速いことと、評価が高いこと（4.7）。弱みはオフラインで使えないことと、Android の利用者が少ないこと。機会は東南アジアへの展開。脅威はアプリの追跡に関する新しいプライバシー規制。",
+    gold: "swot モバイルアプリの SWOT\n強み:\n- 初回設定が速い\n- 評価が高い（4.7）\n弱み:\n- オフラインで使えない\n- Android の利用者が少ない\n機会:\n- 東南アジアへの展開\n脅威:\n- アプリの追跡に関する新しいプライバシー規制\n",
   },
 ];
 
