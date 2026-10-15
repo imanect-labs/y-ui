@@ -41,7 +41,8 @@ export function tokenize(src: string): Tok[] | string {
       i++;
       continue;
     }
-    const num = /^\d+(?:\.\d+)?/.exec(s.slice(i));
+    // 数字で始まる名前（`1時間あたりの賃金`）は、数字の直後に名前の文字が続くかで見分ける
+    const num = /^\d+(?:\.\d+)?(?![^\s+\-*/^(),<>=!\d.])/.exec(s.slice(i));
     if (num) {
       out.push({ k: "num", v: Number(num[0]), at: i });
       i += num[0].length;
@@ -53,7 +54,7 @@ export function tokenize(src: string): Tok[] | string {
       i += op.length;
       continue;
     }
-    // 名前: 空白・演算子以外が続く部分（日本語可）。数字で始まらない。
+    // 名前: 空白・演算子以外が続く部分（日本語可）
     const name = /^[^\s+\-*/^(),<>=!]+/.exec(s.slice(i));
     if (name) {
       out.push({ k: "name", v: name[0], at: i });

@@ -274,7 +274,7 @@ function calcSource(f: CalcFigure, lines: string[]): void {
         lines.push(`${d.name} = count ${d.min}..${d.max} 初期 ${d.initial}${unit}`);
         break;
       case "choice":
-        lines.push(`${d.name} = choice ${d.options!.map((o) => `${o.label}=${o.value}`).join(" | ")}`);
+        lines.push(`${d.name} = choice ${d.options!.map((o) => `${o.label}=${o.value}`).join(" | ")}${unit}`);
         break;
       case "toggle":
         lines.push(`${d.name} = toggle${d.initial ? " 初期 オン" : ""}`);

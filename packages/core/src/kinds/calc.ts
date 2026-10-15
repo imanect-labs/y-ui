@@ -81,17 +81,22 @@ function readDef(name: string, body: string, line: number, diags: Diagnostics, d
   }
   m = CHOICE.exec(body);
   if (m) {
+    // 最後の選択肢の後ろの単位（`… | 軽減=8 %`）は入力の単位にする
+    let unit: string | undefined;
     const options = m[2]!
       .split(/\s*\|\s*/)
-      .map((o) => /^(.+?)\s*[=＝]\s*(-?\d+(?:\.\d+)?)$/.exec(o.trim()))
+      .map((o) => /^(.+?)\s*[=＝]\s*(-?\d+(?:\.\d+)?)\s*(\S*)$/.exec(o.trim()))
       .filter((x): x is RegExpExecArray => x !== null)
-      .map((x) => ({ label: clip(x[1]!.trim(), line, diags), value: +x[2]! }));
+      .map((x) => {
+        if (x[3]) unit = x[3];
+        return { label: clip(x[1]!.trim(), line, diags), value: +x[2]! };
+      });
     if (options.length < 2) {
       diags.add(line, "warning", "unrecognized_line", `「${name}」の選択肢は「表示名=値 | 表示名=値」で 2 つ以上書いてください`);
       return null;
     }
     const values = options.map((o) => o.value);
-    return { type: "input", name, control: "choice", min: Math.min(...values), max: Math.max(...values), step: 0, initial: options[0]!.value, options };
+    return { type: "input", name, control: "choice", min: Math.min(...values), max: Math.max(...values), step: 0, initial: options[0]!.value, options, ...(unit ? { unit: clip(unit, line, diags) } : {}) };
   }
   m = TOGGLE.exec(body);
   if (m) {
@@ -114,6 +119,11 @@ function readDef(name: string, body: string, line: number, diags: Diagnostics, d
     const p = parseExpr(text);
     const normalized = text.normalize("NFKC");
     const unit = normalized.slice(p.end).trim();
+    // 単位に演算子が残るのは、式の途中で読めなくなったもの
+    if (/[+\-*/^()=]/.test(unit)) {
+      diags.add(line, "warning", "unrecognized_line", `「${name}」の式を読めません（「${unit}」の前に演算子がありません）`);
+      return null;
+    }
     const missing = [...namesIn(p.expr)].filter((n) => !defined.has(n));
     if (missing.length) {
       diags.add(line, "warning", "unrecognized_line", `「${name}」の式に、前に定義されていない名前があります: ${missing.join("、")}`);

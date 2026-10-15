@@ -1,0 +1,61 @@
+{
+  "runId": "2026-10-15T12-37-33-489Z",
+  "outDir": "eval/runs/2026-10-15-luna-calc",
+  "models": [
+    "luna-go"
+  ],
+  "efforts": [
+    "low"
+  ],
+  "arms": [
+    "C",
+    "F",
+    "H"
+  ],
+  "seeds": 3,
+  "tasks": [
+    "stat-001",
+    "stat-002",
+    "stat-003",
+    "stat-004",
+    "stat-005",
+    "stat-006",
+    "stat-007",
+    "stat-008",
+    "stat-009",
+    "stat-010",
+    "stat-011",
+    "stat-012",
+    "stat-013",
+    "stat-014",
+    "stat-015",
+    "stat-016",
+    "stat-017",
+    "stat-018",
+    "stat-019",
+    "stat-020",
+    "none-unneeded-001",
+    "none-unneeded-002",
+    "none-unneeded-003",
+    "none-unneeded-004",
+    "none-unneeded-005",
+    "none-unneeded-006",
+    "none-unneeded-007",
+    "none-unneeded-008",
+    "none-unneeded-009",
+    "none-unneeded-010",
+    "calc-001",
+    "calc-002",
+    "calc-003",
+    "calc-004",
+    "calc-005",
+    "calc-006",
+    "calc-007",
+    "calc-008"
+  ],
+  "concurrency": 4,
+  "shiki": {
+    "commit": "b37c7a6"
+  },
+  "mock": false
+}

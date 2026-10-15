@@ -1,0 +1,31 @@
+{
+  "runId": "2026-10-15T12-43-31-463Z",
+  "outDir": "eval/runs/2026-10-15-luna-calc2",
+  "models": [
+    "luna-go"
+  ],
+  "efforts": [
+    "low"
+  ],
+  "arms": [
+    "C",
+    "F",
+    "H"
+  ],
+  "seeds": 3,
+  "tasks": [
+    "calc-001",
+    "calc-002",
+    "calc-003",
+    "calc-004",
+    "calc-005",
+    "calc-006",
+    "calc-007",
+    "calc-008"
+  ],
+  "concurrency": 4,
+  "shiki": {
+    "commit": "d54287f"
+  },
+  "mock": false
+}

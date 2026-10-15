@@ -26,6 +26,14 @@ describe("式", () => {
     expect([ev("1 < 2 and not 0"), ev("1 > 2 or 0"), ev("if(a >= 10, 1, 2)", { a: 10 }), ev("round(2.345, 2)"), ev("max(1, 5, 3)")]).toEqual([1, 0, 1, 2.35, 5]);
   });
 
+  it("数字で始まる名前を読む（`1時間あたりの賃金`）", () => {
+    expect(ev("1時間あたりの賃金 * 1.25 * 2", { "1時間あたりの賃金": 100 })).toBe(250);
+    expect(ev("2x", { "2x": 3 })).toBe(3);
+    expect(ev("1.5 * 2")).toBe(3);
+    const r = calc("calc x\na = slider 0..10 初期 2\nb = a 円 * 3\n");
+    expect((r.figure as CalcFigure).defs.map((d) => d.name)).toEqual(["a"]);
+  });
+
   it("0 除算・定義域外・未定義は null（「—」）", () => {
     expect([ev("1 / 0"), ev("sqrt(-1)"), ev("x + 1"), ev("10 ^ 400")]).toEqual([null, null, null, null]);
     expect(formatCalc(null, 0, "ja-JP")).toBe("—");
@@ -75,6 +83,9 @@ describe("calc の記法", () => {
     expect(f.defs[1]).toMatchObject({ control: "count", min: 1, max: 100, initial: 5, unit: "人" });
     expect(f.defs[2]).toMatchObject({ control: "toggle", initial: 1 });
     expect(runCalc(f).get("料金")).toBeCloseTo(4410);
+    const tax = calc("calc 税\n税率 = choice 標準=10 | 軽減=8 %\n税込 = 1000 * (1 + 税率 / 100) 円\n").figure as CalcFigure;
+    expect(tax.defs[0]).toMatchObject({ options: [{ label: "標準", value: 10 }, { label: "軽減", value: 8 }], unit: "%" });
+    expect(calc(toSource(tax)).figure).toEqual(tax);
   });
 
   it("前に定義していない名前・読めない式・選択肢の不足は、その行だけ除外する", () => {

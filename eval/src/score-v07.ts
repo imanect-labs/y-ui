@@ -254,9 +254,26 @@ export function scoreCalc(gold: CalcFigure, f: CalcFigure, checks: { inputs: Rec
   const gIn = gold.defs.filter((d) => d.type === "input");
   const mIn = f.defs.filter((d) => d.type === "input");
   const inMap = matchByText(gIn.map((d) => d.name), mIn.map((d) => d.name));
+  // 名前で対応しなかった入力は、初期値（単位の倍率込み）が同じものと対応付ける（`年数` と `積立期間`）
+  gIn.forEach((g, gi) => {
+    if (inMap.has(gi) || g.type !== "input" || g.control === "choice" || g.control === "toggle") return;
+    const used = new Set(inMap.values());
+    const mi = mIn.findIndex((m, i) => !used.has(i) && m.type === "input" && (m.control === "slider" || m.control === "count") && SCALES.some((k) => same(m.initial, g.initial * k)));
+    if (mi >= 0) inMap.set(gi, mi);
+  });
   const mFormulas = f.defs.filter((d) => d.type === "formula");
   let ok = 0;
   let total = 0;
+  // 選択・オンオフの入力は、モデルが別の値（年払い = オンオフで 0.8 を式に書く）で表すことがあるので、
+  // 期待値に合う設定が選べるか（モデルの選択肢・オン/オフのどれか）で見る
+  const discrete = mIn.filter((d) => d.type === "input" && (d.control === "choice" || d.control === "toggle"));
+  const settings = (d: (typeof mIn)[number]) => (d.type === "input" ? (d.control === "toggle" ? [0, 1] : (d.options ?? []).map((o) => o.value)) : []);
+  const combos: Map<string, number>[] = [new Map()];
+  for (const d of discrete.slice(0, 4)) {
+    const next: Map<string, number>[] = [];
+    for (const c of combos) for (const v of settings(d)) next.push(new Map([...c, [d.name, v]]));
+    combos.splice(0, combos.length, ...next);
+  }
   for (const c of checks) {
     const inputs = new Map<string, number>();
     for (const [gi, mi] of inMap) {
@@ -270,17 +287,32 @@ export function scoreCalc(gold: CalcFigure, f: CalcFigure, checks: { inputs: Rec
       }
       inputs.set(m.name, v);
     }
-    const values = runCalc(f, inputs);
+    // 正解の選択の値がモデルの選択肢にそのまま無い入力は、モデルの設定を総当たりで試す
+    const discreteGold = gIn.filter((g) => g.type === "input" && (g.control === "choice" || g.control === "toggle")).length;
+    const discreteMapped = [...inMap].filter(([gi]) => gIn[gi]!.type === "input" && ((gIn[gi] as { control: string }).control === "choice" || (gIn[gi] as { control: string }).control === "toggle")).length;
+    const exact = discreteMapped === discreteGold && [...inMap].every(([gi, mi]) => {
+      const g = gIn[gi]!;
+      const m = mIn[mi]!;
+      return !(g.type === "input" && (g.control === "choice" || g.control === "toggle")) || (m.type === "input" && settings(m).includes(inputs.get(m.name)!));
+    });
+    // 選択・オンオフの値の意味（1 が月払いか年払いか）はモデルごとに違うので、正解に選択の入力があれば常に総当たりする
+    const trials = exact && discreteGold === 0 ? [inputs] : combos.map((cmb) => new Map([...inputs, ...cmb]));
     for (const [name, want] of Object.entries(c.expect)) {
       total++;
-      // 期待値に合う式を、名前の近いものから探す（無ければどれでも）
       const ranked = [...mFormulas].sort((a, b) => similarity(name, b.name) - similarity(name, a.name));
-      if (ranked.some((m) => {
-        const got = values.get(m.name);
-        return got !== null && got !== undefined && SCALES.some((k) => same(got, want * k));
-      })) ok++;
+      const hit = trials.some((t) => {
+        const values = runCalc(f, t);
+        return ranked.some((m) => {
+          const got = values.get(m.name);
+          return got !== null && got !== undefined && SCALES.some((k) => same(got, want * k));
+        });
+      });
+      if (hit) ok++;
     }
   }
   const acc = total === 0 ? 0 : ok / total;
-  return { pass: acc === 1 && inMap.size === gIn.length, semantic: acc, fabricated: 0, detail: { acc, inputsMatched: inMap.size, goldInputs: gIn.length } };
+  // 選択・オンオフの入力は、モデルが別の形（オンオフで 0.8 を式に書く）で表してよい（上の総当たりで確かめた）
+  const continuous = gIn.filter((g) => g.type === "input" && (g.control === "slider" || g.control === "count"));
+  const continuousMapped = [...inMap].filter(([gi]) => continuous.includes(gIn[gi]!)).length;
+  return { pass: acc === 1 && continuousMapped === continuous.length, semantic: acc, fabricated: 0, detail: { acc, inputsMatched: inMap.size, goldInputs: gIn.length } };
 }
