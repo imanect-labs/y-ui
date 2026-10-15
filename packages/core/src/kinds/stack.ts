@@ -13,7 +13,7 @@ import { clip, Diagnostics, hasPipe, LIMITS, type Line, parseOption, splitCells,
 const OPTIONS = ["note", "src"] as const;
 const ARROW_LINE = /^(?:↓|⬇|↕|⇩|->|→)\s+(.*)$|^(?:↓|⬇|↕|⇩)$/;
 
-function indentOf(raw: string): number {
+export function indentOf(raw: string): number {
   let n = 0;
   for (const ch of raw) {
     if (ch === " ") n += 1;

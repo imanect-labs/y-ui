@@ -27,9 +27,13 @@ export const ARM_LABELS: Record<ArmId, string> = {
 };
 
 /** その方式で評価する課題か。 */
+export const V07_CATEGORIES: string[] = ["scatter", "timeline", "steps", "tree"];
+
 export function armApplies(arm: ArmId, task: EvalTask): boolean {
   if (arm === "A2") return task.expect === "figure";
   if (arm === "E") return task.category === "flow" || task.category === "stack";
+  // D（JSON）は比較用の方式で、v0.7 で足した種類の書き方を持たない
+  if (arm === "D") return !V07_CATEGORIES.includes(task.category);
   return true;
 }
 

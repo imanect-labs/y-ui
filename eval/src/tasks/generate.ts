@@ -220,6 +220,55 @@ function pieTasks(count: number, seed: number): EvalTask[] {
   return out;
 }
 
+// ------------------------------------------------------------ scatter（2 つの量の関係）
+
+interface ScatterDomain {
+  title: string;
+  label: string;
+  labels: string[];
+  x: { name: string; unit: string; range: [number, number] };
+  y: { name: string; unit: string; range: [number, number] };
+}
+
+const SCATTER_DOMAINS: ScatterDomain[] = [
+  { title: "店舗別の広告費と売上", label: "店舗", labels: ["新宿", "渋谷", "池袋", "横浜", "大宮", "千葉", "立川", "町田"], x: { name: "広告費", unit: "万円", range: [20, 150] }, y: { name: "売上", unit: "百万円", range: [10, 60] } },
+  { title: "営業担当者の訪問件数と受注件数", label: "担当者", labels: ["佐藤", "鈴木", "高橋", "田中", "伊藤", "渡辺", "山本"], x: { name: "訪問件数", unit: "件", range: [10, 80] }, y: { name: "受注件数", unit: "件", range: [1, 20] } },
+  { title: "製品の価格と月間販売数", label: "製品", labels: ["A", "B", "C", "D", "E", "F", "G", "H"], x: { name: "価格", unit: "円", range: [980, 9800] }, y: { name: "月間販売数", unit: "個", range: [50, 900] } },
+  { title: "支店の従業員数と顧客満足度", label: "支店", labels: ["札幌", "仙台", "名古屋", "大阪", "広島", "福岡"], x: { name: "従業員数", unit: "人", range: [8, 60] }, y: { name: "顧客満足度", unit: "点", range: [55, 95] } },
+  { title: "研修の受講時間と試験の点数", label: "受講者", labels: ["A さん", "B さん", "C さん", "D さん", "E さん", "F さん", "G さん"], x: { name: "受講時間", unit: "時間", range: [2, 30] }, y: { name: "点数", unit: "点", range: [40, 98] } },
+];
+
+function scatterTasks(count: number, seed: number): EvalTask[] {
+  const r = rng(seed);
+  const out: EvalTask[] = [];
+  for (let i = 0; i < count; i++) {
+    const d = SCATTER_DOMAINS[i % SCATTER_DOMAINS.length]!;
+    const n = Math.min(d.labels.length, 5 + Math.floor(r() * 3));
+    const labels = shuffle(r, d.labels).slice(0, n);
+    const points = labels.map((label) => ({ label, x: between(r, d.x.range[0], d.x.range[1]), y: between(r, d.y.range[0], d.y.range[1]) }));
+    const xName = `${d.x.name}（${d.x.unit}）`;
+    const yName = `${d.y.name}（${d.y.unit}）`;
+    const style = i % 3;
+    const context =
+      style === 0
+        ? `${d.title}の一覧\n\n| ${d.label} | ${xName} | ${yName} |\n|---|---:|---:|\n${points.map((p) => `| ${p.label} | ${ja(p.x)} | ${ja(p.y)} |`).join("\n")}`
+        : style === 1
+          ? `${d.title}をまとめました。${points.map((p) => `${p.label}は${d.x.name}${ja(p.x)}${d.x.unit}、${d.y.name}${ja(p.y)}${d.y.unit}`).join("。")}です。`
+          : `${d.title}\n${points.map((p) => `- ${p.label}: ${d.x.name} ${ja(p.x)}${d.x.unit} / ${d.y.name} ${ja(p.y)}${d.y.unit}`).join("\n")}`;
+    const question = i % 4 === 3 ? `${d.x.name}と${d.y.name}の関係がわかるように図にして。` : pick(r, [`${d.title}を散布図にしてください。`, `横軸を${d.x.name}、縦軸を${d.y.name}にした散布図で見せて。`]);
+    out.push({
+      id: `scatter-${String(i + 1).padStart(3, "0")}`,
+      category: "scatter",
+      question,
+      context,
+      expect: "figure",
+      acceptKinds: ["scatter"],
+      gold: { kind: "scatter", title: d.title, refs: [], columns: [d.label, xName, yName], points: points.map((p) => ({ ...p, refs: [] })) },
+    });
+  }
+  return out;
+}
+
 // ------------------------------------------------------------ long（大量の行）
 
 const PREFECTURES = "北海道 青森県 岩手県 宮城県 秋田県 山形県 福島県 茨城県 栃木県 群馬県 埼玉県 千葉県 東京都 神奈川県 新潟県 富山県 石川県 福井県 山梨県 長野県 岐阜県 静岡県 愛知県 三重県 滋賀県 京都府 大阪府 兵庫県 奈良県 和歌山県 鳥取県 島根県 岡山県 広島県 山口県 徳島県 香川県 愛媛県 高知県 福岡県 佐賀県 長崎県 熊本県 大分県 宮崎県 鹿児島県 沖縄県".split(" ");
@@ -444,6 +493,7 @@ export function generatedTasks(): EvalTask[] {
     ...chartTasks("bar", 25, 101),
     ...chartTasks("line", 20, 202),
     ...pieTasks(18, 606),
+    ...scatterTasks(10, 707),
     ...statTasks(20, 303),
     ...longTasks(10, 404),
     ...jpnumTasks(10, 505),

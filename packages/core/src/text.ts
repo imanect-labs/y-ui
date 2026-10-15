@@ -5,7 +5,7 @@
  * - toText: Yui 非対応の場所に貼るためのテキスト化 Markdown（表・リスト）。
  */
 
-import type { ChartFigure, Figure, FlowFigure, StackBox, StackFigure, StatFigure } from "./ir.js";
+import type { ChartFigure, Figure, FlowFigure, ScatterFigure, StackBox, StackFigure, StatFigure, StepsFigure, TimelineFigure, TreeNode } from "./ir.js";
 import { parseMarkdown } from "./markdown.js";
 
 function refsText(refs: number[]): string {
@@ -48,6 +48,20 @@ export function toSource(f: Figure): string {
     case "stack":
       stackSource(f, lines);
       break;
+    case "scatter":
+      lines.push(f.columns.map(esc).join(" | "));
+      for (const p of f.points) lines.push(withRefs([esc(p.label), String(p.x), String(p.y), ...(p.group !== undefined ? [esc(p.group)] : [])].join(" | "), p.refs));
+      break;
+    case "timeline":
+      // 時期・出来事に `:` が入っても戻せるよう、表の形で書く
+      for (const e of f.events) lines.push(withRefs([esc(e.when), esc(e.title), ...(e.desc !== undefined ? [esc(e.desc)] : [])].join(" | "), e.refs));
+      break;
+    case "steps":
+      f.steps.forEach((s, i) => lines.push(withRefs(`${i + 1}. ${stepSource(s.title, s.desc)}`, s.refs)));
+      break;
+    case "tree":
+      treeSource(f.roots, 0, lines);
+      break;
   }
   if (f.src !== undefined) lines.push(`src: ${f.src}`);
   if (f.note !== undefined) lines.push(`note: ${f.note}`);
@@ -89,6 +103,20 @@ function stackSource(f: StackFigure, lines: string[]): void {
   }
 }
 
+/** 見出しに `:` や `|` が無ければ `見出し: 説明`、あれば表の形（`見出し | 説明`）。 */
+function stepSource(title: string, desc: string | undefined): string {
+  const plain = !/[:：|]/.test(title) && !/^(step|ステップ|手順|stage|段階)\s*\d/i.test(title) && !(desc ?? "").includes("|");
+  if (plain) return desc === undefined ? title : `${title}: ${desc}`;
+  return desc === undefined ? `${esc(title)} |` : `${esc(title)} | ${esc(desc)}`;
+}
+
+function treeSource(nodes: TreeNode[], depth: number, lines: string[]): void {
+  for (const n of nodes) {
+    lines.push(`${"  ".repeat(depth)}- ${withRefs(n.desc === undefined ? esc(n.title) : `${esc(n.title)}: ${esc(n.desc)}`, n.refs)}`);
+    treeSource(n.children, depth + 1, lines);
+  }
+}
+
 // ---------------------------------------------------------------- text
 
 const fmt = new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 6 });
@@ -112,6 +140,18 @@ export function toText(f: Figure): string {
       break;
     case "stack":
       stackText(f, out);
+      break;
+    case "scatter":
+      scatterText(f, out);
+      break;
+    case "timeline":
+      timelineText(f, out);
+      break;
+    case "steps":
+      stepsText(f, out);
+      break;
+    case "tree":
+      treeText(f.roots, 0, out);
       break;
   }
   if (f.note !== undefined) out.push("", `※ ${f.note}`);
@@ -175,6 +215,27 @@ function stackText(f: StackFigure, out: string[]): void {
       for (const c of b.children) out.push(`  - ${withRefs(c.desc === undefined ? c.title : `${c.title}（${c.desc}）`, c.refs)}`);
     }
   });
+}
+
+function scatterText(f: ScatterFigure, out: string[]): void {
+  const group = f.columns.length > 3;
+  out.push(`| ${f.columns.map(esc).join(" | ")} |`, `| --- | ---: | ---: |${group ? " --- |" : ""}`);
+  for (const p of f.points) out.push(`| ${[withRefs(esc(p.label), p.refs), fmt.format(p.x), fmt.format(p.y), ...(group ? [esc(p.group ?? "")] : [])].join(" | ")} |`);
+}
+
+function timelineText(f: TimelineFigure, out: string[]): void {
+  for (const e of f.events) out.push(`- ${e.when}: ${withRefs(e.desc === undefined ? e.title : `${e.title}（${e.desc}）`, e.refs)}`);
+}
+
+function stepsText(f: StepsFigure, out: string[]): void {
+  f.steps.forEach((s, i) => out.push(`${i + 1}. ${withRefs(s.desc === undefined ? s.title : `${s.title}: ${s.desc}`, s.refs)}`));
+}
+
+function treeText(nodes: TreeNode[], depth: number, out: string[]): void {
+  for (const n of nodes) {
+    out.push(`${"  ".repeat(depth)}- ${withRefs(n.desc === undefined ? n.title : `${n.title}（${n.desc}）`, n.refs)}`);
+    treeText(n.children, depth + 1, out);
+  }
 }
 
 // ---------------------------------------------------------------- markdown

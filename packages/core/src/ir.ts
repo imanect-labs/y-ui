@@ -5,7 +5,7 @@
  * LLM が書くソースは寛容に受けるが、IR は常にこの形に正規化されている。
  */
 
-export const KINDS = ["bar", "line", "pie", "stat", "flow", "stack"] as const;
+export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree"] as const;
 export type Kind = (typeof KINDS)[number];
 
 /** 全図に共通する項目。 */
@@ -98,7 +98,63 @@ export interface StackFigure extends FigureBase {
   tiers: StackTier[];
 }
 
-export type Figure = ChartFigure | StatFigure | FlowFigure | StackFigure;
+/** 散布図の点。 */
+export interface ScatterPoint {
+  label: string;
+  x: number;
+  y: number;
+  /** 色分けのまとまり（4 列目）。 */
+  group?: string;
+  refs: number[];
+}
+
+export interface ScatterFigure extends FigureBase {
+  kind: "scatter";
+  /** [ラベル列, X の名前, Y の名前]（4 列目があればまとまりの名前）。 */
+  columns: string[];
+  points: ScatterPoint[];
+}
+
+/** 年表の出来事。 */
+export interface TimelineEvent {
+  /** 時期（書かれたまま。並べ替えない）。 */
+  when: string;
+  title: string;
+  desc?: string;
+  refs: number[];
+}
+
+export interface TimelineFigure extends FigureBase {
+  kind: "timeline";
+  events: TimelineEvent[];
+}
+
+/** 手順の 1 段。番号は書かれた順に振る。 */
+export interface Step {
+  title: string;
+  desc?: string;
+  refs: number[];
+}
+
+export interface StepsFigure extends FigureBase {
+  kind: "steps";
+  steps: Step[];
+}
+
+export interface TreeNode {
+  title: string;
+  desc?: string;
+  children: TreeNode[];
+  refs: number[];
+}
+
+export interface TreeFigure extends FigureBase {
+  kind: "tree";
+  /** 最上位の節（複数可）。深さは 4 段まで。 */
+  roots: TreeNode[];
+}
+
+export type Figure = ChartFigure | ScatterFigure | StatFigure | FlowFigure | StackFigure | TimelineFigure | StepsFigure | TreeFigure;
 
 /** 表形式のデータを持つ図（bar / line / pie）。 */
 export function isChart(f: Figure): f is ChartFigure {

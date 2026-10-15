@@ -37,6 +37,16 @@ On-premises | 52
 Training | 31
 Consulting | 24
 `,
+    scatter: `scatter Ad spend and revenue by store
+Store | Ad spend ($K) | Revenue ($M) | Region
+Downtown | 120 | 48 | East
+Midtown | 95 | 41 | East
+Harbor | 80 | 30 | East
+Airport | 110 | 39 | West
+Hillside | 60 | 22 | West
+Lakeside | 45 | 19 | South
+Riverside | 70 | 27 | South
+`,
     stat: `stat This month
 Revenue | $3.2M | +18% YoY
 New customers | 165
@@ -59,6 +69,33 @@ Revise -> Submit report
   - Lean kernel
 - LLM: OpenAI / Anthropic | Tools: external APIs | Storage: DB / object store
 note: Logical view based on public material.
+`,
+    timeline: `timeline Company history
+- Apr 2015: Founded in Tokyo
+- Oct 2017: First product launched
+- Jun 2019: Osaka office opened [1]
+- Jan 2021: 100 customers
+  Cloud edition released
+- Apr 2024: IPO
+`,
+    steps: `steps Expense reimbursement
+1. Submit: enter the receipt in the expense system
+2. Manager approval: check the purpose and amount
+3. Finance review: check the account and receipt
+4. Payment: paid with the next salary
+`,
+    tree: `tree Organization
+- CEO
+  - Sales: 120 people
+    - East sales
+    - West sales
+  - Engineering: 80 people
+    - Product
+    - Platform
+    - QA
+  - Corporate
+    - HR
+    - Finance
 `,
   },
   ja: {
@@ -88,6 +125,16 @@ unit: 億円
 研修 | 31
 コンサルティング | 24
 `,
+    scatter: `scatter 店舗別の広告費と売上
+店舗 | 広告費（万円） | 売上（百万円） | 地域
+新宿 | 120 | 48 | 東京
+渋谷 | 95 | 41 | 東京
+池袋 | 80 | 30 | 東京
+梅田 | 110 | 39 | 大阪
+難波 | 60 | 22 | 大阪
+天神 | 45 | 19 | 福岡
+博多 | 70 | 27 | 福岡
+`,
     stat: `stat 今月の営業実績
 売上 | 3,200万円 | 前年比 +18%
 新規顧客数 | 165社
@@ -110,6 +157,33 @@ unit: 億円
   - Lean Kernel
 - LLM: OpenAI / Anthropic | Tools: 外部API | Storage: DB / Object Store
 note: 公開資料を基にした論理構成図。
+`,
+    timeline: `timeline 会社の沿革
+- 2015年4月: 創業（東京・渋谷）
+- 2017年10月: 初の製品を発売
+- 2019年6月: 大阪支社を開設 [1]
+- 2021年1月: 導入企業 100 社を突破
+  クラウド版の提供を開始
+- 2024年4月: 東証グロース市場に上場
+`,
+    steps: `steps 経費精算の手順
+1. 申請: 領収書を添えて精算システムに入力する
+2. 上長の承認: 目的と金額を確認する
+3. 経理の確認: 勘定科目と証憑を確認する
+4. 支払: 翌月の給与と一緒に振り込む
+`,
+    tree: `tree 組織図
+- 社長
+  - 営業本部: 120名
+    - 東日本営業部
+    - 西日本営業部
+  - 開発本部: 80名
+    - プロダクト開発部
+    - 基盤開発部
+    - 品質保証部
+  - 管理本部
+    - 人事部
+    - 経理部
 `,
   },
 };

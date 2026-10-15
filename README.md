@@ -80,6 +80,26 @@ Consulting | 24
 ```
 ````
 
+### `scatter`
+
+Scatter plot for the relation between two quantities. A 4th column colors points by group; with up to 15 points, names sit next to the dots.
+
+<img src="docs/images/en-scatter.png" width="640" alt="scatter">
+
+````md
+```ui
+scatter Ad spend and revenue by store
+Store | Ad spend ($K) | Revenue ($M) | Region
+Downtown | 120 | 48 | East
+Midtown | 95 | 41 | East
+Harbor | 80 | 30 | East
+Airport | 110 | 39 | West
+Hillside | 60 | 22 | West
+Lakeside | 45 | 19 | South
+Riverside | 70 | 27 | South
+```
+````
+
 ### `stat`
 
 KPI cards. Values are shown as written; the third column is a note.
@@ -130,6 +150,63 @@ stack System architecture
   - Lean kernel
 - LLM: OpenAI / Anthropic | Tools: external APIs | Storage: DB / object store
 note: Logical view based on public material.
+```
+````
+
+### `timeline`
+
+Timeline for history, schedules and time-ordered events. Kept in the written order; few short events go horizontal.
+
+<img src="docs/images/en-timeline.png" width="640" alt="timeline">
+
+````md
+```ui
+timeline Company history
+- Apr 2015: Founded in Tokyo
+- Oct 2017: First product launched
+- Jun 2019: Osaka office opened [1]
+- Jan 2021: 100 customers
+  Cloud edition released
+- Apr 2024: IPO
+```
+````
+
+### `steps`
+
+Numbered steps for a procedure without branches (use `flow` for branches and loops).
+
+<img src="docs/images/en-steps.png" width="640" alt="steps">
+
+````md
+```ui
+steps Expense reimbursement
+1. Submit: enter the receipt in the expense system
+2. Manager approval: check the purpose and amount
+3. Finance review: check the account and receipt
+4. Payment: paid with the next salary
+```
+````
+
+### `tree`
+
+Hierarchy for org charts, categories and tables of contents. Indentation is the depth (up to 4 levels); it becomes an org chart when it fits, otherwise an indented outline.
+
+<img src="docs/images/en-tree.png" width="640" alt="tree">
+
+````md
+```ui
+tree Organization
+- CEO
+  - Sales: 120 people
+    - East sales
+    - West sales
+  - Engineering: 80 people
+    - Product
+    - Platform
+    - QA
+  - Corporate
+    - HR
+    - Finance
 ```
 ````
 

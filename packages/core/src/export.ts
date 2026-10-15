@@ -8,7 +8,7 @@
  * 同じ見た目になる。外部の画像・スクリプト・リンクは出さない。
  */
 
-import type { ChartFigure, Figure, FlowFigure, StackBox, StackFigure, StatFigure } from "./ir.js";
+import { type ChartFigure, type Figure, type FlowFigure, isChart, type ScatterFigure, type StackBox, type StackFigure, type StatFigure, type TreeNode } from "./ir.js";
 import { layout, type LayoutOptions } from "./render/layout.js";
 import { sceneToSVG } from "./render/svg.js";
 import { share, toSource, toText } from "./text.js";
@@ -84,9 +84,41 @@ function stackList(f: StackFigure): string {
   return `<ol>${tiers.join("")}</ol>`;
 }
 
+function scatterTable(f: ScatterFigure): string {
+  const head = `<thead><tr>${f.columns.map((c) => `<th scope="col">${esc(c)}</th>`).join("")}</tr></thead>`;
+  const num = (v: number) => `<td style="text-align:right">${esc(nf.format(v))}</td>`;
+  const rows = f.points.map((p) => `<tr><th scope="row">${esc(p.label + refs(p.refs))}</th>${num(p.x)}${num(p.y)}${f.columns.length > 3 ? `<td>${esc(p.group ?? "")}</td>` : ""}</tr>`).join("");
+  return `<table>${head}<tbody>${rows}</tbody></table>`;
+}
+
+const withDesc = (title: string, desc: string | undefined, r: number[]) => esc((desc === undefined ? title : `${title}（${desc}）`) + refs(r));
+
+function treeList(nodes: TreeNode[]): string {
+  return `<ul>${nodes.map((n) => `<li>${withDesc(n.title, n.desc, n.refs)}${n.children.length ? treeList(n.children) : ""}</li>`).join("")}</ul>`;
+}
+
+function otherHTML(f: Exclude<Figure, ChartFigure>): string {
+  switch (f.kind) {
+    case "stat":
+      return statTable(f);
+    case "flow":
+      return flowList(f);
+    case "stack":
+      return stackList(f);
+    case "scatter":
+      return scatterTable(f);
+    case "timeline":
+      return `<ul>${f.events.map((e) => `<li><strong>${esc(e.when)}</strong> ${withDesc(e.title, e.desc, e.refs)}</li>`).join("")}</ul>`;
+    case "steps":
+      return `<ol>${f.steps.map((s) => `<li>${withDesc(s.title, s.desc, s.refs)}</li>`).join("")}</ol>`;
+    case "tree":
+      return treeList(f.roots);
+  }
+}
+
 /** 図のデータを HTML の表・リストにする（画像を読めない人・貼り付け先のための代替）。 */
 export function toHTML(f: Figure): string {
-  const body = f.kind === "stat" ? statTable(f) : f.kind === "flow" ? flowList(f) : f.kind === "stack" ? stackList(f) : chartTable(f);
+  const body = isChart(f) ? chartTable(f) : otherHTML(f);
   const note = f.note === undefined ? "" : `<p>※ ${esc(f.note)}</p>`;
   return body + note;
 }

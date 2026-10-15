@@ -15,7 +15,7 @@ Feb | 150 | -10
 ```
 ````
 
-Six figure kinds: `bar`, `line`, `pie` (donut charts for shares), `stat` (KPI cards), `flow` (flowcharts with branches and loops) and `stack` (layered architecture diagrams).
+Ten figure kinds: `bar`, `line`, `pie` (donut charts for shares), `scatter`, `timeline`, `steps` (procedures without branches), `tree` (org charts and outlines), `stat` (KPI cards), `flow` (flowcharts with branches and loops) and `stack` (layered architecture diagrams).
 The parser is lenient with what models naturally write (GFM tables, Mermaid-style arrows, Japanese number formats such as `1億2,000万円` or `△120`) and reports per-line diagnostics instead of failing the whole block.
 
 ## Install

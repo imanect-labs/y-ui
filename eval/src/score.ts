@@ -5,6 +5,7 @@
  */
 
 import { isChart, parseNumber, type ChartFigure, type Figure, type FlowFigure, type StackFigure, type StatFigure } from "@imanect/yui";
+import { flowAsSteps, scoreScatter, scoreSteps, scoreTimeline, scoreTree } from "./score-v07.js";
 import { matchByText, norm, similarity } from "./similarity.js";
 import type { EvalTask } from "./tasks/types.js";
 
@@ -44,6 +45,7 @@ const SCALES = [1, 1e4, 1e-4, 1e8, 1e-8, 1e3, 1e-3, 1e6, 1e-6, 1e2, 1e-2];
 function numericValues(f: Figure): number[] {
   if (isChart(f)) return f.rows.flatMap((r) => r.values.filter((v): v is number => v !== null));
   if (f.kind === "stat") return f.items.flatMap((i) => (i.num === undefined ? [] : [i.num]));
+  if (f.kind === "scatter") return f.points.flatMap((p) => [p.x, p.y]);
   return [];
 }
 
@@ -80,6 +82,16 @@ function scoreFigure(task: EvalTask, gold: Figure, f: Figure): Score {
   if (gold.kind === "stat" && f.kind === "stat") return { ...base, ...scoreStat(task, gold, f) };
   if (gold.kind === "flow" && f.kind === "flow") return { ...base, ...scoreFlow(gold, f, task.context) };
   if (gold.kind === "stack" && f.kind === "stack") return { ...base, ...scoreStack(gold, f, task.context) };
+  if (gold.kind === "scatter" && f.kind === "scatter") return { ...base, ...scoreScatter(gold, f) };
+  if (gold.kind === "timeline" && f.kind === "timeline") return { ...base, ...scoreTimeline(gold, f) };
+  if (gold.kind === "tree" && f.kind === "tree") return { ...base, ...scoreTree(gold, f, task.context) };
+  // 手順と一本道の流れ図は、受ける種類に入っていれば互いに比べる
+  if (kindOk && (gold.kind === "steps" || gold.kind === "flow") && (f.kind === "steps" || f.kind === "flow")) {
+    const g = gold.kind === "steps" ? gold : flowAsSteps(gold);
+    const m = f.kind === "steps" ? f : flowAsSteps(f);
+    if (g && m) return { ...base, ...scoreSteps(g, m) };
+    return { ...base, pass: false, semantic: 0, fabricated: 0, detail: { reason: "kind_mismatch", got: f.kind } };
+  }
   // 種類が違う（グラフを求めたのに数値カードなど）。数値の捏造だけは数える。
   const goldNums = numericValues(gold);
   const fabricated = numericValues(f).filter((v) => !SCALES.some((k) => goldNums.some((g) => same(v, g * k)))).length;

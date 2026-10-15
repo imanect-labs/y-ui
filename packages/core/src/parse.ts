@@ -5,6 +5,9 @@ import { Diagnostics, type Line, takeRefs } from "./lines.js";
 import { parseChart } from "./kinds/chart.js";
 import { parseFlow } from "./kinds/flow.js";
 import { parsePie } from "./kinds/pie.js";
+import { parseScatter } from "./kinds/scatter.js";
+import { parseSteps, parseTimeline } from "./kinds/seq.js";
+import { parseTree } from "./kinds/tree.js";
 import { parseStack } from "./kinds/stack.js";
 import { parseStat } from "./kinds/stat.js";
 
@@ -23,6 +26,20 @@ const KIND_ALIASES: Record<string, Kind> = {
   円: "pie",
   円グラフ: "pie",
   ドーナツ: "pie",
+  scatter: "scatter",
+  散布図: "scatter",
+  timeline: "timeline",
+  年表: "timeline",
+  沿革: "timeline",
+  タイムライン: "timeline",
+  steps: "steps",
+  step: "steps",
+  手順: "steps",
+  ステップ: "steps",
+  tree: "tree",
+  ツリー: "tree",
+  階層: "tree",
+  組織図: "tree",
   stat: "stat",
   stats: "stat",
   kpi: "stat",
@@ -83,7 +100,7 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
       title = first.text.trim();
       body = lines.slice(1);
     } else if (!kind) {
-      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / stat / flow / stack）`);
+      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree）`);
       return { figure: null, diagnostics: diags.list, pending };
     }
   }
@@ -112,6 +129,18 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
     case "stack":
       parseStack(figure, body, diags);
       break;
+    case "scatter":
+      parseScatter(figure, body, diags);
+      break;
+    case "timeline":
+      parseTimeline(figure, body, diags);
+      break;
+    case "steps":
+      parseSteps(figure, body, diags);
+      break;
+    case "tree":
+      parseTree(figure, body, diags);
+      break;
   }
 
   if (opts.final && isEmpty(figure)) {
@@ -137,6 +166,14 @@ function emptyFigure(kind: Kind, title: string, refs: number[]): Figure {
       return { kind, title, refs, direction: "TB", nodes: [], edges: [] };
     case "stack":
       return { kind, title, refs, tiers: [] };
+    case "scatter":
+      return { kind, title, refs, columns: [], points: [] };
+    case "timeline":
+      return { kind, title, refs, events: [] };
+    case "steps":
+      return { kind, title, refs, steps: [] };
+    case "tree":
+      return { kind, title, refs, roots: [] };
   }
 }
 
@@ -152,5 +189,13 @@ export function isEmpty(f: Figure): boolean {
       return f.nodes.length === 0;
     case "stack":
       return f.tiers.length === 0;
+    case "scatter":
+      return f.points.length === 0;
+    case "timeline":
+      return f.events.length === 0;
+    case "steps":
+      return f.steps.length === 0;
+    case "tree":
+      return f.roots.length === 0;
   }
 }

@@ -38,7 +38,8 @@ export const estimate: Measure = (text, fontSize, weight = 400) => {
  * maxLines を超える分は末尾を「…」にする。
  */
 export function wrap(text: string, maxWidth: number, fontSize: number, measure: Measure = estimate, maxLines = 3, weight = 400): string[] {
-  const tokens = text.match(/[A-Za-z0-9][A-Za-z0-9.,%\-+/_]*\s*|\s+|./gu) ?? [];
+  // 引用番号 `[1]` は 1 語として扱う。行頭に来てはいけない閉じ括弧・句読点は、直前の文字とまとめて 1 語にする（禁則）
+  const tokens = text.match(/\[\d+\](?:\[\d+\])*|[A-Za-z0-9][A-Za-z0-9.,%\-+/_]*[」』）)\]、。，．！？]*\s*|\s+|[「『（(]*.[」』）)\]、。，．・！？ーぁぃぅぇぉっゃゅょァィゥェォッャュョ々]*/gu) ?? [];
   const lines: string[] = [];
   let cur = "";
   for (const tok of tokens) {

@@ -19,6 +19,11 @@ export const LIMITS = {
   stackTiers: 12,
   stackBoxesPerTier: 8,
   stackChildren: 16,
+  scatterPoints: 200,
+  timelineEvents: 40,
+  steps: 15,
+  treeNodes: 80,
+  treeDepth: 4,
 } as const;
 
 export class Diagnostics {

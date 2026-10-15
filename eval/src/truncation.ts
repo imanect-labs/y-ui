@@ -66,6 +66,19 @@ function units(f: Figure): string[] {
     case "stack":
       // 層は子が後から増えるので、層の見出しだけを単位にし、子は別に確かめる。
       return f.tiers.map((t) => JSON.stringify(t.boxes.map((b) => [b.title, b.desc])));
+    case "scatter":
+      return [JSON.stringify(f.columns), ...f.points.map((p) => JSON.stringify(p))];
+    case "timeline":
+      // 説明は字下げした次の行で後から伸びるので、時期と出来事だけを単位にする
+      return f.events.map((e) => JSON.stringify([e.when, e.title]));
+    case "steps":
+      return f.steps.map((s) => s.title);
+    case "tree": {
+      const out: string[] = [];
+      const walk = (ns: typeof f.roots, d: number) => ns.forEach((n) => (out.push(`${d}:${n.title}`), walk(n.children, d + 1)));
+      walk(f.roots, 0);
+      return out;
+    }
   }
 }
 
@@ -120,7 +133,7 @@ export function checkCase(c: TruncationCase): TruncationResult {
     if (!fig) continue;
     const u = units(fig);
     // 列名の行は、データ行が来るまで補完値のことがあるので、行が 1 つ以上あるときだけ比べる。
-    const comparable = isChart(fig) && fig.rows.length === 0 ? [] : u;
+    const comparable = (isChart(fig) && fig.rows.length === 0) || (fig.kind === "scatter" && fig.points.length === 0) ? [] : u;
     comparable.forEach((x, k) => {
       if (finalUnits[k] !== x) {
         res.inconsistent++;
