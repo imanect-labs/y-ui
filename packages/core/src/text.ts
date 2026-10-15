@@ -29,17 +29,32 @@ function num(v: number | null): string {
 // ---------------------------------------------------------------- source
 
 export function toSource(f: Figure): string {
-  const lines: string[] = [withRefs(`${f.kind} ${f.title}`.trimEnd(), f.refs)];
+  // callout は見出しの先頭に種類を書く（`callout warning 締め切り`）
+  const head = f.kind === "callout" ? `callout ${f.tone} ${f.title}` : `${f.kind} ${f.title}`;
+  const lines: string[] = [withRefs(head.trimEnd(), f.refs)];
   switch (f.kind) {
     case "bar":
     case "line":
     case "pie":
+    case "radar":
+    case "treemap":
       chartSource(f, lines);
+      break;
+    case "callout":
+      for (const p of f.body ? f.body.split("\n") : []) lines.push(p);
+      for (const it of f.items) lines.push(`- ${it}`);
+      break;
+    case "map":
+      lines.push("名前 | 緯度 | 経度 | 説明");
+      for (const m of f.markers) lines.push(withRefs([esc(m.label), String(m.lat), String(m.lng), ...(m.desc ? [esc(m.desc)] : [])].join(" | "), m.refs));
+      if (f.route) lines.push(`route: ${f.route.stops.join(" -> ")}${f.route.mode ? ` (${f.route.mode})` : ""}`);
+      if (f.zoom !== undefined) lines.push(`zoom: ${f.zoom}`);
       break;
     case "stat":
       for (const it of f.items) {
         const cells = [esc(it.label), esc(it.value)];
         if (it.sub !== undefined) cells.push(esc(it.sub));
+        if (it.trend) cells.push(`trend ${it.trend.join(", ")}`);
         lines.push(withRefs(cells.join(" | "), it.refs));
       }
       break;
@@ -278,7 +293,22 @@ export function toText(f: Figure): string {
       chartText(f, out);
       break;
     case "pie":
+    case "treemap":
       pieText(f, out);
+      break;
+    case "radar":
+      chartText(f, out);
+      break;
+    case "callout": {
+      const label = { info: "情報", success: "成功", warning: "注意", danger: "警告" }[f.tone];
+      if (!f.title) out.push(`**${label}**`, "");
+      for (const p of f.body ? f.body.split("\n") : []) out.push(`> ${p}`);
+      for (const it of f.items) out.push(`> - ${it}`);
+      break;
+    }
+    case "map":
+      for (const m of f.markers) out.push(`- ${withRefs(`${m.label}（${m.lat}, ${m.lng}）${m.desc ? `: ${m.desc}` : ""}`, m.refs)}`);
+      if (f.route) out.push("", `道順: ${f.route.stops.join(" → ")}`);
       break;
     case "stat":
       statText(f, out);

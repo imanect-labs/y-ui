@@ -5,6 +5,7 @@ import { parseNumber } from "../number.js";
 import { clip, Diagnostics, hasPipe, isSeparatorRow, LIMITS, type Line, parseOption, splitCells, stripListMarker, takeRefs } from "../lines.js";
 
 const OPTIONS = ["note", "src"] as const;
+const TREND = /^(?:trend|推移)\s*[:：]?\s*(-?\d+(?:\.\d+)?(?:\s*[,、]\s*-?\d+(?:\.\d+)?)+)$/i;
 
 export function parseStat(fig: StatFigure, body: Line[], diags: Diagnostics): void {
   for (const line of body) {
@@ -44,8 +45,16 @@ export function parseStat(fig: StatFigure, body: Line[], diags: Diagnostics): vo
     };
     const num = parseNumber(value.text);
     if (num) item.num = num.value;
-    if (cells.length > 2 && cells[2] !== "") {
-      const sub = takeRefs(cells.slice(2).join(" / "));
+    // `trend 100, 110, 120`（推移）のセルは小さな折れ線にする
+    const rest = cells.slice(2).filter((c) => {
+      const t = TREND.exec(c.trim());
+      if (!t) return true;
+      const nums = t[1]!.split(/\s*[,、]\s*/).map(Number);
+      if (nums.length >= 2 && nums.every(Number.isFinite)) item.trend = nums.slice(0, 60);
+      return false;
+    });
+    if (rest.length > 0 && rest[0] !== "") {
+      const sub = takeRefs(rest.join(" / "));
       item.sub = clip(sub.text, line.no, diags);
       item.refs = [...new Set([...item.refs, ...sub.refs])];
     }

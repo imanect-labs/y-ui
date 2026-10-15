@@ -13,6 +13,8 @@ import { parseGantt, parseQuadrant } from "./kinds/v08b.js";
 import { parseCalc } from "./kinds/calc.js";
 import { parseApp } from "./kinds/app.js";
 import { parseAsk, parsePlan } from "./kinds/ask.js";
+import { parseCallout, parseMap } from "./kinds/callout.js";
+import { parseRadar, parseTreemap } from "./kinds/chart2.js";
 import { parseChecklist, parseCompare, parseProsCons, parseSwot } from "./kinds/v09.js";
 import { parseStack } from "./kinds/stack.js";
 import { parseStat } from "./kinds/stat.js";
@@ -96,6 +98,17 @@ export const KIND_ALIASES: Readonly<Record<string, Kind>> = {
   確認: "ask",
   plan: "plan",
   計画: "plan",
+  radar: "radar",
+  レーダー: "radar",
+  レーダーチャート: "radar",
+  treemap: "treemap",
+  ツリーマップ: "treemap",
+  callout: "callout",
+  alert: "callout",
+  注意書き: "callout",
+  map: "map",
+  地図: "map",
+  マップ: "map",
   stat: "stat",
   stats: "stat",
   kpi: "stat",
@@ -156,7 +169,7 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
       title = first.text.trim();
       body = lines.slice(1);
     } else if (!kind) {
-      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt / calc / compare / proscons / swot / checklist / app / ask / plan）`);
+      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt / calc / compare / proscons / swot / checklist / app / ask / plan / radar / treemap / callout / map）`);
       return { figure: null, diagnostics: diags.list, pending };
     }
   }
@@ -236,6 +249,18 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
     case "plan":
       parsePlan(figure, body, diags);
       break;
+    case "radar":
+      parseRadar(figure, body, diags);
+      break;
+    case "treemap":
+      parseTreemap(figure, body, diags);
+      break;
+    case "callout":
+      parseCallout(figure, body, diags);
+      break;
+    case "map":
+      parseMap(figure, body, diags);
+      break;
   }
 
   if (opts.final && isEmpty(figure)) {
@@ -254,7 +279,13 @@ function emptyFigure(kind: Kind, title: string, refs: number[]): Figure {
     case "bar":
     case "line":
     case "pie":
+    case "radar":
+    case "treemap":
       return { kind, title, refs, columns: [], rows: [] };
+    case "callout":
+      return { kind, title, refs, tone: "info", body: "", items: [] };
+    case "map":
+      return { kind, title, refs, markers: [] };
     case "stat":
       return { kind, title, refs, items: [] };
     case "flow":
@@ -303,6 +334,8 @@ export function isEmpty(f: Figure): boolean {
     case "bar":
     case "line":
     case "pie":
+    case "radar":
+    case "treemap":
       return f.rows.length === 0;
     case "stat":
       return f.items.length === 0;
@@ -344,5 +377,9 @@ export function isEmpty(f: Figure): boolean {
       return f.questions.length === 0;
     case "plan":
       return f.steps.length === 0;
+    case "callout":
+      return f.body === "" && f.items.length === 0;
+    case "map":
+      return f.markers.length === 0;
   }
 }

@@ -5,7 +5,7 @@
  * LLM が書くソースは寛容に受けるが、IR は常にこの形に正規化されている。
  */
 
-export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree", "cards", "progress", "funnel", "quadrant", "gantt", "calc", "compare", "proscons", "swot", "checklist", "app", "ask", "plan"] as const;
+export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree", "cards", "progress", "funnel", "quadrant", "gantt", "calc", "compare", "proscons", "swot", "checklist", "app", "ask", "plan", "radar", "treemap", "callout", "map"] as const;
 export type Kind = (typeof KINDS)[number];
 
 /** 全図に共通する項目。 */
@@ -32,8 +32,8 @@ export interface ChartRow {
 }
 
 export interface ChartFigure extends FigureBase {
-  /** pie は 1 系列（columns[1]）だけを持ち、値はすべて 0 以上。 */
-  kind: "bar" | "line" | "pie";
+  /** pie・treemap は 1 系列（columns[1]）だけを持ち、値はすべて 0 以上。radar は 3 項目以上。 */
+  kind: "bar" | "line" | "pie" | "radar" | "treemap";
   /** 列名。columns[0] はラベル列の見出し、columns[1..] が系列名。 */
   columns: string[];
   rows: ChartRow[];
@@ -50,6 +50,8 @@ export interface StatItem {
   num?: number;
   /** 補足（3 列目）。 */
   sub?: string;
+  /** 推移（`trend 100, 110, 120`）。値の下に小さな折れ線で描く。 */
+  trend?: number[];
   refs: number[];
 }
 
@@ -409,6 +411,33 @@ export interface PlanFigure extends FigureBase {
   approveLabel?: string;
 }
 
+/** 注意書き。tone は情報・成功・注意・危険。 */
+export interface CalloutFigure extends FigureBase {
+  kind: "callout";
+  tone: "info" | "success" | "warning" | "danger";
+  /** 本文。段落は改行で区切る。 */
+  body: string;
+  /** 箇条書き。 */
+  items: string[];
+}
+
+export interface MapMarker {
+  label: string;
+  lat: number;
+  lng: number;
+  desc?: string;
+  refs: number[];
+}
+
+/** 地図。データだけを持ち、背景の地図はホストが描く（Yui の静止画は位置関係だけ）。 */
+export interface MapFigure extends FigureBase {
+  kind: "map";
+  markers: MapMarker[];
+  /** 道順（マーカーの名前の順）と移動手段。 */
+  route?: { stops: string[]; mode?: "walk" | "drive" | "transit" };
+  zoom?: number;
+}
+
 export type Figure =
   | ChartFigure
   | ScatterFigure
@@ -430,11 +459,13 @@ export type Figure =
   | ChecklistFigure
   | AppFigure
   | AskFigure
-  | PlanFigure;
+  | PlanFigure
+  | CalloutFigure
+  | MapFigure;
 
 /** 表形式のデータを持つ図（bar / line / pie）。 */
 export function isChart(f: Figure): f is ChartFigure {
-  return f.kind === "bar" || f.kind === "line" || f.kind === "pie";
+  return f.kind === "bar" || f.kind === "line" || f.kind === "pie" || f.kind === "radar" || f.kind === "treemap";
 }
 
 export type Severity = "error" | "warning" | "info";

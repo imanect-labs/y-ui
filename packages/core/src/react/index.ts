@@ -22,7 +22,7 @@ import {
   type ReactElement,
   type RefObject,
 } from "react";
-import type { Diagnostic, Figure, Kind } from "../ir.js";
+import type { Diagnostic, Figure, Kind, MapFigure } from "../ir.js";
 import { parseBlock } from "../parse.js";
 import { layout, type LayoutOptions } from "../render/layout.js";
 import type { Item, Scene, Target } from "../render/scene.js";
@@ -53,6 +53,8 @@ export interface YuiFigureProps extends Omit<LayoutOptions, "width"> {
   actionDisabledReason?: string;
   /** 送り済みの 1 回だけのボタンの id（ask・plan・app の `-> chat`）。ホストがサーバーの状態から渡す。 */
   invokedActions?: readonly string[];
+  /** map をホストの地図の部品で描く（渡さなければ、位置関係だけの図を描く）。 */
+  renderMap?: (figure: MapFigure) => ReactElement;
 }
 
 /** 親要素の幅を測る（SSR では fallback）。 */
@@ -308,6 +310,7 @@ function Interactive(props: {
 export function YuiFigure(props: YuiFigureProps): ReactElement {
   // calc は操作できる HTML の部品で描く（静止画は SVG の書き出し）
   if (props.figure.kind === "calc") return h(CalcView, { figure: props.figure, theme: props.theme ?? "auto", locale: props.locale ?? "ja-JP", ...(props.className ? { className: props.className } : {}) });
+  if (props.figure.kind === "map" && props.renderMap) return props.renderMap(props.figure);
   if (props.figure.kind === "app" || props.figure.kind === "ask" || props.figure.kind === "plan") {
     const common = {
       theme: props.theme ?? "auto",
@@ -325,7 +328,7 @@ export function YuiFigure(props: YuiFigureProps): ReactElement {
 }
 
 function SceneFigure(props: YuiFigureProps): ReactElement {
-  const { figure, theme, width, className, interactive, onAction: _onAction, actionDisabledReason: _reason, invokedActions: _invoked, ...layoutOpts } = props;
+  const { figure, theme, width, className, interactive, onAction: _onAction, actionDisabledReason: _reason, invokedActions: _invoked, renderMap: _renderMap, ...layoutOpts } = props;
   const [ref, w] = useContainerWidth(width);
   const scene = useMemo(() => layout(figure, { ...layoutOpts, width: w }), [figure, w, layoutOpts.locale, layoutOpts.measure, layoutOpts.labels]);
   return h("div", { ref, className, "data-yui": figure.kind }, h(SceneSvg, { scene, theme: theme ?? "auto", interactive: interactive ?? true }));

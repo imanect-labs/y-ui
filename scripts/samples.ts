@@ -201,6 +201,36 @@ button Run report -> workflow monthly-report
 2. Build a comparison table
 3. Summarize the key points
 `,
+    radar: `radar Vendor evaluation
+Criterion | Vendor A | Vendor B
+Price | 4 | 3
+Features | 3 | 5
+Support | 5 | 3
+Security | 4 | 4
+Ease of use | 3 | 4
+`,
+    treemap: `treemap IT budget breakdown
+unit: $K
+Item | Budget
+Cloud | 420
+Licenses | 260
+Devices | 180
+Security | 150
+Training | 60
+Consulting | 90
+Network | 110
+`,
+    callout: `callout warning Submission deadline
+Expense claims for March must be submitted by April 5.
+- Late claims are processed next month
+- Attach receipts as PDF
+`,
+    map: `map Office visit
+- Osaka Station | 34.7025 | 135.4959 | Meeting point
+- Umeda Sky Building | 34.7053 | 135.4903
+- Head office | 34.6937 | 135.5023 | 10:00 meeting
+route: Osaka Station -> Head office (walk)
+`,
   },
   ja: {
     bar: `bar 四半期ごとの売上と利益
@@ -405,6 +435,36 @@ button 会話で相談する -> chat
 1. 社内文書を検索する: 経費規程と過去の申請
 2. 比較表を作る
 3. 要点をまとめる
+`,
+    radar: `radar 候補の評価
+観点 | A社 | B社
+価格 | 4 | 3
+機能 | 3 | 5
+サポート | 5 | 3
+セキュリティ | 4 | 4
+使いやすさ | 3 | 4
+`,
+    treemap: `treemap IT 予算の内訳
+unit: 万円
+項目 | 予算
+クラウド | 4200
+ライセンス | 2600
+端末 | 1800
+セキュリティ | 1500
+研修 | 600
+外部委託 | 900
+ネットワーク | 1100
+`,
+    callout: `callout warning 申請の締め切り
+3 月分の経費は 4 月 5 日までに申請してください。
+- 締め切りを過ぎた申請は翌月の処理になります
+- 領収書は PDF で添付してください
+`,
+    map: `map 訪問の行程
+- 大阪駅 | 34.7025 | 135.4959 | 集合場所
+- 梅田スカイビル | 34.7053 | 135.4903
+- 本社 | 34.6937 | 135.5023 | 10:00 から打ち合わせ
+route: 大阪駅 -> 本社 (walk)
 `,
   },
 };

@@ -44,6 +44,10 @@ export const LIMITS = {
   askQuestions: 8,
   askOptions: 12,
   planSteps: 12,
+  treemapItems: 30,
+  radarAxes: 12,
+  mapMarkers: 50,
+  calloutItems: 12,
   calcExprLength: 200,
 } as const;
 

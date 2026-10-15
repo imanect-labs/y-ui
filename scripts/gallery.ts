@@ -222,6 +222,11 @@ y: 実現しやすさ
   - 専任サポート
 note: 架空のサービス・料金です。
 `,
+  "stat-trend": `stat 今月の主な指標
+売上 | 1.2億円 | 前月比 +12% | trend 92, 98, 101, 107, 112, 120
+新規顧客 | 132社 | 前月比 -3% | trend 140, 138, 135, 136, 132
+解約率 | 1.8% | 目標 2.0% 以下
+`,
   "stat": `stat 今月の営業実績 [2]
 売上 | 3,200万円 | 前年比 +18%
 新規顧客数 | 165社
@@ -263,7 +268,7 @@ const figures: [string, Figure][] = [
   ...Object.entries({
     ...samples,
     // v0.9 の種類は README の見本をそのまま使う
-    ...Object.fromEntries(["compare", "proscons", "swot", "checklist", "app", "ask", "plan"].flatMap((k) => [[k, SAMPLES.ja[k]!], [`${k}-en`, SAMPLES.en[k]!]])),
+    ...Object.fromEntries(["compare", "proscons", "swot", "checklist", "app", "ask", "plan", "radar", "treemap", "callout", "map"].flatMap((k) => [[k, SAMPLES.ja[k]!], [`${k}-en`, SAMPLES.en[k]!]])),
   }).map(([k, src]) => {
     const r = parseBlock(src, { final: true });
     if (!r.figure) throw new Error(`${k}: ${JSON.stringify(r.diagnostics)}`);

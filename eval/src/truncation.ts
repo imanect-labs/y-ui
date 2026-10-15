@@ -56,7 +56,13 @@ function units(f: Figure): string[] {
     case "bar":
     case "line":
     case "pie":
+    case "radar":
+    case "treemap":
       return [JSON.stringify(f.columns), ...f.rows.map((r) => JSON.stringify(r))];
+    case "callout":
+      return [...(f.body ? f.body.split("\n") : []), ...f.items];
+    case "map":
+      return f.markers.map((m) => JSON.stringify(m));
     case "stat":
       return f.items.map((i) => JSON.stringify(i));
     case "flow": {

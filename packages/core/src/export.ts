@@ -154,6 +154,10 @@ function otherHTML(f: Exclude<Figure, ChartFigure>): string {
       return [listHTML(f.labels[0] || "メリット", f.pros), listHTML(f.labels[1] || "デメリット", f.cons)].join("");
     case "swot":
       return ["強み", "弱み", "機会", "脅威"].map((n, i) => listHTML(f.labels[i] || n, f.sections[i]!)).join("");
+    case "callout":
+      return `${f.body ? f.body.split("\n").map((p) => `<p>${esc(p)}</p>`).join("") : ""}${f.items.length ? `<ul>${f.items.map((it) => `<li>${esc(it)}</li>`).join("")}</ul>` : ""}`;
+    case "map":
+      return `<ul>${f.markers.map((m) => `<li>${esc(m.label + refs(m.refs))}（${m.lat}, ${m.lng}）${m.desc ? ` ${esc(m.desc)}` : ""}</li>`).join("")}</ul>`;
     case "ask":
       return `${f.intro ? `<p>${esc(f.intro)}</p>` : ""}<ol>${f.questions.map((q) => `<li>${esc(q.text)}${q.options.length ? `<ul>${q.options.map((o) => `<li>${esc(o.desc ? `${o.label}: ${o.desc}` : o.label)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ol>`;
     case "plan":

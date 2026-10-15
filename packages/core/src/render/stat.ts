@@ -21,7 +21,9 @@ export function layoutStat(ctx: Ctx, f: StatFigure, top: number): number {
 
   const subLines = f.items.map((it) => (it.sub ? wrap(it.sub, cardW - pad * 2, BODY_SIZE, ctx.measure, 2) : []));
   const maxSub = Math.max(0, ...subLines.map((l) => l.length));
-  const cardH = pad + 14 + 8 + valueSize + (maxSub ? 6 + maxSub * 16 : 0) + pad;
+  // 推移があれば、値の下に小さな折れ線の段を足す
+  const spark = f.items.some((it) => it.trend && it.trend.length >= 2) ? 30 : 0;
+  const cardH = pad + 14 + 8 + valueSize + spark + (maxSub ? 6 + maxSub * 16 : 0) + pad;
 
   f.items.forEach((it, i) => {
     const c = i % cols;
@@ -33,7 +35,17 @@ export function layoutStat(ctx: Ctx, f: StatFigure, top: number): number {
     ctx.items.push({ t: "text", x: x + pad, y: y + pad + 12, text: fit(it.label + refs, cardW - pad * 2, BODY_SIZE, ctx.measure, 600), size: BODY_SIZE, weight: 600, fill: "muted" });
     const vy = y + pad + 14 + 8 + valueSize * 0.85;
     ctx.items.push({ t: "text", x: x + pad, y: vy, text: fit(it.value, cardW - pad * 2, valueSize, ctx.measure, 600), size: valueSize, weight: 600, fill: "ink" });
-    subLines[i]!.forEach((l, k) => ctx.items.push({ t: "text", x: x + pad, y: vy + valueSize * 0.15 + 6 + 12 + k * 16, text: l, size: BODY_SIZE, fill: "muted" }));
+    if (it.trend && it.trend.length >= 2) {
+      const t = it.trend;
+      const [mn, mx] = [Math.min(...t), Math.max(...t)];
+      const sw = cardW - pad * 2;
+      const sy = vy + valueSize * 0.15 + 6;
+      const pts = t.map((v, k) => [x + pad + (k / (t.length - 1)) * sw, sy + 20 - (mx > mn ? ((v - mn) / (mx - mn)) * 18 : 9)] as const);
+      ctx.items.push({ t: "path", d: pts.map(([px, py], k) => `${k ? "L" : "M"}${px.toFixed(1)},${py.toFixed(1)}`).join(""), stroke: "s1", strokeWidth: 1.75 });
+      const [lx, ly] = pts[pts.length - 1]!;
+      ctx.items.push({ t: "circle", cx: lx, cy: ly, r: 3, fill: "s1", stroke: "surface2", strokeWidth: 1.5 });
+    }
+    subLines[i]!.forEach((l, k) => ctx.items.push({ t: "text", x: x + pad, y: vy + spark + valueSize * 0.15 + 6 + 12 + k * 16, text: l, size: BODY_SIZE, fill: "muted" }));
   });
   const rows = Math.ceil(n / cols);
   return top + rows * cardH + (rows - 1) * GAP + 8;

@@ -16,6 +16,8 @@ import { layoutChecklist, layoutCompare } from "./v09.js";
 import { layoutProsCons, layoutSwot } from "./v09b.js";
 import { layoutApp } from "./app.js";
 import { layoutAsk, layoutPlan } from "./ask.js";
+import { layoutCallout, layoutMap } from "./callout.js";
+import { layoutRadar, layoutTreemap } from "./v10.js";
 import type { Scene } from "./scene.js";
 import { layoutStack } from "./stack.js";
 import { layoutStat } from "./stat.js";
@@ -24,7 +26,8 @@ export type { LayoutOptions } from "./frame.js";
 
 export function layout(f: Figure, opts: LayoutOptions = {}): Scene {
   const ctx = makeCtx(opts);
-  let y = drawTitle(ctx, f, ctx.pad - 4);
+  // callout は見出しを枠の中に描く
+  let y = f.kind === "callout" ? ctx.pad - 4 : drawTitle(ctx, f, ctx.pad - 4);
   switch (f.kind) {
     case "bar":
     case "line":
@@ -90,6 +93,18 @@ export function layout(f: Figure, opts: LayoutOptions = {}): Scene {
       break;
     case "plan":
       y = layoutPlan(ctx, f, y + 2);
+      break;
+    case "radar":
+      y = layoutRadar(ctx, f, y);
+      break;
+    case "treemap":
+      y = layoutTreemap(ctx, f, y);
+      break;
+    case "callout":
+      y = layoutCallout(ctx, f, y);
+      break;
+    case "map":
+      y = layoutMap(ctx, f, y);
       break;
   }
   y = drawNote(ctx, f, y);

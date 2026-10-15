@@ -241,14 +241,48 @@ const INFO: Record<Kind, KindInfo> = {
     instead: "ただの手順の説明は steps。",
     spec: "5.22 plan",
   },
+  radar: {
+    name: "レーダーチャート",
+    use: "いくつかの観点（3 つ以上）での点数を、比べるもの同士で重ねて見せる。",
+    syntax: ["bar と同じ表。行が観点、列が比べるもの", "値は 0 以上"],
+    options: ["`unit:` 単位", ...COMMON],
+    limits: [`観点 ${LIMITS.radarAxes}`],
+    instead: "観点が 2 つ以下・正確な値を比べるなら bar。",
+    spec: "5.23 radar",
+  },
+  treemap: {
+    name: "ツリーマップ",
+    use: "項目の多い構成比を面積で見せる（予算・売上の内訳など）。",
+    syntax: ["pie と同じ「項目 | 値」", "値は 0 より大きい"],
+    options: ["`unit:` 単位", ...COMMON],
+    limits: [`${LIMITS.treemapItems} 項目`],
+    instead: "項目が 6 つ程度までなら pie。",
+    spec: "5.24 treemap",
+  },
+  callout: {
+    name: "注意書き",
+    use: "読み落としてほしくない注意・警告・補足を目立たせる。",
+    syntax: ["1 行目「callout 種類 見出し」（info・success・warning・danger、`注意`・`警告` も可）", "本文は段落、`- ` は箇条書き"],
+    options: COMMON,
+    limits: [`箇条書き ${LIMITS.calloutItems}`],
+    spec: "5.25 callout",
+  },
+  map: {
+    name: "地図",
+    use: "地点の位置と道順。背景の地図はホストが描く（Yui の静止画は位置関係だけ）。",
+    syntax: ["「- 名前 | 緯度 | 経度 | 説明」、「名前: 緯度, 経度」", "`route: A -> B -> C (walk)`（walk・drive・transit）"],
+    options: ["`zoom: 14`", ...COMMON],
+    limits: [`地点 ${LIMITS.mapMarkers}`],
+    spec: "5.26 map",
+  },
 };
 
 /** 一覧での並び（用途のまとまり）。 */
 const GROUPS: { title: string; kinds: Kind[] }[] = [
-  { title: "グラフ", kinds: ["bar", "line", "pie", "scatter"] },
+  { title: "グラフ", kinds: ["bar", "line", "pie", "scatter", "radar", "treemap"] },
   { title: "数値", kinds: ["stat", "progress", "funnel"] },
   { title: "流れ・手順・時間", kinds: ["flow", "steps", "timeline", "gantt"] },
-  { title: "構造・整理", kinds: ["stack", "tree", "quadrant", "cards"] },
+  { title: "構造・整理", kinds: ["stack", "tree", "quadrant", "cards", "callout", "map"] },
   { title: "比較・判断", kinds: ["compare", "proscons", "swot", "checklist"] },
   { title: "操作できる図", kinds: ["calc", "app", "ask", "plan"] },
 ];
