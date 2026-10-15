@@ -84,6 +84,8 @@ function units(f: Figure): string[] {
       return f.items.map((i) => JSON.stringify(i));
     case "gantt":
       return f.tasks.map((t) => JSON.stringify(t));
+    case "calc":
+      return f.defs.map((d) => JSON.stringify(d));
     case "tree": {
       const out: string[] = [];
       const walk = (ns: typeof f.roots, d: number) => ns.forEach((n) => (out.push(`${d}:${n.title}`), walk(n.children, d + 1)));

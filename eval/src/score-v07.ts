@@ -3,7 +3,8 @@
  * （対応付けはテキストの類似度、数値は相対誤差 0.5% と単位の倍率を吸収）。
  */
 
-import type { CardsFigure, FlowFigure, FunnelFigure, GanttFigure, ProgressFigure, QuadrantFigure, ScatterFigure, StepsFigure, TimelineFigure, TreeFigure, TreeNode } from "@imanect/yui";
+import type { CalcFigure, CardsFigure, FlowFigure, FunnelFigure, GanttFigure, ProgressFigure, QuadrantFigure, ScatterFigure, StepsFigure, TimelineFigure, TreeFigure, TreeNode } from "@imanect/yui";
+import { runCalc } from "@imanect/yui";
 import { matchByText, norm, similarity } from "./similarity.js";
 
 export interface PartScore {
@@ -243,4 +244,43 @@ export function scoreGantt(gold: GanttFigure, f: GanttFigure): PartScore {
   const recall = gold.tasks.length === 0 ? 1 : ok / gold.tasks.length;
   const extra = f.tasks.length - map.size;
   return { pass: recall === 1 && extra === 0, semantic: recall, fabricated: 0, detail: { recall, extra } };
+}
+
+/**
+ * calc: 正解の入力・結果の名前をモデルの名前に対応付け、各チェックの入力でモデルの式を計算して期待値と比べる。
+ * 結果は単位の取り方（円と万円）の違いを許す。
+ */
+export function scoreCalc(gold: CalcFigure, f: CalcFigure, checks: { inputs: Record<string, number>; expect: Record<string, number> }[]): PartScore {
+  const gIn = gold.defs.filter((d) => d.type === "input");
+  const mIn = f.defs.filter((d) => d.type === "input");
+  const inMap = matchByText(gIn.map((d) => d.name), mIn.map((d) => d.name));
+  const mFormulas = f.defs.filter((d) => d.type === "formula");
+  let ok = 0;
+  let total = 0;
+  for (const c of checks) {
+    const inputs = new Map<string, number>();
+    for (const [gi, mi] of inMap) {
+      const g = gIn[gi]!;
+      const m = mIn[mi]!;
+      let v = c.inputs[g.name] ?? g.initial;
+      // 単位の取り方が違う入力（万円と円）は、モデルの範囲に合う倍率で直す
+      if (m.type === "input" && g.type === "input" && (v < m.min || v > m.max)) {
+        const k = SCALES.find((s) => v * s >= m.min && v * s <= m.max);
+        if (k !== undefined) v *= k;
+      }
+      inputs.set(m.name, v);
+    }
+    const values = runCalc(f, inputs);
+    for (const [name, want] of Object.entries(c.expect)) {
+      total++;
+      // 期待値に合う式を、名前の近いものから探す（無ければどれでも）
+      const ranked = [...mFormulas].sort((a, b) => similarity(name, b.name) - similarity(name, a.name));
+      if (ranked.some((m) => {
+        const got = values.get(m.name);
+        return got !== null && got !== undefined && SCALES.some((k) => same(got, want * k));
+      })) ok++;
+    }
+  }
+  const acc = total === 0 ? 0 : ok / total;
+  return { pass: acc === 1 && inMap.size === gIn.length, semantic: acc, fabricated: 0, detail: { acc, inputsMatched: inMap.size, goldInputs: gIn.length } };
 }

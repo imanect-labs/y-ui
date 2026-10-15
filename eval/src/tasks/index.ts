@@ -6,6 +6,7 @@ import { generatedTasks } from "./generate.js";
 import { FLOW_TASKS, STACK_TASKS, type Handwritten } from "./handwritten.js";
 import { STEPS_TASKS, TIMELINE_TASKS, TREE_TASKS } from "./handwritten-v07.js";
 import { CARDS_TASKS, GANTT_TASKS, QUADRANT_TASKS } from "./handwritten-v08.js";
+import { CALC_TASKS } from "./calc.js";
 import type { EvalTask } from "./types.js";
 
 export const TASKS_PATH = join(dirname(fileURLToPath(import.meta.url)), "../../tasks/tasks.jsonl");
@@ -24,7 +25,7 @@ function parseGold(id: string, src: string): Figure {
   return r.figure;
 }
 
-function fromHandwritten(h: Handwritten, category: "flow" | "stack" | "timeline" | "steps" | "tree" | "cards" | "quadrant" | "gantt"): EvalTask {
+function fromHandwritten(h: Handwritten, category: "flow" | "stack" | "timeline" | "steps" | "tree" | "cards" | "quadrant" | "gantt" | "calc"): EvalTask {
   const alt = (h.alt ?? []).map((s) => parseGold(h.id, s));
   const r = parseBlock(h.gold, { final: true });
   const problems = r.diagnostics.filter((d) => d.severity !== "info");
@@ -55,6 +56,7 @@ export function buildTasks(): EvalTask[] {
     ...CARDS_TASKS.map((h) => fromHandwritten(h, "cards")),
     ...QUADRANT_TASKS.map((h) => fromHandwritten(h, "quadrant")),
     ...GANTT_TASKS.map((h) => fromHandwritten(h, "gantt")),
+    ...CALC_TASKS.map((h) => ({ ...fromHandwritten(h, "calc"), calcChecks: h.checks })),
   ];
 }
 

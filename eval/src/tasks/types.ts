@@ -16,6 +16,7 @@ export const CATEGORIES = [
   "funnel",
   "quadrant",
   "gantt",
+  "calc",
   "long",
   "jpnum",
   "none-unneeded",
@@ -37,4 +38,6 @@ export interface EvalTask {
   gold?: Figure;
   /** 別の種類で描いた場合の正解（構成図の課題を流れ図で描いてもよい場合など）。acceptKinds にその種類があること。 */
   altGolds?: Figure[];
+  /** calc の課題: 入力の値（正解の名前）と、期待する結果。 */
+  calcChecks?: { inputs: Record<string, number>; expect: Record<string, number> }[];
 }
