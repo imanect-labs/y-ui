@@ -32,10 +32,23 @@ export interface Labels {
   fromFirst: string;
   /** 進捗が目標に届いた項目（読み上げ）。 */
   done: string;
+  /** 比較表で強調する選択肢の札。 */
+  recommended: string;
+  /** proscons・swot の見出しの既定（見出しが書かれていないとき）。 */
+  pros: string;
+  cons: string;
+  swot: [string, string, string, string];
+  /** チェックリストの進行中の札と、完了の数。 */
+  doing: string;
+  completed: (done: number, total: number) => string;
+  /** 比較表の印の読み上げ。 */
+  yes: string;
+  no: string;
+  partial: string;
 }
 
-export const LABELS_JA: Labels = { unit: (u) => `単位: ${u}`, note: (n) => `※ ${n}`, total: "合計", share: "割合", stepRate: "前段比", count: "数", fromPrev: "前の段階から", fromFirst: "最初から", done: "達成" };
-export const LABELS_EN: Labels = { unit: (u) => `Unit: ${u}`, note: (n) => `Note: ${n}`, total: "Total", share: "Share", stepRate: "Step rate", count: "Count", fromPrev: "From previous", fromFirst: "From first", done: "done" };
+export const LABELS_JA: Labels = { unit: (u) => `単位: ${u}`, note: (n) => `※ ${n}`, total: "合計", share: "割合", stepRate: "前段比", count: "数", fromPrev: "前の段階から", fromFirst: "最初から", done: "達成", recommended: "おすすめ", pros: "メリット", cons: "デメリット", swot: ["強み", "弱み", "機会", "脅威"], doing: "進行中", completed: (d, t) => `${t} 項目中 ${d} 項目が完了`, yes: "あり", no: "なし", partial: "一部" };
+export const LABELS_EN: Labels = { unit: (u) => `Unit: ${u}`, note: (n) => `Note: ${n}`, total: "Total", share: "Share", stepRate: "Step rate", count: "Count", fromPrev: "From previous", fromFirst: "From first", done: "done", recommended: "Recommended", pros: "Pros", cons: "Cons", swot: ["Strengths", "Weaknesses", "Opportunities", "Threats"], doing: "In progress", completed: (d, t) => `${d} of ${t} done`, yes: "Yes", no: "No", partial: "Partial" };
 
 /** 数値に単位を付ける（英字で始まる単位は空白を挟む: `1,200 people`、`1,200人`）。 */
 export function withUnit(value: string, unit: string | undefined): string {

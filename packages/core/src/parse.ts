@@ -11,6 +11,7 @@ import { parseTree } from "./kinds/tree.js";
 import { parseCards, parseFunnel, parseProgress } from "./kinds/v08.js";
 import { parseGantt, parseQuadrant } from "./kinds/v08b.js";
 import { parseCalc } from "./kinds/calc.js";
+import { parseChecklist, parseCompare, parseProsCons, parseSwot } from "./kinds/v09.js";
 import { parseStack } from "./kinds/stack.js";
 import { parseStat } from "./kinds/stat.js";
 
@@ -66,6 +67,22 @@ export const KIND_ALIASES: Readonly<Record<string, Kind>> = {
   計算: "calc",
   試算: "calc",
   calculator: "calc",
+  compare: "compare",
+  comparison: "compare",
+  比較: "compare",
+  比較表: "compare",
+  proscons: "proscons",
+  "pros-cons": "proscons",
+  pros_cons: "proscons",
+  メリット・デメリット: "proscons",
+  メリットデメリット: "proscons",
+  長所短所: "proscons",
+  swot: "swot",
+  checklist: "checklist",
+  check: "checklist",
+  todo: "checklist",
+  チェックリスト: "checklist",
+  確認事項: "checklist",
   stat: "stat",
   stats: "stat",
   kpi: "stat",
@@ -126,7 +143,7 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
       title = first.text.trim();
       body = lines.slice(1);
     } else if (!kind) {
-      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt / calc）`);
+      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt / calc / compare / proscons / swot / checklist）`);
       return { figure: null, diagnostics: diags.list, pending };
     }
   }
@@ -185,6 +202,18 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
     case "calc":
       parseCalc(figure, body, diags);
       break;
+    case "compare":
+      parseCompare(figure, body, diags);
+      break;
+    case "proscons":
+      parseProsCons(figure, body, diags);
+      break;
+    case "swot":
+      parseSwot(figure, body, diags);
+      break;
+    case "checklist":
+      parseChecklist(figure, body, diags);
+      break;
   }
 
   if (opts.final && isEmpty(figure)) {
@@ -230,6 +259,14 @@ function emptyFigure(kind: Kind, title: string, refs: number[]): Figure {
       return { kind, title, refs, tasks: [], noYear: true };
     case "calc":
       return { kind, title, refs, defs: [], show: [], hide: [] };
+    case "compare":
+      return { kind, title, refs, columns: [], rows: [] };
+    case "proscons":
+      return { kind, title, refs, pros: [], cons: [], labels: ["", ""] };
+    case "swot":
+      return { kind, title, refs, sections: [[], [], [], []], labels: ["", "", "", ""] };
+    case "checklist":
+      return { kind, title, refs, items: [] };
   }
 }
 
@@ -265,5 +302,13 @@ export function isEmpty(f: Figure): boolean {
       return f.tasks.length === 0;
     case "calc":
       return !f.defs.some((d) => d.type === "formula");
+    case "compare":
+      return f.rows.length === 0;
+    case "proscons":
+      return f.pros.length + f.cons.length === 0;
+    case "swot":
+      return f.sections.every((s) => s.length === 0);
+    case "checklist":
+      return f.items.length === 0;
   }
 }

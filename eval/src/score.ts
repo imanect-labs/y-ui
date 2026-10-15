@@ -5,6 +5,7 @@
  */
 
 import { isChart, parseNumber, type ChartFigure, type Figure, type FlowFigure, type StackFigure, type StatFigure } from "@imanect/yui";
+import { scoreChecklist, scoreCompare, scoreProsCons, scoreSwot } from "./score-v09.js";
 import { flowAsSteps, scoreCalc, scoreCards, scoreFunnel, scoreGantt, scoreProgress, scoreQuadrant, scoreScatter, scoreSteps, scoreTimeline, scoreTree } from "./score-v07.js";
 import { matchByText, norm, similarity } from "./similarity.js";
 import type { EvalTask } from "./tasks/types.js";
@@ -94,6 +95,10 @@ function scoreFigure(task: EvalTask, gold: Figure, f: Figure): Score {
   if (gold.kind === "quadrant" && f.kind === "quadrant") return { ...base, ...scoreQuadrant(gold, f) };
   if (gold.kind === "gantt" && f.kind === "gantt") return { ...base, ...scoreGantt(gold, f) };
   if (gold.kind === "calc" && f.kind === "calc") return { ...base, ...scoreCalc(gold, f, task.calcChecks ?? [{ inputs: {}, expect: {} }]) };
+  if (gold.kind === "compare" && f.kind === "compare") return { ...base, ...scoreCompare(gold, f) };
+  if (gold.kind === "proscons" && f.kind === "proscons") return { ...base, ...scoreProsCons(gold, f) };
+  if (gold.kind === "swot" && f.kind === "swot") return { ...base, ...scoreSwot(gold, f) };
+  if (gold.kind === "checklist" && f.kind === "checklist") return { ...base, ...scoreChecklist(gold, f) };
   // 手順と一本道の流れ図は、受ける種類に入っていれば互いに比べる
   if (kindOk && (gold.kind === "steps" || gold.kind === "flow") && (f.kind === "steps" || f.kind === "flow")) {
     const g = gold.kind === "steps" ? gold : flowAsSteps(gold);

@@ -178,6 +178,42 @@ const INFO: Record<Kind, KindInfo> = {
     limits: [`${LIMITS.calcDefs} 定義、1 式 ${LIMITS.calcExprLength} 文字`],
     spec: "5.15 calc",
   },
+  compare: {
+    name: "比較表",
+    use: "製品・プラン・案を項目ごとに比べる。✓ / ✗ / △ は印で描く。",
+    syntax: ["1 行目に「項目 | 選択肢 | 選択肢…」、以降「項目 | セル | セル…」", "セルの `✓` `○` `あり` は ✓、`✗` `×` `-` `なし` は ✗、`△` `一部` は △。印の後ろに文字を続けてもよい"],
+    options: ["`推奨: 選択肢` その列を強調する", ...COMMON],
+    limits: [`選択肢 ${LIMITS.compareOptions}、${LIMITS.compareRows} 項目`],
+    instead: "数値の大小を比べるなら bar。選択肢の要点を並べるだけなら cards。",
+    spec: "5.16 compare",
+  },
+  proscons: {
+    name: "メリット・デメリット",
+    use: "案・選択の良い点と悪い点を左右に並べる。",
+    syntax: ["`メリット:` `デメリット:` の見出しの下に「- 項目: 補足」", "見出しを書かないなら「+ 項目」（メリット）と「- 項目」（デメリット）", "「メリット | デメリット」の 2 列の表も受ける"],
+    options: COMMON,
+    limits: [`それぞれ ${LIMITS.prosconsItems} 項目`],
+    instead: "複数の案を項目ごとに比べるなら compare。",
+    spec: "5.17 proscons",
+  },
+  swot: {
+    name: "SWOT",
+    use: "強み・弱み・機会・脅威の 4 つに分けた整理。",
+    syntax: ["`強み:` `弱み:` `機会:` `脅威:`（`Strengths:` `S:` も可）の見出しの下に「- 項目」"],
+    options: COMMON,
+    limits: [`それぞれ ${LIMITS.swotItems} 項目`],
+    instead: "2 つの軸での位置づけは quadrant。",
+    spec: "5.18 swot",
+  },
+  checklist: {
+    name: "チェックリスト",
+    use: "確認事項・タスクの済・未・進行中と、完了の数。",
+    syntax: ["「- [x] 済んだ項目」「- [ ] 未の項目」「- [~] 進行中の項目」", "「項目: 補足」、字下げした行は補足の段落", "「項目 | 状態」の表（状態は 完了・未・進行中）も受ける"],
+    options: COMMON,
+    limits: [`${LIMITS.checklistItems} 項目`],
+    instead: "数値の目標に対する進み具合は progress、順序のある段取りは steps。",
+    spec: "5.19 checklist",
+  },
 };
 
 /** 一覧での並び（用途のまとまり）。 */
@@ -186,6 +222,7 @@ const GROUPS: { title: string; kinds: Kind[] }[] = [
   { title: "数値", kinds: ["stat", "progress", "funnel"] },
   { title: "流れ・手順・時間", kinds: ["flow", "steps", "timeline", "gantt"] },
   { title: "構造・整理", kinds: ["stack", "tree", "quadrant", "cards"] },
+  { title: "比較・判断", kinds: ["compare", "proscons", "swot", "checklist"] },
   { title: "計算（操作できる図）", kinds: ["calc"] },
 ];
 

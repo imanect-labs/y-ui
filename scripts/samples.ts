@@ -134,6 +134,44 @@ MonthlyRate = Rate / 100 / 12
 Payment = Loan * 1000 * MonthlyRate / (1 - (1 + MonthlyRate) ^ -(Years * 12)) $
 hide: MonthlyRate
 `,
+    compare: `compare Plan comparison
+Recommended: Pro
+Feature | Starter | Pro | Business
+Price / user | $8 | $18 | $36
+SSO | ✗ | ✓ | ✓
+API access | ✗ | ✓ | ✓
+Audit log | ✗ | △ 90 days | ✓ Unlimited
+Support | Email | Chat | Dedicated
+`,
+    proscons: `proscons Moving to a 4-day work week
+Pros:
+- Higher retention: fewer resignations in pilot teams
+- Better focus
+- Easier hiring
+Cons:
+- Harder customer coverage: needs a rota for Fridays
+- Longer workdays
+`,
+    swot: `swot Our product
+Strengths:
+- Permission-aware search
+- Runs on-premises
+Weaknesses:
+- Low brand awareness
+- Small sales team
+Opportunities:
+- Rapid AI adoption in enterprises
+Threats:
+- Large vendors bundling AI features
+- Price competition
+`,
+    checklist: `checklist Release readiness
+- [x] All tests pass
+- [x] Changelog updated
+- [~] Docs reviewed: waiting on the API section
+- [ ] Production config checked
+- [ ] Rollback plan shared
+`,
   },
   ja: {
     bar: `bar 四半期ごとの売上と利益
@@ -268,6 +306,44 @@ y: 実現しやすさ
 総返済額 = 毎月の返済額 * 期間 * 12 / 10000 万円
 show 毎月の返済額 | 総返済額
 hide: 月利
+`,
+    compare: `compare プランの比較
+推奨: Pro
+機能 | Starter | Pro | Business
+料金（1 人あたり） | ¥980 | ¥2,240 | ¥4,400
+SSO | ✗ | ✓ | ✓
+API | ✗ | ✓ | ✓
+監査ログ | ✗ | △ 90 日 | ✓ 無期限
+サポート | メール | チャット | 専任
+`,
+    proscons: `proscons 週休 3 日制の導入
+メリット:
+- 定着率が上がる: 試行したチームで退職が減った
+- 集中して働ける
+- 採用で有利になる
+デメリット:
+- 顧客対応が手薄になる: 金曜の当番が要る
+- 1 日の勤務が長くなる
+`,
+    swot: `swot 自社製品の SWOT
+強み:
+- 権限を考慮した検索
+- オンプレミスで動く
+弱み:
+- 知名度が低い
+- 営業の人数が少ない
+機会:
+- 企業での生成 AI の普及
+脅威:
+- 大手が AI 機能を標準で付ける
+- 価格競争
+`,
+    checklist: `checklist リリース前の確認
+- [x] すべてのテストが通る
+- [x] 変更履歴を書いた
+- [~] ドキュメントの確認: API の節が残っている
+- [ ] 本番の設定を確認する
+- [ ] 切り戻しの手順を共有する
 `,
   },
 };

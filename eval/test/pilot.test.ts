@@ -5,7 +5,7 @@ import { loadTasks } from "../src/tasks/index.js";
 describe("予備評価", () => {
   it("種類ごとに等間隔で選ぶ", () => {
     const s = sampleTasks(loadTasks(), 3);
-    expect(s).toHaveLength(60);
+    expect(s).toHaveLength(72);
     expect(s.filter((t) => t.category === "flow").map((t) => t.id)).toEqual(["flow-001", "flow-007", "flow-014"]);
   });
 

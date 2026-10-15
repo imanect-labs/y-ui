@@ -31,6 +31,11 @@ export const LIMITS = {
   quadrantItems: 30,
   ganttTasks: 30,
   calcDefs: 30,
+  compareOptions: 6,
+  compareRows: 30,
+  prosconsItems: 12,
+  swotItems: 8,
+  checklistItems: 30,
   calcExprLength: 200,
 } as const;
 

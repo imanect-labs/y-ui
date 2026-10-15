@@ -5,7 +5,7 @@
  * LLM が書くソースは寛容に受けるが、IR は常にこの形に正規化されている。
  */
 
-export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree", "cards", "progress", "funnel", "quadrant", "gantt", "calc"] as const;
+export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree", "cards", "progress", "funnel", "quadrant", "gantt", "calc", "compare", "proscons", "swot", "checklist"] as const;
 export type Kind = (typeof KINDS)[number];
 
 /** 全図に共通する項目。 */
@@ -275,6 +275,65 @@ export interface CalcFigure extends FigureBase {
   hide: string[];
 }
 
+/** 箇条書きの 1 項目（proscons・swot）。 */
+export interface ListItem {
+  text: string;
+  /** `項目: 補足` の補足と、字下げした続き（段落は改行で区切る）。 */
+  desc?: string;
+  refs: number[];
+}
+
+/** 比較表のセル。✓・✗・△ は mark に、残りの文字は text に持つ。 */
+export interface CompareCell {
+  mark?: "yes" | "no" | "partial";
+  text: string;
+}
+
+export interface CompareRow {
+  label: string;
+  /** 選択肢ごとのセル（columns.length - 1 個）。 */
+  cells: CompareCell[];
+  refs: number[];
+}
+
+export interface CompareFigure extends FigureBase {
+  kind: "compare";
+  /** 見出し行。columns[0] は項目の列の見出し、columns[1..] が比べる選択肢。 */
+  columns: string[];
+  rows: CompareRow[];
+  /** 強調する選択肢（`推奨: Pro`）。columns の添字（1 以上）。 */
+  highlight?: number;
+}
+
+export interface ProsConsFigure extends FigureBase {
+  kind: "proscons";
+  pros: ListItem[];
+  cons: ListItem[];
+  /** 見出しの書かれたままの名前（`良い点:`）。無ければ空文字（ロケールの既定を使う）。 */
+  labels: [string, string];
+}
+
+export interface SwotFigure extends FigureBase {
+  kind: "swot";
+  /** 強み・弱み・機会・脅威の順。 */
+  sections: [ListItem[], ListItem[], ListItem[], ListItem[]];
+  /** 見出しの書かれたままの名前。無ければ空文字。 */
+  labels: [string, string, string, string];
+}
+
+export interface ChecklistItem {
+  text: string;
+  desc?: string;
+  /** 済・未・進行中。 */
+  state: "done" | "todo" | "doing";
+  refs: number[];
+}
+
+export interface ChecklistFigure extends FigureBase {
+  kind: "checklist";
+  items: ChecklistItem[];
+}
+
 export type Figure =
   | ChartFigure
   | ScatterFigure
@@ -289,7 +348,11 @@ export type Figure =
   | FunnelFigure
   | QuadrantFigure
   | GanttFigure
-  | CalcFigure;
+  | CalcFigure
+  | CompareFigure
+  | ProsConsFigure
+  | SwotFigure
+  | ChecklistFigure;
 
 /** 表形式のデータを持つ図（bar / line / pie）。 */
 export function isChart(f: Figure): f is ChartFigure {

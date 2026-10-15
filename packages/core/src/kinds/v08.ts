@@ -36,13 +36,14 @@ export function parseCards(fig: CardsFigure, body: Line[], diags: Diagnostics): 
     // readEntries は字下げした段落を desc に、箇条書きを items に足すので、body・items に移す
     const { desc, items, ...rest } = c as Card & { desc?: string };
     const text = [rest.body, desc].filter((x): x is string => x !== undefined && x !== "").join("\n");
-    const card: Card = { title: rest.title, refs: rest.refs };
-    if (rest.value !== undefined) card.value = rest.value;
-    if (text) card.body = text;
-    if (items?.length) {
-      if (items.length > LIMITS.cardItems) diags.addOnce(body[0]?.no ?? 0, "warning", "limit_exceeded", `カードの項目は ${LIMITS.cardItems} 個までです`);
-      card.items = items.slice(0, LIMITS.cardItems);
-    }
+    if ((items?.length ?? 0) > LIMITS.cardItems) diags.addOnce(body[0]?.no ?? 0, "warning", "limit_exceeded", `カードの項目は ${LIMITS.cardItems} 個までです`);
+    const card: Card = {
+      title: rest.title,
+      ...(rest.value !== undefined ? { value: rest.value } : {}),
+      ...(text ? { body: text } : {}),
+      ...(items?.length ? { items: items.slice(0, LIMITS.cardItems) } : {}),
+      refs: rest.refs,
+    };
     return card;
   });
 }

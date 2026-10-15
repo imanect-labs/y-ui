@@ -86,6 +86,16 @@ function units(f: Figure): string[] {
       return f.tasks.map((t) => JSON.stringify(t));
     case "calc":
       return f.defs.map((d) => JSON.stringify(d));
+    case "compare":
+      // 見出し行が確定するまでは列が空
+      return [...(f.columns.length ? [JSON.stringify(f.columns)] : []), ...f.rows.map((r) => JSON.stringify(r))];
+    case "proscons":
+      // 補足は字下げした次の行で後から伸びるので、項目の見出しだけを単位にする
+      return [...f.pros.map((i) => `+${i.text}`), ...f.cons.map((i) => `-${i.text}`)];
+    case "swot":
+      return f.sections.flatMap((s, k) => s.map((i) => `${k}:${i.text}`));
+    case "checklist":
+      return f.items.map((i) => JSON.stringify([i.text, i.state]));
     case "tree": {
       const out: string[] = [];
       const walk = (ns: typeof f.roots, d: number) => ns.forEach((n) => (out.push(`${d}:${n.title}`), walk(n.children, d + 1)));

@@ -6,7 +6,7 @@
  */
 
 import { formatCalc, runCalc, shownFormulas } from "./calc/run.js";
-import type { CalcFigure, ChartFigure, Figure, FlowFigure, FunnelFigure, QuadrantFigure, ScatterFigure, StackBox, StackFigure, StatFigure, StepsFigure, TimelineFigure, TreeNode } from "./ir.js";
+import type { CalcFigure, ChartFigure, CompareCell, Figure, ListItem, FlowFigure, FunnelFigure, QuadrantFigure, ScatterFigure, StackBox, StackFigure, StatFigure, StepsFigure, TimelineFigure, TreeNode } from "./ir.js";
 import { parseMarkdown } from "./markdown.js";
 
 function refsText(refs: number[]): string {
@@ -99,6 +99,35 @@ export function toSource(f: Figure): string {
     case "calc":
       calcSource(f, lines);
       break;
+    case "compare":
+      if (f.highlight !== undefined) lines.push(`推奨: ${f.columns[f.highlight]}`);
+      lines.push(f.columns.map(esc).join(" | "));
+      for (const r of f.rows) lines.push(withRefs([esc(r.label), ...r.cells.map(cellSource)].join(" | "), r.refs));
+      break;
+    case "proscons": {
+      // 見出しの無い側は `+ 項目` / `- 項目` で先に書く（見出しの後ろの `- ` は見出しの項目になるため）
+      const sides = [
+        { list: f.pros, label: f.labels[0], mark: "+", name: "メリット" },
+        { list: f.cons, label: f.labels[1], mark: "-", name: "デメリット" },
+      ];
+      for (const s of sides) if (!s.label) for (const it of s.list) itemSource(it, `${s.mark} `, lines);
+      for (const s of sides) {
+        if (!s.label) continue;
+        lines.push(`${s.label}:`);
+        for (const it of s.list) itemSource(it, "- ", lines);
+      }
+      break;
+    }
+    case "swot":
+      SWOT_NAMES.forEach((name, i) => {
+        if (!f.labels[i] && f.sections[i]!.length === 0) return;
+        lines.push(`${f.labels[i] || name}:`);
+        for (const it of f.sections[i]!) itemSource(it, "- ", lines);
+      });
+      break;
+    case "checklist":
+      for (const it of f.items) itemSource(it, `- [${it.state === "done" ? "x" : it.state === "doing" ? "~" : " "}] `, lines);
+      break;
   }
   if (f.src !== undefined) lines.push(`src: ${f.src}`);
   if (f.note !== undefined) lines.push(`note: ${f.note}`);
@@ -145,6 +174,22 @@ function stepSource(title: string, desc: string | undefined): string {
   const plain = !/[:：|]/.test(title) && !/^(step|ステップ|手順|stage|段階)\s*\d/i.test(title) && !(desc ?? "").includes("|");
   if (plain) return desc === undefined ? title : `${title}: ${desc}`;
   return desc === undefined ? `${esc(title)} |` : `${esc(title)} | ${esc(desc)}`;
+}
+
+const SWOT_NAMES = ["強み", "弱み", "機会", "脅威"];
+
+/** 箇条書きの 1 項目（`前置き 見出し: 補足`、2 段落目以降は字下げした行）。 */
+function itemSource(it: { text: string; desc?: string; refs: number[] }, prefix: string, lines: string[]): void {
+  const [first, ...more] = it.desc === undefined ? [] : it.desc.split("\n");
+  lines.push(withRefs(`${prefix}${first === undefined ? it.text : `${it.text}: ${first}`}`, it.refs));
+  for (const p of more) lines.push(`${" ".repeat(prefix.length + 2)}${p}`);
+}
+
+const MARK_TEXT = { yes: "✓", no: "✗", partial: "△" } as const;
+
+function cellSource(c: CompareCell): string {
+  if (!c.mark) return esc(c.text);
+  return c.text ? `${MARK_TEXT[c.mark]} ${esc(c.text)}` : MARK_TEXT[c.mark];
 }
 
 function treeSource(nodes: TreeNode[], depth: number, lines: string[]): void {
@@ -213,9 +258,35 @@ export function toText(f: Figure): string {
     case "calc":
       calcText(f, out);
       break;
+    case "compare": {
+      const head = [f.columns[0] || "項目", ...f.columns.slice(1).map((c, i) => (f.highlight === i + 1 ? `${c}（推奨）` : c))];
+      out.push(`| ${head.map(esc).join(" | ")} |`, `|${head.map(() => " --- ").join("|")}|`);
+      for (const r of f.rows) out.push(`| ${[withRefs(r.label, r.refs), ...r.cells.map((c) => (c.mark ? `${MARK_TEXT[c.mark]}${c.text ? ` ${c.text}` : ""}` : c.text))].map(esc).join(" | ")} |`);
+      break;
+    }
+    case "proscons":
+      listText(f.labels[0] || "メリット", f.pros, out);
+      listText(f.labels[1] || "デメリット", f.cons, out);
+      break;
+    case "swot":
+      SWOT_NAMES.forEach((name, i) => listText(f.labels[i] || name, f.sections[i]!, out));
+      break;
+    case "checklist": {
+      const done = f.items.filter((it) => it.state === "done").length;
+      out.push(`（${f.items.length} 項目中 ${done} 項目が完了）`, "");
+      for (const it of f.items) out.push(`- [${it.state === "done" ? "x" : " "}] ${withRefs(it.desc ? `${it.text}: ${it.desc.replace(/\n/g, " ")}` : it.text, it.refs)}${it.state === "doing" ? "（進行中）" : ""}`);
+      break;
+    }
   }
   if (f.note !== undefined) out.push("", `※ ${f.note}`);
   return out.join("\n");
+}
+
+function listText(label: string, items: ListItem[], out: string[]): void {
+  if (items.length === 0) return;
+  if (out.length > 0 && out[out.length - 1] !== "") out.push("");
+  out.push(`**${label}**`);
+  for (const it of items) out.push(`- ${withRefs(it.desc ? `${it.text}: ${it.desc.replace(/\n/g, " ")}` : it.text, it.refs)}`);
 }
 
 function chartText(f: ChartFigure, out: string[]): void {

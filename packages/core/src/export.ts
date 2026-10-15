@@ -9,7 +9,7 @@
  */
 
 import { formatCalc, runCalc } from "./calc/run.js";
-import { type CalcFigure, type ChartFigure, type Figure, type FlowFigure, isChart, type ScatterFigure, type StackBox, type StackFigure, type StatFigure, type TreeNode } from "./ir.js";
+import { type CalcFigure, type ChartFigure, type Figure, type FlowFigure, isChart, type ListItem, type ScatterFigure, type StackBox, type StackFigure, type StatFigure, type TreeNode } from "./ir.js";
 import { layout, type LayoutOptions } from "./render/layout.js";
 import { sceneToSVG } from "./render/svg.js";
 import { share, toSource, toText } from "./text.js";
@@ -111,6 +111,11 @@ function calcHTML(f: CalcFigure): string {
   return `<table><tbody>${rows}</tbody></table>`;
 }
 
+function listHTML(label: string, items: ListItem[]): string {
+  if (items.length === 0) return "";
+  return `<p><strong>${esc(label)}</strong></p><ul>${items.map((it) => `<li>${withDesc(it.text, it.desc, it.refs)}</li>`).join("")}</ul>`;
+}
+
 function otherHTML(f: Exclude<Figure, ChartFigure>): string {
   switch (f.kind) {
     case "stat":
@@ -139,6 +144,18 @@ function otherHTML(f: Exclude<Figure, ChartFigure>): string {
       return `<ul>${f.tasks.map((t) => `<li>${esc(t.label + refs(t.refs))}: ${esc(t.endText ? `${t.startText} 〜 ${t.endText}` : t.startText)}</li>`).join("")}</ul>`;
     case "funnel":
       return `<table><tbody>${f.stages.map((s) => `<tr><th scope="row">${esc(s.label + refs(s.refs))}</th><td style="text-align:right">${esc(nf.format(s.value))}${f.unit ? esc(f.unit) : ""}</td></tr>`).join("")}</tbody></table>`;
+    case "compare": {
+      const mark = { yes: "✓", no: "✗", partial: "△" } as const;
+      const head = f.columns.map((c, i) => `<th scope="col">${esc(c)}${f.highlight === i && i > 0 ? "（推奨）" : ""}</th>`).join("");
+      const body = f.rows.map((r) => `<tr><th scope="row">${esc(r.label + refs(r.refs))}</th>${r.cells.map((c) => `<td style="text-align:center">${esc([c.mark ? mark[c.mark] : "", c.text].filter(Boolean).join(" "))}</td>`).join("")}</tr>`).join("");
+      return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    }
+    case "proscons":
+      return [listHTML(f.labels[0] || "メリット", f.pros), listHTML(f.labels[1] || "デメリット", f.cons)].join("");
+    case "swot":
+      return ["強み", "弱み", "機会", "脅威"].map((n, i) => listHTML(f.labels[i] || n, f.sections[i]!)).join("");
+    case "checklist":
+      return `<ul>${f.items.map((it) => `<li>${it.state === "done" ? "☑" : "☐"} ${withDesc(it.text, it.desc, it.refs)}${it.state === "doing" ? "（進行中）" : ""}</li>`).join("")}</ul>`;
   }
 }
 
