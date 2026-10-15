@@ -36,6 +36,11 @@ export const LIMITS = {
   prosconsItems: 12,
   swotItems: 8,
   checklistItems: 30,
+  appSections: 6,
+  appSectionFields: 20,
+  appFields: 40,
+  appSectionActions: 3,
+  appLabel: 40,
   calcExprLength: 200,
 } as const;
 

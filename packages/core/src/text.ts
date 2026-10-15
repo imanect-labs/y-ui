@@ -6,7 +6,7 @@
  */
 
 import { formatCalc, runCalc, shownFormulas } from "./calc/run.js";
-import type { CalcFigure, ChartFigure, CompareCell, Figure, ListItem, FlowFigure, FunnelFigure, QuadrantFigure, ScatterFigure, StackBox, StackFigure, StatFigure, StepsFigure, TimelineFigure, TreeNode } from "./ir.js";
+import type { AppField, AppFigure, CalcFigure, ChartFigure, CompareCell, Figure, ListItem, FlowFigure, FunnelFigure, QuadrantFigure, ScatterFigure, StackBox, StackFigure, StatFigure, StepsFigure, TimelineFigure, TreeNode } from "./ir.js";
 import { parseMarkdown } from "./markdown.js";
 
 function refsText(refs: number[]): string {
@@ -128,6 +128,9 @@ export function toSource(f: Figure): string {
     case "checklist":
       for (const it of f.items) itemSource(it, `- [${it.state === "done" ? "x" : it.state === "doing" ? "~" : " "}] `, lines);
       break;
+    case "app":
+      appSource(f, lines);
+      break;
   }
   if (f.src !== undefined) lines.push(`src: ${f.src}`);
   if (f.note !== undefined) lines.push(`note: ${f.note}`);
@@ -186,6 +189,48 @@ function itemSource(it: { text: string; desc?: string; refs: number[] }, prefix:
 }
 
 const MARK_TEXT = { yes: "✓", no: "✗", partial: "△" } as const;
+
+function fieldSource(x: AppField): string {
+  const parts = [`${x.label} = ${x.type}`];
+  if (x.type === "choice") parts.push(x.options!.map((o) => (o.label === o.value ? o.value : `${o.label}=${o.value}`)).join(" | "));
+  if (x.min !== undefined && x.max !== undefined) parts.push(`${x.min}..${x.max}`);
+  if (x.unit) parts.push(x.unit);
+  if (x.required) parts.push("必須");
+  if (x.multi) parts.push("multi");
+  if (x.key !== x.label) parts.push(`as ${x.key}`);
+  if (x.step !== undefined && x.type !== "count") parts.push(`step ${x.step}`);
+  if (x.initial !== undefined) {
+    const v = x.initial;
+    parts.push(`初期 ${typeof v === "boolean" ? (v ? "オン" : "オフ") : Array.isArray(v) ? v.join(", ") : v}`);
+  }
+  if (x.placeholder) parts.push(`例 ${x.placeholder}`);
+  return parts.join(" ");
+}
+
+function appSource(f: AppFigure, lines: string[]): void {
+  f.sections.forEach((s) => {
+    if (s.title) lines.push(`## ${s.title}`);
+    for (const d of s.desc?.split("\n") ?? []) lines.push(`> ${d}`);
+    for (const x of s.fields) lines.push(fieldSource(x));
+    for (const a of s.actions) lines.push(`button ${a.label} -> ${a.target.kind === "chat" ? `chat${a.confirm ? " confirm" : ""}` : `workflow ${a.target.name}`}`);
+  });
+}
+
+const FIELD_TYPE_JA: Record<AppField["type"], string> = { text: "文字", textarea: "文章", number: "数値", slider: "数値", count: "数", choice: "選択", date: "日付", month: "年月", toggle: "オン・オフ" };
+
+function appText(f: AppFigure, out: string[]): void {
+  out.push("（入力してボタンで実行する画面。対応する画面で操作できます）");
+  for (const s of f.sections) {
+    out.push("");
+    if (s.title) out.push(`### ${s.title}`);
+    if (s.desc) out.push(s.desc.replace(/\n/g, " "));
+    for (const x of s.fields) {
+      const kind = [FIELD_TYPE_JA[x.type], x.required ? "必須" : "", x.type === "choice" ? x.options!.map((o) => o.label).join(" / ") : "", x.unit ?? ""].filter(Boolean).join("・");
+      out.push(`- ${x.label}（${kind}）${x.placeholder ? `: 例 ${x.placeholder}` : ""}`);
+    }
+    for (const a of s.actions) out.push(`- ボタン「${a.label}」→ ${a.target.kind === "chat" ? "会話に送る" : `ワークフロー「${a.target.name}」を起動`}`);
+  }
+}
 
 function cellSource(c: CompareCell): string {
   if (!c.mark) return esc(c.text);
@@ -270,6 +315,9 @@ export function toText(f: Figure): string {
       break;
     case "swot":
       SWOT_NAMES.forEach((name, i) => listText(f.labels[i] || name, f.sections[i]!, out));
+      break;
+    case "app":
+      appText(f, out);
       break;
     case "checklist": {
       const done = f.items.filter((it) => it.state === "done").length;

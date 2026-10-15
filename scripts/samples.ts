@@ -172,6 +172,19 @@ Threats:
 - [ ] Production config checked
 - [ ] Rollback plan shared
 `,
+    app: `app Expenses
+## Submit an expense
+> Enter the receipt details.
+Subject = text required e.g. Taxi to the airport
+Amount = number 1..10000 USD required as amount
+Category = choice Travel | Meals | Supplies
+Date = date required
+button Submit -> workflow expense-approval
+
+## Monthly report
+Month = month required
+button Run report -> workflow monthly-report
+`,
   },
   ja: {
     bar: `bar 四半期ごとの売上と利益
@@ -344,6 +357,22 @@ API | ✗ | ✓ | ✓
 - [~] ドキュメントの確認: API の節が残っている
 - [ ] 本番の設定を確認する
 - [ ] 切り戻しの手順を共有する
+`,
+    app: `app 経費の処理
+## 経費の申請
+> 領収書の内容を入力してください。
+件名 = text 必須 例 4月 大阪出張の交通費
+金額 = number 1..1000000 円 必須 as amount
+区分 = choice 交通費 | 出張費 | 備品
+日付 = date 必須
+立替 = toggle 初期 オン
+button 申請する -> workflow 経費申請
+
+## 月次の集計
+対象月 = month 必須
+部署 = choice 営業 | 開発 | 管理 multi
+button 集計する -> workflow 月次集計
+button 会話で相談する -> chat
 `,
   },
 };

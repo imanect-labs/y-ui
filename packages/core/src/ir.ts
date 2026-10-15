@@ -5,7 +5,7 @@
  * LLM が書くソースは寛容に受けるが、IR は常にこの形に正規化されている。
  */
 
-export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree", "cards", "progress", "funnel", "quadrant", "gantt", "calc", "compare", "proscons", "swot", "checklist"] as const;
+export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree", "cards", "progress", "funnel", "quadrant", "gantt", "calc", "compare", "proscons", "swot", "checklist", "app"] as const;
 export type Kind = (typeof KINDS)[number];
 
 /** 全図に共通する項目。 */
@@ -334,6 +334,47 @@ export interface ChecklistFigure extends FigureBase {
   items: ChecklistItem[];
 }
 
+/** app の入力部品。key は実行先に渡す名前（`as キー`、無ければラベル）。 */
+export interface AppField {
+  key: string;
+  label: string;
+  type: "text" | "textarea" | "number" | "slider" | "count" | "choice" | "date" | "month" | "toggle";
+  required: boolean;
+  /** 入力の例（`例 …`）。 */
+  placeholder?: string;
+  initial?: string | number | boolean | string[];
+  min?: number;
+  max?: number;
+  step?: number;
+  unit?: string;
+  /** choice の選択肢（表示名と値）。 */
+  options?: { label: string; value: string }[];
+  /** choice の複数選択。 */
+  multi?: boolean;
+}
+
+/** app のボタン。id はソースの順の `a1`・`a2`…（ホストはこれを束縛の id にする）。 */
+export interface AppAction {
+  id: string;
+  label: string;
+  target: { kind: "workflow"; name: string } | { kind: "chat" };
+  /** 押した後に確認を挟むか（workflow は既定で挟む）。 */
+  confirm: boolean;
+}
+
+/** 機能（入力のまとまりとボタン）。ボタンはその機能の入力値だけを送る。 */
+export interface AppSection {
+  title?: string;
+  desc?: string;
+  fields: AppField[];
+  actions: AppAction[];
+}
+
+export interface AppFigure extends FigureBase {
+  kind: "app";
+  sections: AppSection[];
+}
+
 export type Figure =
   | ChartFigure
   | ScatterFigure
@@ -352,7 +393,8 @@ export type Figure =
   | CompareFigure
   | ProsConsFigure
   | SwotFigure
-  | ChecklistFigure;
+  | ChecklistFigure
+  | AppFigure;
 
 /** 表形式のデータを持つ図（bar / line / pie）。 */
 export function isChart(f: Figure): f is ChartFigure {

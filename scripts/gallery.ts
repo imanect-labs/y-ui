@@ -263,7 +263,7 @@ const figures: [string, Figure][] = [
   ...Object.entries({
     ...samples,
     // v0.9 の種類は README の見本をそのまま使う
-    ...Object.fromEntries(["compare", "proscons", "swot", "checklist"].flatMap((k) => [[k, SAMPLES.ja[k]!], [`${k}-en`, SAMPLES.en[k]!]])),
+    ...Object.fromEntries(["compare", "proscons", "swot", "checklist", "app"].flatMap((k) => [[k, SAMPLES.ja[k]!], [`${k}-en`, SAMPLES.en[k]!]])),
   }).map(([k, src]) => {
     const r = parseBlock(src, { final: true });
     if (!r.figure) throw new Error(`${k}: ${JSON.stringify(r.diagnostics)}`);

@@ -11,6 +11,7 @@ import { parseTree } from "./kinds/tree.js";
 import { parseCards, parseFunnel, parseProgress } from "./kinds/v08.js";
 import { parseGantt, parseQuadrant } from "./kinds/v08b.js";
 import { parseCalc } from "./kinds/calc.js";
+import { parseApp } from "./kinds/app.js";
 import { parseChecklist, parseCompare, parseProsCons, parseSwot } from "./kinds/v09.js";
 import { parseStack } from "./kinds/stack.js";
 import { parseStat } from "./kinds/stat.js";
@@ -83,6 +84,10 @@ export const KIND_ALIASES: Readonly<Record<string, Kind>> = {
   todo: "checklist",
   チェックリスト: "checklist",
   確認事項: "checklist",
+  app: "app",
+  form: "app",
+  アプリ: "app",
+  フォーム: "app",
   stat: "stat",
   stats: "stat",
   kpi: "stat",
@@ -143,7 +148,7 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
       title = first.text.trim();
       body = lines.slice(1);
     } else if (!kind) {
-      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt / calc / compare / proscons / swot / checklist）`);
+      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt / calc / compare / proscons / swot / checklist / app）`);
       return { figure: null, diagnostics: diags.list, pending };
     }
   }
@@ -214,6 +219,9 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
     case "checklist":
       parseChecklist(figure, body, diags);
       break;
+    case "app":
+      parseApp(figure, body, diags);
+      break;
   }
 
   if (opts.final && isEmpty(figure)) {
@@ -267,6 +275,8 @@ function emptyFigure(kind: Kind, title: string, refs: number[]): Figure {
       return { kind, title, refs, sections: [[], [], [], []], labels: ["", "", "", ""] };
     case "checklist":
       return { kind, title, refs, items: [] };
+    case "app":
+      return { kind, title, refs, sections: [] };
   }
 }
 
@@ -310,5 +320,7 @@ export function isEmpty(f: Figure): boolean {
       return f.sections.every((s) => s.length === 0);
     case "checklist":
       return f.items.length === 0;
+    case "app":
+      return f.sections.length === 0;
   }
 }

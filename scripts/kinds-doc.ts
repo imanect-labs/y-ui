@@ -214,6 +214,15 @@ const INFO: Record<Kind, KindInfo> = {
     instead: "数値の目標に対する進み具合は progress、順序のある段取りは steps。",
     spec: "5.19 checklist",
   },
+  app: {
+    name: "アプリ（入力と実行）",
+    use: "入力部品とボタンを並べ、押すとホストがその値でワークフローを起動する（Yui は実行しない）。機能ごとに分けて並べられる。",
+    syntax: ["`## 見出し` で機能を分け、`> 説明`", "入力は「ラベル = 種類」（text・textarea・number・choice・date・month・toggle・slider・count）。`必須`・`例 …`・`初期 …`・`as キー`", "ボタンは「button ラベル -> workflow 名前」か「-> chat」"],
+    options: COMMON,
+    limits: [`機能 ${LIMITS.appSections}、入力 1 機能 ${LIMITS.appSectionFields}・全体 ${LIMITS.appFields}、ボタン 1 機能 ${LIMITS.appSectionActions}`],
+    instead: "画面の中で計算が完結するなら calc。",
+    spec: "5.20 app（docs/app.md）",
+  },
 };
 
 /** 一覧での並び（用途のまとまり）。 */
@@ -223,7 +232,7 @@ const GROUPS: { title: string; kinds: Kind[] }[] = [
   { title: "流れ・手順・時間", kinds: ["flow", "steps", "timeline", "gantt"] },
   { title: "構造・整理", kinds: ["stack", "tree", "quadrant", "cards"] },
   { title: "比較・判断", kinds: ["compare", "proscons", "swot", "checklist"] },
-  { title: "計算（操作できる図）", kinds: ["calc"] },
+  { title: "操作できる図", kinds: ["calc", "app"] },
 ];
 
 /** GitHub の見出しのアンカー（小文字・記号を除く・空白を - に）。 */

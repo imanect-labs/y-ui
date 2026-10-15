@@ -154,6 +154,10 @@ function otherHTML(f: Exclude<Figure, ChartFigure>): string {
       return [listHTML(f.labels[0] || "メリット", f.pros), listHTML(f.labels[1] || "デメリット", f.cons)].join("");
     case "swot":
       return ["強み", "弱み", "機会", "脅威"].map((n, i) => listHTML(f.labels[i] || n, f.sections[i]!)).join("");
+    case "app":
+      return f.sections
+        .map((s) => `${s.title ? `<p><strong>${esc(s.title)}</strong></p>` : ""}<ul>${s.fields.map((x) => `<li>${esc(x.label)}${x.required ? "（必須）" : ""}${x.type === "choice" ? `: ${esc(x.options!.map((o) => o.label).join(" / "))}` : ""}</li>`).join("")}${s.actions.map((a) => `<li>［${esc(a.label)}］${a.target.kind === "workflow" ? ` → ${esc(a.target.name)}` : ""}</li>`).join("")}</ul>`)
+        .join("");
     case "checklist":
       return `<ul>${f.items.map((it) => `<li>${it.state === "done" ? "☑" : "☐"} ${withDesc(it.text, it.desc, it.refs)}${it.state === "doing" ? "（進行中）" : ""}</li>`).join("")}</ul>`;
   }
