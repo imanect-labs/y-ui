@@ -4,7 +4,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseBlock, validateAppValues, type AppFigure } from "@imanect/yui";
+import { figureActions, parseBlock, validateActionValues, type Figure } from "@imanect/yui";
 
 const SOURCES: Record<string, string> = {
   full: `app 経費の処理
@@ -30,6 +30,10 @@ note: 申請は上長の承認後に経理へ回ります。
   english: "app Expenses\n## Submit\nSubject = text required e.g. Taxi to the airport\nAmount = number 1..10000 USD required as amount\nbutton Submit -> workflow expense-approval\n",
   rejected: "app x\n開始日 = date\n種類 = color\nbutton 送る -> https://example.com/x\nbutton 申請 -> workflow 休暇申請\nこれは説明ではない\nbutton 相談 -> chat confirm\n",
   slider: "app 設定\n上限 = slider 0..100 step 5 初期 50 %\nbutton 保存 -> workflow 設定の保存\n",
+  extended: "app 研修の感想\n満足度 = rating 5 必須\n受講期間 = date range 必須\n参加の形 = choice 会場 | オンライン | その他\n関心 = choice AI | セキュリティ | 法務 multi other\nbutton 送る -> chat\n",
+  ask: "ask 調べる前の確認\n> いくつか教えてください。\n? 対象の期間は？\n- 直近 1 年\n- 直近 3 年: 傾向を見るならこちら\n? 出力の形式は？ multi\n- 表\n- グラフ\n- その他\n? 補足があれば 任意 例 部署を絞るなど\nbutton 回答する\n",
+  askOne: "ask x\n? 一つだけ\n- A\nこれは読めない\n",
+  plan: "plan 調査の進め方\n> 次の手順で進めます。\n1. 社内文書を検索する: 経費規程と過去の申請\n2. 比較表を作る\n3. 要点をまとめる\nbutton 進める\nrevise: off\n",
 };
 
 const VALUES: { source: string; action: string; input: Record<string, unknown> }[] = [
@@ -38,12 +42,18 @@ const VALUES: { source: string; action: string; input: Record<string, unknown> }
   { source: "full", action: "a2", input: { 対象月: "2025-13", 部署: ["hr"], 人数: 2.5 } },
   { source: "full", action: "a2", input: { 対象月: "2025-04", 部署: ["sales", "dev", "dev"], 人数: 3 } },
   { source: "slider", action: "a1", input: { 上限: 105 } },
+  { source: "extended", action: "a1", input: { 満足度: 4, 受講期間: "2025-04-01/2025-04-03", 参加の形: "社内の研修室", 関心: ["AI", "経理"] } },
+  { source: "extended", action: "a1", input: { 満足度: 6, 受講期間: "2025-04-03/2025-04-01", 関心: ["x", "y"] } },
+  { source: "ask", action: "a1", input: { q1: "直近 1 年", q2: ["表", "PDF"], q3: "" } },
+  { source: "ask", action: "a1", input: { q1: "直近 10 年", q2: ["A", "B"] } },
+  { source: "plan", action: "approve", input: {} },
+  { source: "plan", action: "revise", input: { comment: "x" } },
 ];
 
 const cases = Object.entries(SOURCES).map(([name, source]) => {
   const r = parseBlock(source, { final: true });
-  return { name, source, figure: r.figure as AppFigure, diagnostics: r.diagnostics.map((d) => ({ line: d.line, code: d.code })) };
+  return { name, source, figure: r.figure as Figure, actions: figureActions(r.figure!), diagnostics: r.diagnostics.map((d) => ({ line: d.line, code: d.code })) };
 });
-const values = VALUES.map((v) => ({ ...v, expect: validateAppValues(cases.find((c) => c.name === v.source)!.figure, v.action, v.input) }));
-writeFileSync(join(import.meta.dirname, "../spec-tests/app.json"), `${JSON.stringify({ note: "scripts/app-fixtures.ts で生成。TS 版と Rust 版の app のパーサ・検証が同じ結果を出すかを確かめる。", cases, values }, null, 2)}\n`);
+const values = VALUES.map((v) => ({ ...v, expect: validateActionValues(cases.find((c) => c.name === v.source)!.figure, v.action, v.input) }));
+writeFileSync(join(import.meta.dirname, "../spec-tests/app.json"), `${JSON.stringify({ note: "scripts/app-fixtures.ts で生成。TS 版と Rust 版の、操作を持つ種類（app・ask・plan）のパーサ・ボタン・値の検証が同じ結果を出すかを確かめる。", cases, values }, null, 2)}\n`);
 console.log(`wrote ${cases.length} cases, ${values.length} value checks`);

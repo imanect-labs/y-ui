@@ -154,6 +154,10 @@ function otherHTML(f: Exclude<Figure, ChartFigure>): string {
       return [listHTML(f.labels[0] || "メリット", f.pros), listHTML(f.labels[1] || "デメリット", f.cons)].join("");
     case "swot":
       return ["強み", "弱み", "機会", "脅威"].map((n, i) => listHTML(f.labels[i] || n, f.sections[i]!)).join("");
+    case "ask":
+      return `${f.intro ? `<p>${esc(f.intro)}</p>` : ""}<ol>${f.questions.map((q) => `<li>${esc(q.text)}${q.options.length ? `<ul>${q.options.map((o) => `<li>${esc(o.desc ? `${o.label}: ${o.desc}` : o.label)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ol>`;
+    case "plan":
+      return `${f.intro ? `<p>${esc(f.intro)}</p>` : ""}<ol>${f.steps.map((s) => `<li>${withDesc(s.title, s.desc, s.refs)}</li>`).join("")}</ol>`;
     case "app":
       return f.sections
         .map((s) => `${s.title ? `<p><strong>${esc(s.title)}</strong></p>` : ""}<ul>${s.fields.map((x) => `<li>${esc(x.label)}${x.required ? "（必須）" : ""}${x.type === "choice" ? `: ${esc(x.options!.map((o) => o.label).join(" / "))}` : ""}</li>`).join("")}${s.actions.map((a) => `<li>［${esc(a.label)}］${a.target.kind === "workflow" ? ` → ${esc(a.target.name)}` : ""}</li>`).join("")}</ul>`)

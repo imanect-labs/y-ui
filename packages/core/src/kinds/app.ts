@@ -31,6 +31,10 @@ const TYPES: Record<string, AppField["type"]> = {
   日付: "date",
   month: "month",
   年月: "month",
+  daterange: "daterange",
+  期間: "daterange",
+  rating: "rating",
+  評価: "rating",
   toggle: "toggle",
   switch: "toggle",
   checkbox: "toggle",
@@ -41,6 +45,8 @@ const RANGE = new RegExp(`^${NUM}\\s*(?:\\.\\.|〜|~|～)\\s*${NUM}\\s*`);
 const KEY = /(?:^|\s)as\s+([A-Za-z_][\w.-]{0,63})(?=\s|$)/;
 const REQUIRED = /(?:^|\s)(?:必須|required)(?=\s|$)/i;
 const MULTI = /(?:^|\s)(?:multi|複数)(?=\s|$)/i;
+/** choice の「その他」（自由記述も受ける）。 */
+const OTHER_OPT = /(?:^|\s)(?:other|その他を受ける)(?=\s|$)/i;
 /** 値を取るオプション（後ろに値が続く）。 */
 const VALUED = /(?:^|\s)(例|e\.g\.|placeholder|初期値?|initial|default|step|刻み)\s+/gi;
 
@@ -169,9 +175,14 @@ function takeValued(s: string): { rest: string; values: Record<string, string> }
 }
 
 function readField(name: string, typeWord: string, opts: string, line: number, diags: Diagnostics): AppField | null {
-  const type = TYPES[typeWord.normalize("NFKC").toLowerCase()] ?? TYPES[typeWord];
+  let type = TYPES[typeWord.normalize("NFKC").toLowerCase()] ?? TYPES[typeWord];
+  // `date range` は期間
+  if (type === "date" && /^\s*range(?=\s|$)/i.test(opts)) {
+    type = "daterange";
+    opts = opts.replace(/^\s*range/i, "");
+  }
   if (!type) {
-    diags.add(line, "warning", "unrecognized_line", `入力の種類が分かりません: ${typeWord}（text / textarea / number / choice / date / month / toggle / slider / count）`);
+    diags.add(line, "warning", "unrecognized_line", `入力の種類が分かりません: ${typeWord}（text / textarea / number / choice / date / daterange / month / toggle / rating / slider / count）`);
     return null;
   }
   let s = ` ${opts} `;
@@ -181,6 +192,8 @@ function readField(name: string, typeWord: string, opts: string, line: number, d
   s = s.replace(REQUIRED, " ");
   const multi = MULTI.test(s);
   s = s.replace(MULTI, " ");
+  const other = OTHER_OPT.test(s);
+  s = s.replace(OTHER_OPT, " ");
   const field: AppField = { key: key ? key[1]! : label(name, line, diags), label: label(name, line, diags), type, required };
 
   if (type === "choice") {
@@ -194,12 +207,16 @@ function readField(name: string, typeWord: string, opts: string, line: number, d
         const kv = /^(.+?)\s*[=＝]\s*(.+)$/.exec(o);
         return kv ? { label: label(kv[1]!, line, diags), value: kv[2]!.trim() } : { label: label(o, line, diags), value: o };
       });
+    // 選択肢に「その他」と書いたものは、自由記述を受ける印にする
+    const otherIdx = options.findIndex((o) => /^(その他|other)$/i.test(o.value));
+    if (otherIdx >= 0) options.splice(otherIdx, 1);
     if (options.length < 2) {
       diags.add(line, "warning", "unrecognized_line", `選択肢は「a | b」のように 2 つ以上書いてください: ${name}`);
       return null;
     }
     field.options = options.slice(0, 20);
     if (multi) field.multi = true;
+    if (other || otherIdx >= 0) field.other = true;
     const init = values["初期"];
     if (init) {
       const picked = init.split(/\s*[,、|]\s*/).filter((v) => field.options!.some((o) => o.value === v || o.label === v)).map((v) => field.options!.find((o) => o.value === v || o.label === v)!.value);
@@ -225,6 +242,19 @@ function readField(name: string, typeWord: string, opts: string, line: number, d
     if (type === "count") field.step = 1;
     if (values["初期"] !== undefined && Number.isFinite(Number(values["初期"]))) field.initial = Number(values["初期"]);
     if (tail) field.unit = label(tail, line, diags);
+    return field;
+  }
+  if (type === "rating") {
+    // `rating 5`（最大。既定 5、2〜10）
+    const m = /^(\d{1,2})\b/.exec(tail);
+    field.max = m ? Math.min(10, Math.max(2, +m[1]!)) : 5;
+    field.min = 1;
+    if (values["初期"] !== undefined && /^\d+$/.test(values["初期"])) field.initial = Math.min(field.max, Math.max(1, +values["初期"]));
+    return field;
+  }
+  if (type === "daterange") {
+    const init = values["初期"]?.replace(/\//g, "-").replace(/\s*(?:〜|~|～)\s*/, "/");
+    if (init && /^\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}$/.test(init)) field.initial = init;
     return field;
   }
   if (type === "toggle") {

@@ -15,6 +15,7 @@ import { layoutCalc } from "./calc.js";
 import { layoutChecklist, layoutCompare } from "./v09.js";
 import { layoutProsCons, layoutSwot } from "./v09b.js";
 import { layoutApp } from "./app.js";
+import { layoutAsk, layoutPlan } from "./ask.js";
 import type { Scene } from "./scene.js";
 import { layoutStack } from "./stack.js";
 import { layoutStat } from "./stat.js";
@@ -83,6 +84,12 @@ export function layout(f: Figure, opts: LayoutOptions = {}): Scene {
       break;
     case "app":
       y = layoutApp(ctx, f, y + 2);
+      break;
+    case "ask":
+      y = layoutAsk(ctx, f, y + 2);
+      break;
+    case "plan":
+      y = layoutPlan(ctx, f, y + 2);
       break;
   }
   y = drawNote(ctx, f, y);

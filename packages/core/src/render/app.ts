@@ -17,7 +17,7 @@ const BTN_H = 36;
 const COL_GAP = 12;
 const ROW_GAP = 14;
 
-const boxH = (x: AppField) => (x.type === "textarea" ? AREA_H : x.type === "slider" ? 22 : BOX_H);
+const boxH = (x: AppField) => (x.type === "textarea" ? AREA_H : x.type === "slider" || x.type === "rating" ? 24 : BOX_H);
 
 export function layoutApp(ctx: Ctx, f: AppFigure, top: number): number {
   const inner = ctx.width - ctx.pad * 2;
@@ -119,11 +119,16 @@ function drawField(ctx: Ctx, x: AppField, fx: number, fy: number, fw: number, g:
     ctx.items.push({ t: "circle", cx: tx, cy: by + 11, r: 8, fill: "surface", stroke: "s1", strokeWidth: 2, group: g });
     return;
   }
+  if (x.type === "rating") {
+    const n = typeof x.initial === "number" ? x.initial : 0;
+    for (let i = 0; i < (x.max ?? 5); i++) ctx.items.push({ t: "text", x: fx + i * 26, y: by + 20, text: "★", size: 22, fill: i < n ? "s6" : "axis", group: g });
+    return;
+  }
   const h = boxH(x);
   ctx.items.push({ t: "rect", x: fx + 0.5, y: by + 0.5, w: fw - 1, h: h - 1, r: 8, fill: "surface", stroke: "border", strokeWidth: 1, group: g });
   const has = x.initial !== undefined && x.initial !== "" && !(Array.isArray(x.initial) && x.initial.length === 0);
-  const text = has ? displayValue(x, x.initial, ja) : (x.placeholder ?? (x.type === "choice" ? (ja ? "選択してください" : "Select") : x.type === "date" ? "yyyy-mm-dd" : x.type === "month" ? "yyyy-mm" : ""));
-  const chevron = x.type === "choice" || x.type === "date" || x.type === "month";
+  const text = has ? displayValue(x, x.initial, ja) : (x.placeholder ?? (x.type === "choice" ? (ja ? "選択してください" : "Select") : x.type === "date" ? "yyyy-mm-dd" : x.type === "daterange" ? "yyyy-mm-dd 〜 yyyy-mm-dd" : x.type === "month" ? "yyyy-mm" : ""));
+  const chevron = x.type === "choice" || x.type === "date" || x.type === "daterange" || x.type === "month";
   const unitW = x.unit && (x.type === "number" || x.type === "count") ? ctx.measure(x.unit, TEXT) + 12 : 0;
   if (text) ctx.items.push({ t: "text", x: fx + 12, y: by + 23, text: fit(text, fw - 24 - (chevron ? 16 : 0) - unitW, TEXT, ctx.measure), size: TEXT, fill: has ? "ink" : "muted", group: g });
   if (unitW) ctx.items.push({ t: "text", x: fx + fw - 12, y: by + 23, text: x.unit!, size: TEXT, fill: "muted", anchor: "end", group: g });

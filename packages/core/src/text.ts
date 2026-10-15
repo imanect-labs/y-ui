@@ -131,6 +131,25 @@ export function toSource(f: Figure): string {
     case "app":
       appSource(f, lines);
       break;
+    case "ask":
+      for (const d of f.intro?.split("\n") ?? []) lines.push(`> ${d}`);
+      for (const q of f.questions) {
+        lines.push(`? ${[q.text, q.multi ? "multi" : "", q.required ? "" : "任意", q.placeholder ? `例 ${q.placeholder}` : ""].filter(Boolean).join(" ")}`);
+        for (const o of q.options) lines.push(`- ${o.desc !== undefined ? `${o.label}: ${o.desc}` : o.label}`);
+        if (q.other) lines.push("- その他");
+      }
+      if (f.submitLabel) lines.push(`button ${f.submitLabel}`);
+      break;
+    case "plan":
+      for (const d of f.intro?.split("\n") ?? []) lines.push(`> ${d}`);
+      f.steps.forEach((s, i) => {
+        const [first, ...more] = s.desc === undefined ? [] : s.desc.split("\n");
+        lines.push(withRefs(`${i + 1}. ${stepSource(s.title, first)}`, s.refs));
+        for (const p of more) lines.push(`   ${p}`);
+      });
+      if (f.approveLabel) lines.push(`button ${f.approveLabel}`);
+      if (!f.revise) lines.push("revise: off");
+      break;
   }
   if (f.src !== undefined) lines.push(`src: ${f.src}`);
   if (f.note !== undefined) lines.push(`note: ${f.note}`);
@@ -193,10 +212,12 @@ const MARK_TEXT = { yes: "✓", no: "✗", partial: "△" } as const;
 function fieldSource(x: AppField): string {
   const parts = [`${x.label} = ${x.type}`];
   if (x.type === "choice") parts.push(x.options!.map((o) => (o.label === o.value ? o.value : `${o.label}=${o.value}`)).join(" | "));
-  if (x.min !== undefined && x.max !== undefined) parts.push(`${x.min}..${x.max}`);
+  if (x.type === "rating") parts.push(String(x.max ?? 5));
+  else if (x.min !== undefined && x.max !== undefined) parts.push(`${x.min}..${x.max}`);
   if (x.unit) parts.push(x.unit);
   if (x.required) parts.push("必須");
   if (x.multi) parts.push("multi");
+  if (x.other) parts.push("other");
   if (x.key !== x.label) parts.push(`as ${x.key}`);
   if (x.step !== undefined && x.type !== "count") parts.push(`step ${x.step}`);
   if (x.initial !== undefined) {
@@ -216,7 +237,7 @@ function appSource(f: AppFigure, lines: string[]): void {
   });
 }
 
-const FIELD_TYPE_JA: Record<AppField["type"], string> = { text: "文字", textarea: "文章", number: "数値", slider: "数値", count: "数", choice: "選択", date: "日付", month: "年月", toggle: "オン・オフ" };
+const FIELD_TYPE_JA: Record<AppField["type"], string> = { text: "文字", textarea: "文章", number: "数値", slider: "数値", count: "数", choice: "選択", date: "日付", daterange: "期間", month: "年月", toggle: "オン・オフ", rating: "評価" };
 
 function appText(f: AppFigure, out: string[]): void {
   out.push("（入力してボタンで実行する画面。対応する画面で操作できます）");
@@ -225,7 +246,7 @@ function appText(f: AppFigure, out: string[]): void {
     if (s.title) out.push(`### ${s.title}`);
     if (s.desc) out.push(s.desc.replace(/\n/g, " "));
     for (const x of s.fields) {
-      const kind = [FIELD_TYPE_JA[x.type], x.required ? "必須" : "", x.type === "choice" ? x.options!.map((o) => o.label).join(" / ") : "", x.unit ?? ""].filter(Boolean).join("・");
+      const kind = [FIELD_TYPE_JA[x.type], x.required ? "必須" : "", x.type === "choice" ? [...x.options!.map((o) => o.label), ...(x.other ? ["その他"] : [])].join(" / ") : "", x.unit ?? ""].filter(Boolean).join("・");
       out.push(`- ${x.label}（${kind}）${x.placeholder ? `: 例 ${x.placeholder}` : ""}`);
     }
     for (const a of s.actions) out.push(`- ボタン「${a.label}」→ ${a.target.kind === "chat" ? "会話に送る" : `ワークフロー「${a.target.name}」を起動`}`);
@@ -318,6 +339,18 @@ export function toText(f: Figure): string {
       break;
     case "app":
       appText(f, out);
+      break;
+    case "ask":
+      if (f.intro) out.push(f.intro.replace(/\n/g, " "), "");
+      f.questions.forEach((q, i) => {
+        out.push(`${i + 1}. ${q.text}${q.multi ? "（複数選択可）" : ""}${q.required ? "" : "（任意）"}`);
+        for (const o of q.options) out.push(`   - ${o.desc ? `${o.label}: ${o.desc}` : o.label}`);
+        if (q.other) out.push("   - その他（自由記述）");
+      });
+      break;
+    case "plan":
+      if (f.intro) out.push(f.intro.replace(/\n/g, " "), "");
+      f.steps.forEach((s, i) => out.push(`${i + 1}. ${withRefs(s.desc ? `${s.title}: ${s.desc.replace(/\n/g, " ")}` : s.title, s.refs)}`));
       break;
     case "checklist": {
       const done = f.items.filter((it) => it.state === "done").length;

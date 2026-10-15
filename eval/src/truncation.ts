@@ -96,6 +96,11 @@ function units(f: Figure): string[] {
       return f.sections.flatMap((s, k) => s.map((i) => `${k}:${i.text}`));
     case "checklist":
       return f.items.map((i) => JSON.stringify([i.text, i.state]));
+    case "ask":
+      // 選択肢は質問の後から伸びるので、質問の文だけを単位にする
+      return f.questions.map((q) => q.text);
+    case "plan":
+      return f.steps.map((s) => s.title);
     case "app":
       // 機能の見出し・部品・ボタンを書かれた順に（説明は後から伸びるので含めない）
       return f.sections.flatMap((s) => [`#${s.title ?? ""}`, ...s.fields.map((x) => JSON.stringify(x)), ...s.actions.map((a) => JSON.stringify(a))]);

@@ -5,7 +5,7 @@
  * LLM が書くソースは寛容に受けるが、IR は常にこの形に正規化されている。
  */
 
-export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree", "cards", "progress", "funnel", "quadrant", "gantt", "calc", "compare", "proscons", "swot", "checklist", "app"] as const;
+export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree", "cards", "progress", "funnel", "quadrant", "gantt", "calc", "compare", "proscons", "swot", "checklist", "app", "ask", "plan"] as const;
 export type Kind = (typeof KINDS)[number];
 
 /** 全図に共通する項目。 */
@@ -338,7 +338,7 @@ export interface ChecklistFigure extends FigureBase {
 export interface AppField {
   key: string;
   label: string;
-  type: "text" | "textarea" | "number" | "slider" | "count" | "choice" | "date" | "month" | "toggle";
+  type: "text" | "textarea" | "number" | "slider" | "count" | "choice" | "date" | "daterange" | "month" | "toggle" | "rating";
   required: boolean;
   /** 入力の例（`例 …`）。 */
   placeholder?: string;
@@ -351,6 +351,8 @@ export interface AppField {
   options?: { label: string; value: string }[];
   /** choice の複数選択。 */
   multi?: boolean;
+  /** choice で「その他」の自由記述を受けるか。 */
+  other?: boolean;
 }
 
 /** app のボタン。id はソースの順の `a1`・`a2`…（ホストはこれを束縛の id にする）。 */
@@ -375,6 +377,38 @@ export interface AppFigure extends FigureBase {
   sections: AppSection[];
 }
 
+/** ask の質問。選択肢が無ければ自由記述。 */
+export interface AskQuestion {
+  /** `q1`・`q2`…（書かれた順）。回答の値の key。 */
+  id: string;
+  text: string;
+  options: { label: string; desc?: string }[];
+  multi: boolean;
+  /** 「その他」の自由記述を受けるか。 */
+  other: boolean;
+  required: boolean;
+  /** 自由記述の入力の例。 */
+  placeholder?: string;
+}
+
+/** 回答を会話に送る質問のカード（確認の段階）。ボタンの id は `a1`。 */
+export interface AskFigure extends FigureBase {
+  kind: "ask";
+  intro?: string;
+  questions: AskQuestion[];
+  submitLabel?: string;
+}
+
+/** 計画のカード。「この計画で進める」（id `approve`）と「修正を依頼」（id `revise`、値は comment）を会話に送る。 */
+export interface PlanFigure extends FigureBase {
+  kind: "plan";
+  intro?: string;
+  steps: Step[];
+  /** 修正の依頼を受けるか（既定 true）。 */
+  revise: boolean;
+  approveLabel?: string;
+}
+
 export type Figure =
   | ChartFigure
   | ScatterFigure
@@ -394,7 +428,9 @@ export type Figure =
   | ProsConsFigure
   | SwotFigure
   | ChecklistFigure
-  | AppFigure;
+  | AppFigure
+  | AskFigure
+  | PlanFigure;
 
 /** 表形式のデータを持つ図（bar / line / pie）。 */
 export function isChart(f: Figure): f is ChartFigure {

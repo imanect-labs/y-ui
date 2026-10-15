@@ -12,6 +12,7 @@ import { parseCards, parseFunnel, parseProgress } from "./kinds/v08.js";
 import { parseGantt, parseQuadrant } from "./kinds/v08b.js";
 import { parseCalc } from "./kinds/calc.js";
 import { parseApp } from "./kinds/app.js";
+import { parseAsk, parsePlan } from "./kinds/ask.js";
 import { parseChecklist, parseCompare, parseProsCons, parseSwot } from "./kinds/v09.js";
 import { parseStack } from "./kinds/stack.js";
 import { parseStat } from "./kinds/stat.js";
@@ -88,6 +89,13 @@ export const KIND_ALIASES: Readonly<Record<string, Kind>> = {
   form: "app",
   アプリ: "app",
   フォーム: "app",
+  ask: "ask",
+  question: "ask",
+  questions: "ask",
+  質問: "ask",
+  確認: "ask",
+  plan: "plan",
+  計画: "plan",
   stat: "stat",
   stats: "stat",
   kpi: "stat",
@@ -148,7 +156,7 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
       title = first.text.trim();
       body = lines.slice(1);
     } else if (!kind) {
-      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt / calc / compare / proscons / swot / checklist / app）`);
+      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt / calc / compare / proscons / swot / checklist / app / ask / plan）`);
       return { figure: null, diagnostics: diags.list, pending };
     }
   }
@@ -222,6 +230,12 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
     case "app":
       parseApp(figure, body, diags);
       break;
+    case "ask":
+      parseAsk(figure, body, diags);
+      break;
+    case "plan":
+      parsePlan(figure, body, diags);
+      break;
   }
 
   if (opts.final && isEmpty(figure)) {
@@ -277,6 +291,10 @@ function emptyFigure(kind: Kind, title: string, refs: number[]): Figure {
       return { kind, title, refs, items: [] };
     case "app":
       return { kind, title, refs, sections: [] };
+    case "ask":
+      return { kind, title, refs, questions: [] };
+    case "plan":
+      return { kind, title, refs, steps: [], revise: true };
   }
 }
 
@@ -322,5 +340,9 @@ export function isEmpty(f: Figure): boolean {
       return f.items.length === 0;
     case "app":
       return f.sections.length === 0;
+    case "ask":
+      return f.questions.length === 0;
+    case "plan":
+      return f.steps.length === 0;
   }
 }

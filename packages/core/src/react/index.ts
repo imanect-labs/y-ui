@@ -28,10 +28,12 @@ import { layout, type LayoutOptions } from "../render/layout.js";
 import type { Item, Scene, Target } from "../render/scene.js";
 import { FONT, paint, themeCss, type ThemeMode, type Token } from "../render/theme.js";
 import { AppView, type AppViewProps } from "./app.js";
+import { AskView, PlanView } from "./ask.js";
 import { CalcView } from "./calc.js";
 
 export { CalcView, type CalcViewProps } from "./calc.js";
 export { AppView, type AppViewProps, type AppActionEvent, type AppActionResult } from "./app.js";
+export { AskView, PlanView, type CardViewProps } from "./ask.js";
 
 export interface YuiFigureProps extends Omit<LayoutOptions, "width"> {
   figure: Figure;
@@ -49,6 +51,8 @@ export interface YuiFigureProps extends Omit<LayoutOptions, "width"> {
   onAction?: AppViewProps["onAction"];
   /** app のボタンを無効にしている理由の文言。 */
   actionDisabledReason?: string;
+  /** 送り済みの 1 回だけのボタンの id（ask・plan・app の `-> chat`）。ホストがサーバーの状態から渡す。 */
+  invokedActions?: readonly string[];
 }
 
 /** 親要素の幅を測る（SSR では fallback）。 */
@@ -304,20 +308,24 @@ function Interactive(props: {
 export function YuiFigure(props: YuiFigureProps): ReactElement {
   // calc は操作できる HTML の部品で描く（静止画は SVG の書き出し）
   if (props.figure.kind === "calc") return h(CalcView, { figure: props.figure, theme: props.theme ?? "auto", locale: props.locale ?? "ja-JP", ...(props.className ? { className: props.className } : {}) });
-  if (props.figure.kind === "app")
-    return h(AppView, {
-      figure: props.figure,
+  if (props.figure.kind === "app" || props.figure.kind === "ask" || props.figure.kind === "plan") {
+    const common = {
       theme: props.theme ?? "auto",
       locale: props.locale ?? "ja-JP",
       ...(props.className ? { className: props.className } : {}),
       ...(props.onAction ? { onAction: props.onAction } : {}),
       ...(props.actionDisabledReason ? { disabledReason: props.actionDisabledReason } : {}),
-    });
+      ...(props.invokedActions ? { invoked: props.invokedActions } : {}),
+    };
+    if (props.figure.kind === "app") return h(AppView, { ...common, figure: props.figure });
+    if (props.figure.kind === "ask") return h(AskView, { ...common, figure: props.figure });
+    return h(PlanView, { ...common, figure: props.figure });
+  }
   return h(SceneFigure, props);
 }
 
 function SceneFigure(props: YuiFigureProps): ReactElement {
-  const { figure, theme, width, className, interactive, onAction: _onAction, actionDisabledReason: _reason, ...layoutOpts } = props;
+  const { figure, theme, width, className, interactive, onAction: _onAction, actionDisabledReason: _reason, invokedActions: _invoked, ...layoutOpts } = props;
   const [ref, w] = useContainerWidth(width);
   const scene = useMemo(() => layout(figure, { ...layoutOpts, width: w }), [figure, w, layoutOpts.locale, layoutOpts.measure, layoutOpts.labels]);
   return h("div", { ref, className, "data-yui": figure.kind }, h(SceneSvg, { scene, theme: theme ?? "auto", interactive: interactive ?? true }));

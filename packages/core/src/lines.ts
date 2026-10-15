@@ -41,6 +41,9 @@ export const LIMITS = {
   appFields: 40,
   appSectionActions: 3,
   appLabel: 40,
+  askQuestions: 8,
+  askOptions: 12,
+  planSteps: 12,
   calcExprLength: 200,
 } as const;
 

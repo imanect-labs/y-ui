@@ -14,7 +14,8 @@ import { FONT, paint, themeCss, type ThemeMode } from "../render/theme.js";
 export interface AppActionEvent {
   actionId: string;
   action: AppAction;
-  section: AppSection;
+  /** app のボタンの機能（ask・plan には無い）。 */
+  section?: AppSection;
   /** 検証済みの値（その機能の部品だけ）。 */
   values: AppValues;
 }
@@ -34,6 +35,8 @@ export interface AppViewProps {
   onAction?: (e: AppActionEvent) => Promise<AppActionResult | void> | AppActionResult | void;
   /** ボタンを無効にしている理由（onAction が無いときの説明を差し替える）。 */
   disabledReason?: string;
+  /** 送り済みの 1 回だけのボタン（`-> chat`）の id（ホストが覚えている状態）。 */
+  invoked?: readonly string[];
 }
 
 type Phase = { kind: "idle" } | { kind: "confirm"; action: AppAction; values: AppValues } | { kind: "pending"; action: AppAction } | { kind: "done" | "error"; message: string };
@@ -60,7 +63,7 @@ export function AppView(props: AppViewProps): ReactElement {
         `.${id} [aria-invalid=true]{border-color:${c("s5")}}.${id} button:disabled{opacity:.45;cursor:default}`,
     ),
     f.title ? h("div", { style: { fontSize: 15, fontWeight: 600 } }, f.title) : null,
-    ...f.sections.map((s, i) => h(SectionView, { key: i, section: s, sectionId: `${id}-s${i}`, c, ja, enabled, onAction })),
+    ...f.sections.map((s, i) => h(SectionView, { key: i, section: s, sectionId: `${id}-s${i}`, c, ja, enabled, onAction, invoked: props.invoked ?? [] })),
     !enabled ? h("div", { style: { fontSize: 12, color: c("muted") } }, props.disabledReason ?? (ja ? "この場所ではボタンを実行できません。" : "Buttons can't be run here.")) : null,
     f.note ? h("div", { style: { fontSize: 12, color: c("muted") } }, `※ ${f.note}`) : null,
   );
@@ -73,6 +76,7 @@ interface SectionProps {
   ja: boolean;
   enabled: boolean;
   onAction: AppViewProps["onAction"];
+  invoked: readonly string[];
 }
 
 function SectionView(p: SectionProps): ReactElement {
@@ -176,7 +180,7 @@ function SectionView(p: SectionProps): ReactElement {
             ...s.actions.map((a, i) =>
               h(
                 "button",
-                { key: a.id, type: "button", disabled: !p.enabled || busy, title: a.target.kind === "workflow" ? (ja ? `ワークフロー「${a.target.name}」` : `Workflow "${a.target.name}"`) : undefined, style: button(i === 0), onClick: () => press(a) },
+                { key: a.id, type: "button", disabled: !p.enabled || busy || (a.target.kind === "chat" && p.invoked.includes(a.id)), title: a.target.kind === "workflow" ? (ja ? `ワークフロー「${a.target.name}」` : `Workflow "${a.target.name}"`) : undefined, style: button(i === 0), onClick: () => press(a) },
                 busy && phase.action.id === a.id ? (ja ? "実行中…" : "Running…") : a.label,
               ),
             ),
@@ -247,8 +251,36 @@ function FieldView(p: FieldProps): ReactElement {
       break;
     }
     case "choice":
-      control = x.multi ? multiChoice(p) : x.options!.length <= 4 ? segmented(p) : h("select", { ...common, value: String(value), style: box, onChange: (e: { currentTarget: HTMLSelectElement }) => p.set(e.currentTarget.value) }, h("option", { value: "" }, ja ? "選択してください" : "Select"), ...x.options!.map((o) => h("option", { key: o.value, value: o.value }, o.label)));
+      control = h(ChoiceField, p);
       break;
+    case "rating": {
+      const n = Number(value) || 0;
+      const max = x.max ?? 5;
+      control = h(
+        "div",
+        { role: "radiogroup", "aria-labelledby": `${id}-l`, style: { display: "flex", gap: 2 } },
+        ...Array.from({ length: max }, (_, i) =>
+          h(
+            "button",
+            { key: i, type: "button", role: "radio", "aria-checked": n === i + 1, "aria-label": `${i + 1}`, disabled: p.disabled, onClick: () => p.set(i + 1), style: { font: "inherit", fontSize: 22, lineHeight: 1, width: 32, height: 32, border: 0, background: "transparent", color: c(i < n ? "s6" : "axis"), cursor: "pointer", padding: 0 } },
+            "★",
+          ),
+        ),
+      );
+      break;
+    }
+    case "daterange": {
+      const [start = "", end = ""] = String(value).split("/");
+      const upd = (a: string, b: string) => p.set(a || b ? `${a}/${b}` : "");
+      control = h(
+        "div",
+        { role: "group", "aria-labelledby": `${id}-l`, style: { display: "flex", alignItems: "center", gap: 8 } },
+        h("input", { ...common, type: "date", "aria-label": ja ? "開始日" : "Start", value: start, style: box, onChange: (e: { currentTarget: HTMLInputElement }) => upd(e.currentTarget.value, end) }),
+        h("span", { "aria-hidden": true, style: { color: c("muted") } }, "〜"),
+        h("input", { type: "date", disabled: p.disabled, "aria-label": ja ? "終了日" : "End", value: end, style: box, onChange: (e: { currentTarget: HTMLInputElement }) => upd(start, e.currentTarget.value) }),
+      );
+      break;
+    }
     case "date":
     case "month":
       control = h("input", { ...common, type: x.type, value: String(value), style: box, onChange: (e: { currentTarget: HTMLInputElement }) => p.set(e.currentTarget.value) });
@@ -270,9 +302,56 @@ function FieldView(p: FieldProps): ReactElement {
   return h(
     "div",
     { style: { display: "grid", gap: 6, gridColumn: x.type === "textarea" ? "1 / -1" : undefined, alignContent: "start" } },
-    x.type === "count" || x.type === "choice" ? h("span", { id: `${id}-l`, style: { fontSize: 13, fontWeight: 500, color: c("ink2"), display: "flex", gap: 6, alignItems: "baseline" } }, x.label, x.required ? h("span", { style: { fontSize: 11, color: c("muted"), fontWeight: 400 } }, ja ? "必須" : "Required") : null) : label,
+    x.type === "count" || x.type === "choice" || x.type === "rating" || x.type === "daterange" ? h("span", { id: `${id}-l`, style: { fontSize: 13, fontWeight: 500, color: c("ink2"), display: "flex", gap: 6, alignItems: "baseline" } }, x.label, x.required ? h("span", { style: { fontSize: 11, color: c("muted"), fontWeight: 400 } }, ja ? "必須" : "Required") : null) : label,
     control,
     p.error ? h("div", { id: errId, style: { fontSize: 12, color: c("s5") } }, p.error) : null,
+  );
+}
+
+const OTHER = "\u0000other";
+
+/**
+ * 選択。「その他」を受けるなら、選択肢の最後に「その他」を足し、選んだら自由記述の欄を出す。
+ * 親に渡す値は、その他を選んだときは自由記述の文（選択肢の値と同じ形で検証できるように）。
+ */
+function ChoiceField(p: FieldProps): ReactElement {
+  const { field: x, c, ja } = p;
+  const values = new Set(x.options!.map((o) => o.value));
+  const [otherOn, setOtherOn] = useState(() => (Array.isArray(p.value) ? p.value.some((v) => !values.has(v)) : typeof p.value === "string" && p.value !== "" && !values.has(p.value)));
+  const [otherText, setOtherText] = useState(() => (Array.isArray(p.value) ? (p.value.find((v) => !values.has(v)) ?? "") : typeof p.value === "string" && !values.has(p.value) ? p.value : ""));
+  const field: AppField = x.other ? { ...x, options: [...x.options!, { label: ja ? "その他" : "Other", value: OTHER }] } : x;
+  // 子の部品から見た値（その他は印の値）
+  const shown: AppValue = x.multi ? [...(Array.isArray(p.value) ? p.value.filter((v) => values.has(v)) : []), ...(otherOn ? [OTHER] : [])] : otherOn ? OTHER : p.value;
+  const resolve = (v: AppValue, text: string): AppValue => (Array.isArray(v) ? v.flatMap((y) => (y === OTHER ? (text.trim() ? [text] : []) : [y])) : v === OTHER ? text : v);
+  const set = (v: AppValue) => {
+    const on = Array.isArray(v) ? v.includes(OTHER) : v === OTHER;
+    setOtherOn(on);
+    p.set(resolve(v, otherText));
+  };
+  const child: FieldProps = { ...p, field, value: shown, set };
+  const box: CSSProperties = { minHeight: 36, padding: "0 10px" };
+  const control = x.multi
+    ? multiChoice(child)
+    : field.options!.length <= 4
+      ? segmented(child)
+      : h("select", { id: p.id, disabled: p.disabled, "aria-invalid": p.error ? true : undefined, value: String(shown), style: box, onChange: (e: { currentTarget: HTMLSelectElement }) => set(e.currentTarget.value) }, h("option", { value: "" }, ja ? "選択してください" : "Select"), ...field.options!.map((o) => h("option", { key: o.value, value: o.value }, o.label)));
+  if (!otherOn) return control;
+  return h(
+    "div",
+    { style: { display: "grid", gap: 6 } },
+    control,
+    h("input", {
+      type: "text",
+      "aria-label": ja ? `${x.label}（その他）` : `${x.label} (other)`,
+      placeholder: ja ? "その他の内容" : "Other",
+      value: otherText,
+      disabled: p.disabled,
+      style: { minHeight: 36, padding: "0 10px", border: `1px solid ${c("border")}` },
+      onChange: (e: { currentTarget: HTMLInputElement }) => {
+        setOtherText(e.currentTarget.value);
+        p.set(resolve(shown, e.currentTarget.value));
+      },
+    }),
   );
 }
 

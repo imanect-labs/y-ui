@@ -223,6 +223,24 @@ const INFO: Record<Kind, KindInfo> = {
     instead: "画面の中で計算が完結するなら calc。",
     spec: "5.20 app（docs/app.md）",
   },
+  ask: {
+    name: "質問のカード",
+    use: "答える前に利用者に確かめる質問（選択肢・複数選択・その他・自由記述）。回答は会話に送る。",
+    syntax: ["`? 質問文` の下に「- 選択肢: 説明」", "`multi` で複数選択、`- その他` で自由記述も受ける、`任意` で回答しなくてもよい", "選択肢の無い質問は自由記述（`例 …` で入力の例）"],
+    options: ["`button 文言` 送るボタンの文言", "`> 前置き`", ...COMMON],
+    limits: [`質問 ${LIMITS.askQuestions}、選択肢 1 つの質問に ${LIMITS.askOptions}`],
+    instead: "値を入れてワークフローを起動するなら app。",
+    spec: "5.21 ask",
+  },
+  plan: {
+    name: "計画のカード",
+    use: "これから行う手順を示し、「この計画で進める」か「修正を依頼」を会話に送ってもらう。",
+    syntax: ["steps と同じ「1. 見出し: 説明」", "`> 前置き`"],
+    options: ["`button 文言` 進めるボタンの文言", "`revise: off` 修正の依頼を受けない", ...COMMON],
+    limits: [`手順 ${LIMITS.planSteps}`],
+    instead: "ただの手順の説明は steps。",
+    spec: "5.22 plan",
+  },
 };
 
 /** 一覧での並び（用途のまとまり）。 */
@@ -232,7 +250,7 @@ const GROUPS: { title: string; kinds: Kind[] }[] = [
   { title: "流れ・手順・時間", kinds: ["flow", "steps", "timeline", "gantt"] },
   { title: "構造・整理", kinds: ["stack", "tree", "quadrant", "cards"] },
   { title: "比較・判断", kinds: ["compare", "proscons", "swot", "checklist"] },
-  { title: "操作できる図", kinds: ["calc", "app"] },
+  { title: "操作できる図", kinds: ["calc", "app", "ask", "plan"] },
 ];
 
 /** GitHub の見出しのアンカー（小文字・記号を除く・空白を - に）。 */

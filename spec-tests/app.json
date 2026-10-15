@@ -1,5 +1,5 @@
 {
-  "note": "scripts/app-fixtures.ts で生成。TS 版と Rust 版の app のパーサ・検証が同じ結果を出すかを確かめる。",
+  "note": "scripts/app-fixtures.ts で生成。TS 版と Rust 版の、操作を持つ種類（app・ask・plan）のパーサ・ボタン・値の検証が同じ結果を出すかを確かめる。",
   "cases": [
     {
       "name": "full",
@@ -148,6 +148,34 @@
         ],
         "note": "申請は上長の承認後に経理へ回ります。"
       },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "申請する",
+          "target": {
+            "kind": "workflow",
+            "name": "経費申請"
+          },
+          "confirm": true
+        },
+        {
+          "id": "a2",
+          "label": "集計する",
+          "target": {
+            "kind": "workflow",
+            "name": "月次集計"
+          },
+          "confirm": true
+        },
+        {
+          "id": "a3",
+          "label": "会話で相談する",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        }
+      ],
       "diagnostics": []
     },
     {
@@ -198,6 +226,17 @@
           }
         ]
       },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "申請",
+          "target": {
+            "kind": "workflow",
+            "name": "休暇申請"
+          },
+          "confirm": true
+        }
+      ],
       "diagnostics": []
     },
     {
@@ -242,6 +281,17 @@
           }
         ]
       },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "Submit",
+          "target": {
+            "kind": "workflow",
+            "name": "expense-approval"
+          },
+          "confirm": true
+        }
+      ],
       "diagnostics": []
     },
     {
@@ -283,6 +333,25 @@
           }
         ]
       },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "申請",
+          "target": {
+            "kind": "workflow",
+            "name": "休暇申請"
+          },
+          "confirm": true
+        },
+        {
+          "id": "a2",
+          "label": "相談",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": true
+        }
+      ],
       "diagnostics": [
         {
           "line": 3,
@@ -332,6 +401,247 @@
           }
         ]
       },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "保存",
+          "target": {
+            "kind": "workflow",
+            "name": "設定の保存"
+          },
+          "confirm": true
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "name": "extended",
+      "source": "app 研修の感想\n満足度 = rating 5 必須\n受講期間 = date range 必須\n参加の形 = choice 会場 | オンライン | その他\n関心 = choice AI | セキュリティ | 法務 multi other\nbutton 送る -> chat\n",
+      "figure": {
+        "kind": "app",
+        "title": "研修の感想",
+        "refs": [],
+        "sections": [
+          {
+            "fields": [
+              {
+                "key": "満足度",
+                "label": "満足度",
+                "type": "rating",
+                "required": true,
+                "max": 5,
+                "min": 1
+              },
+              {
+                "key": "受講期間",
+                "label": "受講期間",
+                "type": "daterange",
+                "required": true
+              },
+              {
+                "key": "参加の形",
+                "label": "参加の形",
+                "type": "choice",
+                "required": false,
+                "options": [
+                  {
+                    "label": "会場",
+                    "value": "会場"
+                  },
+                  {
+                    "label": "オンライン",
+                    "value": "オンライン"
+                  }
+                ],
+                "other": true
+              },
+              {
+                "key": "関心",
+                "label": "関心",
+                "type": "choice",
+                "required": false,
+                "options": [
+                  {
+                    "label": "AI",
+                    "value": "AI"
+                  },
+                  {
+                    "label": "セキュリティ",
+                    "value": "セキュリティ"
+                  },
+                  {
+                    "label": "法務",
+                    "value": "法務"
+                  }
+                ],
+                "multi": true,
+                "other": true
+              }
+            ],
+            "actions": [
+              {
+                "id": "a1",
+                "label": "送る",
+                "target": {
+                  "kind": "chat"
+                },
+                "confirm": false
+              }
+            ]
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "送る",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "name": "ask",
+      "source": "ask 調べる前の確認\n> いくつか教えてください。\n? 対象の期間は？\n- 直近 1 年\n- 直近 3 年: 傾向を見るならこちら\n? 出力の形式は？ multi\n- 表\n- グラフ\n- その他\n? 補足があれば 任意 例 部署を絞るなど\nbutton 回答する\n",
+      "figure": {
+        "kind": "ask",
+        "title": "調べる前の確認",
+        "refs": [],
+        "questions": [
+          {
+            "id": "q1",
+            "text": "対象の期間は？",
+            "options": [
+              {
+                "label": "直近 1 年"
+              },
+              {
+                "label": "直近 3 年",
+                "desc": "傾向を見るならこちら"
+              }
+            ],
+            "multi": false,
+            "other": false,
+            "required": true
+          },
+          {
+            "id": "q2",
+            "text": "出力の形式は？",
+            "options": [
+              {
+                "label": "表"
+              },
+              {
+                "label": "グラフ"
+              }
+            ],
+            "multi": true,
+            "other": true,
+            "required": true
+          },
+          {
+            "id": "q3",
+            "text": "補足があれば",
+            "options": [],
+            "multi": false,
+            "other": false,
+            "required": false,
+            "placeholder": "部署を絞るなど"
+          }
+        ],
+        "intro": "いくつか教えてください。",
+        "submitLabel": "回答する"
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "回答する",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "name": "askOne",
+      "source": "ask x\n? 一つだけ\n- A\nこれは読めない\n",
+      "figure": {
+        "kind": "ask",
+        "title": "x",
+        "refs": [],
+        "questions": [
+          {
+            "id": "q1",
+            "text": "一つだけ",
+            "options": [],
+            "multi": false,
+            "other": false,
+            "required": true
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "回答する",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "line": 4,
+          "code": "unrecognized_line"
+        },
+        {
+          "line": 0,
+          "code": "unrecognized_line"
+        }
+      ]
+    },
+    {
+      "name": "plan",
+      "source": "plan 調査の進め方\n> 次の手順で進めます。\n1. 社内文書を検索する: 経費規程と過去の申請\n2. 比較表を作る\n3. 要点をまとめる\nbutton 進める\nrevise: off\n",
+      "figure": {
+        "kind": "plan",
+        "title": "調査の進め方",
+        "refs": [],
+        "steps": [
+          {
+            "title": "社内文書を検索する",
+            "refs": [],
+            "desc": "経費規程と過去の申請"
+          },
+          {
+            "title": "比較表を作る",
+            "refs": []
+          },
+          {
+            "title": "要点をまとめる",
+            "refs": []
+          }
+        ],
+        "revise": false,
+        "intro": "次の手順で進めます。",
+        "approveLabel": "進める"
+      },
+      "actions": [
+        {
+          "id": "approve",
+          "label": "進める",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        }
+      ],
       "diagnostics": []
     }
   ],
@@ -438,6 +748,119 @@
         "values": {},
         "errors": {
           "上限": "100 以下にしてください"
+        }
+      }
+    },
+    {
+      "source": "extended",
+      "action": "a1",
+      "input": {
+        "満足度": 4,
+        "受講期間": "2025-04-01/2025-04-03",
+        "参加の形": "社内の研修室",
+        "関心": [
+          "AI",
+          "経理"
+        ]
+      },
+      "expect": {
+        "ok": true,
+        "values": {
+          "満足度": 4,
+          "受講期間": "2025-04-01/2025-04-03",
+          "参加の形": "社内の研修室",
+          "関心": [
+            "AI",
+            "経理"
+          ]
+        },
+        "errors": {}
+      }
+    },
+    {
+      "source": "extended",
+      "action": "a1",
+      "input": {
+        "満足度": 6,
+        "受講期間": "2025-04-03/2025-04-01",
+        "関心": [
+          "x",
+          "y"
+        ]
+      },
+      "expect": {
+        "ok": false,
+        "values": {},
+        "errors": {
+          "満足度": "1〜5 で選んでください",
+          "受講期間": "終わりの日を始まりの日以降にしてください",
+          "関心": "その他は 1 つまでです"
+        }
+      }
+    },
+    {
+      "source": "ask",
+      "action": "a1",
+      "input": {
+        "q1": "直近 1 年",
+        "q2": [
+          "表",
+          "PDF"
+        ],
+        "q3": ""
+      },
+      "expect": {
+        "ok": true,
+        "values": {
+          "q1": "直近 1 年",
+          "q2": [
+            "表",
+            "PDF"
+          ]
+        },
+        "errors": {}
+      }
+    },
+    {
+      "source": "ask",
+      "action": "a1",
+      "input": {
+        "q1": "直近 10 年",
+        "q2": [
+          "A",
+          "B"
+        ]
+      },
+      "expect": {
+        "ok": false,
+        "values": {},
+        "errors": {
+          "q1": "選択肢から選んでください",
+          "q2": "その他は 1 つまでです"
+        }
+      }
+    },
+    {
+      "source": "plan",
+      "action": "approve",
+      "input": {},
+      "expect": {
+        "ok": true,
+        "values": {},
+        "errors": {}
+      }
+    },
+    {
+      "source": "plan",
+      "action": "revise",
+      "input": {
+        "comment": "x"
+      },
+      "expect": {
+        "ok": false,
+        "values": {},
+        "errors": {
+          "": "ボタンが見つかりません"
         }
       }
     }
