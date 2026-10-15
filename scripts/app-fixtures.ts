@@ -33,6 +33,7 @@ note: 申請は上長の承認後に経理へ回ります。
   extended: "app 研修の感想\n満足度 = rating 5 必須\n受講期間 = date range 必須\n参加の形 = choice 会場 | オンライン | その他\n関心 = choice AI | セキュリティ | 法務 multi other\nbutton 送る -> chat\n",
   ask: "ask 調べる前の確認\n> いくつか教えてください。\n? 対象の期間は？\n- 直近 1 年\n- 直近 3 年: 傾向を見るならこちら\n? 出力の形式は？ multi\n- 表\n- グラフ\n- その他\n? 補足があれば 任意 例 部署を絞るなど\nbutton 回答する\n",
   askOne: "ask x\n? 一つだけ\n- A\nこれは読めない\n",
+  askOther: "ask x\n? 読む人は？\n- 経営層\n- 現場\n- その他: 自由に記入\n",
   plan: "plan 調査の進め方\n> 次の手順で進めます。\n1. 社内文書を検索する: 経費規程と過去の申請\n2. 比較表を作る\n3. 要点をまとめる\nbutton 進める\nrevise: off\n",
 };
 

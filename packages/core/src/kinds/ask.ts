@@ -21,7 +21,7 @@ import { splitTitle } from "./stack.js";
 
 const QUESTION = /^(?:[?？]|Q\s*[.:：]|質問\s*[:：])\s*(.+)$/i;
 const BUTTON = /^(?:button|ボタン)\s+(.+)$/i;
-const OTHER = /^(?:その他|other|others|そのほか)(?:\s*[（(].*[)）])?$/i;
+const OTHER = /^(?:その他|other|others|そのほか)(?:\s*[（(].*[)）]|\s*[:：].*)?$/i;
 const MULTI = /(?:^|\s)(?:multi|複数(?:可|選択)?|\(複数可\)|（複数可）)(?=\s|$)/i;
 const OPTIONAL = /(?:^|\s)(?:任意|optional)(?=\s|$)/i;
 const EXAMPLE = /(?:^|\s)(?:例|e\.g\.)\s+(.+)$/i;

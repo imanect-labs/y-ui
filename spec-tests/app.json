@@ -607,6 +607,43 @@
       ]
     },
     {
+      "name": "askOther",
+      "source": "ask x\n? 読む人は？\n- 経営層\n- 現場\n- その他: 自由に記入\n",
+      "figure": {
+        "kind": "ask",
+        "title": "x",
+        "refs": [],
+        "questions": [
+          {
+            "id": "q1",
+            "text": "読む人は？",
+            "options": [
+              {
+                "label": "経営層"
+              },
+              {
+                "label": "現場"
+              }
+            ],
+            "multi": false,
+            "other": true,
+            "required": true
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "回答する",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
       "name": "plan",
       "source": "plan 調査の進め方\n> 次の手順で進めます。\n1. 社内文書を検索する: 経費規程と過去の申請\n2. 比較表を作る\n3. 要点をまとめる\nbutton 進める\nrevise: off\n",
       "figure": {

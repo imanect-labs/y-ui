@@ -1,0 +1,39 @@
+{
+  "runId": "2026-10-15T23-17-17-818Z",
+  "outDir": "eval/runs/luna-v10",
+  "models": [
+    "luna-go"
+  ],
+  "efforts": [
+    "low"
+  ],
+  "arms": [
+    "F"
+  ],
+  "seeds": 3,
+  "tasks": [
+    "app-001",
+    "app-002",
+    "app-003",
+    "app-004",
+    "app-005",
+    "ask-001",
+    "ask-002",
+    "ask-003",
+    "plan-001",
+    "plan-002",
+    "radar-001",
+    "radar-002",
+    "treemap-001",
+    "treemap-002",
+    "callout-001",
+    "callout-002",
+    "map-001",
+    "map-002"
+  ],
+  "concurrency": 4,
+  "shiki": {
+    "commit": "7b8fd95"
+  },
+  "mock": false
+}
