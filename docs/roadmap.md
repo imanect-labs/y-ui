@@ -1,6 +1,6 @@
 # Yui ロードマップ
 
-今の位置は 0.6.0（10 種類）。次の 0.7.0 で 15 種類（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt）で、パーサ・SVG・React（ホバーとキーボード）・書き出し（PNG / SVG / クリップボード）がある。Shiki のチャットでは既定で有効（imanect-labs/shiki-platform#560）。
+今の位置は 0.7.0。対応する図は 16 種類（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt と、計算の calc）で、パーサ・SVG・React（ホバーとキーボード）・書き出し（PNG / SVG / クリップボード）がある。Shiki のチャットでは既定で有効（imanect-labs/shiki-platform#560）。
 
 この文書の順番で進める。v0.6・v0.7・Shiki 側の組み込みは並行する。
 
@@ -62,7 +62,7 @@
 
 ## v0.9 — calc（画面内で完結する計算）
 
-ローン・料金の試算・割り勘のように、利用者が値を動かすと結果が変わる図。入力（スライダー・数の増減・選択）と式と結果だけを持ち、式は Yui が解釈する（JavaScript を実行しない）。仕様の草案: [docs/calc.md](calc.md)。草案 → 評価の課題（期待値つき 30 件）→ 実装の順に進める。
+ローン・料金の試算・割り勘のように、利用者が値を動かすと結果が変わる図。入力（スライダー・数の増減・選択）と式と結果だけを持ち、式は Yui が解釈する（JavaScript を実行しない）。仕様: [docs/calc.md](calc.md)。**実装済み**（0.7.0）。評価の課題は 8 件（期待値つき）で、Shiki の説明で 95.8%。課題を 30 件に増やし、§7 の未決事項（表で比べる形・cards への式の埋め込み）を決める。
 
 ## v1.0 以降
 

@@ -133,6 +133,14 @@ Build | 6/1 | 8/31
 System test | 9/1 | 9/30
 Go-live | 10/1
 `,
+    calc: `calc Mortgage estimate
+Loan = slider 50..1000 step 5 initial 300 $K
+Rate = slider 0.5..10 step 0.05 initial 6.5 %
+Years = slider 5..40 initial 30 years
+MonthlyRate = Rate / 100 / 12
+Payment = Loan * 1000 * MonthlyRate / (1 - (1 + MonthlyRate) ^ -(Years * 12)) $
+hide: MonthlyRate
+`,
   },
   ja: {
     bar: `bar 四半期ごとの売上と利益
@@ -257,6 +265,16 @@ y: 実現しやすさ
 開発 | 6/1 | 8/31
 総合テスト | 9/1 | 9/30
 本番稼働 | 10/1
+`,
+    calc: `calc 住宅ローンの試算
+借入額 = slider 500..10000 step 100 初期 3000 万円
+金利 = slider 0.1..5 step 0.05 初期 1.5 %
+期間 = slider 5..35 初期 35 年
+月利 = 金利 / 100 / 12
+毎月の返済額 = 借入額 * 10000 * 月利 / (1 - (1 + 月利) ^ -(期間 * 12)) 円
+総返済額 = 毎月の返済額 * 期間 * 12 / 10000 万円
+show 毎月の返済額 | 総返済額
+hide: 月利
 `,
   },
 };

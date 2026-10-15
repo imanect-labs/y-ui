@@ -296,6 +296,24 @@ Go-live | 10/1
 ```
 ````
 
+### `calc`
+
+Interactive calculator (stage 2). Sliders, steppers, choices and toggles feed formulas that Yui parses itself — no JavaScript is executed. React renders real controls; SVG export shows the current state. See [docs/calc.md](docs/calc.md).
+
+<img src="docs/images/en-calc.png" width="640" alt="calc">
+
+````md
+```ui
+calc Mortgage estimate
+Loan = slider 50..1000 step 5 initial 300 $K
+Rate = slider 0.5..10 step 0.05 initial 6.5 %
+Years = slider 5..40 initial 30 years
+MonthlyRate = Rate / 100 / 12
+Payment = Loan * 1000 * MonthlyRate / (1 - (1 + MonthlyRate) ^ -(Years * 12)) $
+hide: MonthlyRate
+```
+````
+
 
 Bar charts with many rows turn horizontal, flowcharts mark branches as diamonds and route loops around the side, and every figure re-lays out to its width and follows light/dark mode. Full notation: [docs/spec.md](docs/spec.md) (Japanese).
 
