@@ -25,6 +25,7 @@ export const LIMITS = {
   treeNodes: 80,
   treeDepth: 4,
   cards: 12,
+  cardItems: 8,
   progressItems: 20,
   funnelStages: 10,
   quadrantItems: 30,

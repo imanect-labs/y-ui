@@ -23,17 +23,27 @@ export function parseCards(fig: CardsFigure, body: Line[], diags: Diagnostics): 
       if (isSeparatorRow(cells)) return "skip";
       if (first && HEADER_WORDS.test(cells[0]!.normalize("NFKC"))) return "skip";
       if (cells[0] === "") return null;
-      const e = entry(cells[0]!, cells.slice(1).filter((c) => c !== "").join(" / ") || undefined, line, diags);
-      return { title: e.title, ...(e.desc !== undefined ? { body: e.desc } : {}), refs: e.refs };
+      const rest = cells.slice(1).filter((c) => c !== "");
+      // `Starter | ¥4,800 | 月額相当`: 2 列目が数値なら大きく出す値
+      const value = rest.length >= 1 && parseNumber(takeRefs(rest[0]!).text) ? takeRefs(rest.shift()!) : null;
+      const e = entry(cells[0]!, rest.join(" / ") || undefined, line, diags);
+      return { title: e.title, ...(value ? { value: clip(value.text, line, diags) } : {}), ...(e.desc !== undefined ? { body: e.desc } : {}), refs: [...new Set([...e.refs, ...(value?.refs ?? [])])] };
     }
     const t = splitTitle(text);
     const e = entry(t.title, t.desc, line, diags);
     return { title: e.title, ...(e.desc !== undefined ? { body: e.desc } : {}), refs: e.refs };
   }).map((c) => {
-    // readEntries は字下げした行を desc に足すので、body に移す
-    const { desc, ...rest } = c as Card & { desc?: string };
-    const body = [rest.body, desc].filter((x): x is string => x !== undefined && x !== "").join(" ");
-    return body ? { ...rest, body } : { title: rest.title, refs: rest.refs };
+    // readEntries は字下げした段落を desc に、箇条書きを items に足すので、body・items に移す
+    const { desc, items, ...rest } = c as Card & { desc?: string };
+    const text = [rest.body, desc].filter((x): x is string => x !== undefined && x !== "").join("\n");
+    const card: Card = { title: rest.title, refs: rest.refs };
+    if (rest.value !== undefined) card.value = rest.value;
+    if (text) card.body = text;
+    if (items?.length) {
+      if (items.length > LIMITS.cardItems) diags.addOnce(body[0]?.no ?? 0, "warning", "limit_exceeded", `カードの項目は ${LIMITS.cardItems} 個までです`);
+      card.items = items.slice(0, LIMITS.cardItems);
+    }
+    return card;
   });
 }
 

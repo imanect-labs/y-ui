@@ -16,6 +16,8 @@ interface Entry {
   title: string;
   desc?: string;
   refs: number[];
+  /** 字下げした箇条書き（`  - 項目`）。cards はチェックリストに、他の種類は説明の段落にする。 */
+  items?: string[];
 }
 
 /** 2 行目以降の共通処理。項目を 1 行読む関数 read を受け、字下げ・オプション・上限を扱う。 */
@@ -44,9 +46,10 @@ export function readEntries<T extends Entry>(
     if (base === null) base = indent;
     const prev = out[out.length - 1];
     if (indent > base && prev) {
-      // 字下げした行は直前の項目の説明に足す
+      // 字下げした行は直前の項目に足す。箇条書きなら items、そうでなければ説明の新しい段落
       const r = takeRefs(text);
-      prev.desc = clip(prev.desc ? `${prev.desc} ${r.text}` : r.text, line.no, diags);
+      if (marked) prev.items = [...(prev.items ?? []), clip(r.text, line.no, diags)];
+      else prev.desc = clip(prev.desc ? `${prev.desc}\n${r.text}` : r.text, line.no, diags);
       prev.refs = [...new Set([...prev.refs, ...r.refs])];
       continue;
     }
@@ -84,6 +87,13 @@ const WHEN_TOKEN = /^(\S{0,12}\d\S{0,12})\s+(.+)$/;
 /** `10:00` のような時刻（`:` で分けない）。 */
 const TIME_HEAD = /^(\d{1,2}[:：]\d{2}(?:\s*[-~〜]\s*\d{1,2}[:：]\d{2})?)\s*(?:[:：]\s*)?(.+)$/;
 
+/** 字下げした箇条書きを、説明の段落として足す（年表・手順）。 */
+function foldItems<T extends Entry>(e: T): T {
+  if (!e.items?.length) return e;
+  const { items, ...rest } = e;
+  return { ...rest, desc: [rest.desc, ...items].filter((x) => x !== undefined && x !== "").join("\n") } as T;
+}
+
 export function parseTimeline(fig: TimelineFigure, body: Line[], diags: Diagnostics): void {
   fig.events = readEntries<TimelineEvent>(fig, body, diags, LIMITS.timelineEvents, "出来事", (text, line, first) => {
     let when: string;
@@ -111,13 +121,14 @@ export function parseTimeline(fig: TimelineFigure, body: Line[], diags: Diagnost
     const w = takeRefs(when);
     const e = entry(rest, desc, line, diags);
     return { when: clip(w.text, line, diags), title: e.title, ...(e.desc !== undefined ? { desc: e.desc } : {}), refs: [...new Set([...w.refs, ...e.refs])] };
-  });
+  }).map(foldItems);
 }
 
 // ---------------------------------------------------------------- steps
 
 const STEP_HEADER = /^(手順|ステップ|工程|段階|作業|内容|step|steps|no\.?|#|番号)$/i;
-const STEP_PREFIX = /^(?:step|ステップ|手順|stage|段階)\s*\d+\s*[:：.、)）]?\s*/i;
+// `Step 1〜3: …` のような範囲は番号ではなく見出しの一部なので落とさない
+const STEP_PREFIX = /^(?:step|ステップ|手順|stage|段階)\s*\d+(?![\d〜~～\-–—])\s*[:：.、)）]?\s*/i;
 
 export function parseSteps(fig: StepsFigure, body: Line[], diags: Diagnostics): void {
   fig.steps = readEntries<Step>(fig, body, diags, LIMITS.steps, "手順", (text, line, first) => {
@@ -134,5 +145,5 @@ export function parseSteps(fig: StepsFigure, body: Line[], diags: Diagnostics): 
     const t = splitTitle(text.replace(STEP_PREFIX, "") || text);
     if (t.title === "") return null;
     return entry(t.title, t.desc, line, diags);
-  });
+  }).map(foldItems);
 }

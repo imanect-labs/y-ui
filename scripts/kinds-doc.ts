@@ -106,7 +106,7 @@ const INFO: Record<Kind, KindInfo> = {
   steps: {
     name: "手順",
     use: "分岐の無い手順・段取り。番号は書いた順に振る。",
-    syntax: ["「1. 見出し: 説明」、「見出し | 説明」", "字下げした行は直前の手順の説明に足す"],
+    syntax: ["「1. 見出し: 説明」、「見出し | 説明」", "字下げした行は直前の手順の説明の段落（1 行 1 段落）"],
     options: COMMON,
     limits: [`${LIMITS.steps} 手順`],
     instead: "分岐・差戻しがあれば flow。",
@@ -115,7 +115,7 @@ const INFO: Record<Kind, KindInfo> = {
   timeline: {
     name: "年表",
     use: "沿革・予定・時刻順の出来事。書いた順に並べる。",
-    syntax: ["「- 時期: 出来事」、「時期 | 出来事 | 補足」、「10:00 出来事」", "字下げした行は直前の出来事の補足"],
+    syntax: ["「- 時期: 出来事」、「時期 | 出来事 | 補足」、「10:00 出来事」", "字下げした行は直前の出来事の補足の段落"],
     options: COMMON,
     limits: [`${LIMITS.timelineEvents} 出来事`],
     instead: "いつからいつまでの期間があるなら gantt。",
@@ -159,10 +159,10 @@ const INFO: Record<Kind, KindInfo> = {
   },
   cards: {
     name: "カード",
-    use: "要点・特徴・選択肢・決定事項を並べて見せる。",
-    syntax: ["「- 見出し: 本文」、「見出し | 本文」", "字下げした行は本文に足す"],
+    use: "要点・特徴・選択肢・料金プランを並べて見せる。",
+    syntax: ["「- 見出し: 本文」、「見出し | 本文」", "値を大きく出すなら「- 見出し | 値 | 本文」（料金・数値）", "字下げした行は本文の段落、字下げした「- 項目」は ✓ の付いた一覧"],
     options: COMMON,
-    limits: [`${LIMITS.cards} 枚`],
+    limits: [`${LIMITS.cards} 枚、1 枚に項目 ${LIMITS.cardItems}`],
     instead: "数値を大きく見せるなら stat。",
     spec: "5.10 cards",
   },

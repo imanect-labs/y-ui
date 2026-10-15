@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseBlock, toSource, toText, type CardsFigure, type Figure, type FunnelFigure, type ProgressFigure } from "../src/index.js";
+import { parseBlock, toSource, toText, type CardsFigure, type Figure, type FunnelFigure, type ProgressFigure, type StepsFigure } from "../src/index.js";
 import { layout } from "../src/svg.js";
 
 const parse = (src: string) => parseBlock(src, { final: true });
@@ -83,5 +83,40 @@ describe("単位の付け方", () => {
     expect(texts).toContain("1,200 people");
     expect(texts).toContain("Step rate");
     expect(layout(fig("funnel Hiring\nApplied | 1200\nAccepted | 30\n"), { locale: "en-US", labels: { stepRate: "Rate" } }).items.some((i) => i.t === "text" && i.text === "Rate")).toBe(true);
+  });
+});
+
+describe("段落・項目・値（ChatGPT のような説明の多い図）", () => {
+  it("cards: `見出し | 値 | 本文` の値と、字下げの `- 項目` を受けて往復できる", () => {
+    const c = fig<CardsFigure>("cards 料金\n- Starter | ¥4,800 | 月額相当\n  - 基本分析\n  - メールサポート\n- Pro: 上位プラン\n  チーム向け\n  - API\n");
+    expect(c.cards).toEqual([
+      { title: "Starter", value: "¥4,800", body: "月額相当", items: ["基本分析", "メールサポート"], refs: [] },
+      { title: "Pro", body: "上位プラン\nチーム向け", items: ["API"], refs: [] },
+    ]);
+    roundTrip(c);
+    expect(toText(c)).toContain("基本分析");
+    // 描画: 値は大きな文字、項目の行頭にチェックの印
+    const s = layout(c, { width: 640 });
+    expect(s.items.some((i) => i.t === "text" && i.text === "¥4,800" && i.size > 20)).toBe(true);
+    expect(s.items.filter((i) => i.t === "path" && i.stroke === "s3")).toHaveLength(3);
+  });
+
+  it("steps: 字下げの続きは段落、`Step 1〜3:` の範囲は見出しに残す", () => {
+    const st = fig<StepsFigure>("steps 進め方\n1. 準備: 基礎\n  Rust の所有権\n  - ネットワークの階層\n2. Step 1〜3: 土台\n3. Step 2 実装する\n");
+    expect(st.steps.map((s) => [s.title, s.desc])).toEqual([
+      ["準備", "基礎\nRust の所有権\nネットワークの階層"],
+      ["Step 1〜3", "土台"],
+      ["実装する", undefined],
+    ]);
+    roundTrip(st);
+    expect(toText(st)).toContain("1. 準備: 基礎 Rust の所有権 ネットワークの階層");
+  });
+});
+
+describe("cards の項目の上限", () => {
+  it("1 枚に 8 項目まで", () => {
+    const r = parse(`cards 案\n- A\n${Array.from({ length: 10 }, (_, i) => `  - 項目${i}`).join("\n")}\n`);
+    expect((r.figure as CardsFigure).cards[0]!.items).toHaveLength(8);
+    expect(r.diagnostics.map((d) => d.code)).toContain("limit_exceeded");
   });
 });

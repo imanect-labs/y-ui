@@ -157,7 +157,12 @@ export interface TreeFigure extends FigureBase {
 /** 要点・特徴・選択肢のカード。 */
 export interface Card {
   title: string;
+  /** 大きく出す値（`Starter | ¥4,800 | 月額相当` の 2 列目が数値のとき）。 */
+  value?: string;
+  /** 本文。段落は改行で区切る。 */
   body?: string;
+  /** 字下げした箇条書き（チェックリストとして描く）。 */
+  items?: string[];
   refs: number[];
 }
 

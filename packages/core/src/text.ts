@@ -54,17 +54,31 @@ export function toSource(f: Figure): string {
       for (const p of f.points) lines.push(withRefs([esc(p.label), String(p.x), String(p.y), ...(p.group !== undefined ? [esc(p.group)] : [])].join(" | "), p.refs));
       break;
     case "timeline":
-      // 時期・出来事に `:` が入っても戻せるよう、表の形で書く
-      for (const e of f.events) lines.push(withRefs([esc(e.when), esc(e.title), ...(e.desc !== undefined ? [esc(e.desc)] : [])].join(" | "), e.refs));
+      // 時期・出来事に `:` が入っても戻せるよう、表の形で書く。2 段落目以降は字下げした行
+      for (const e of f.events) {
+        const [first, ...more] = e.desc === undefined ? [] : e.desc.split("\n");
+        lines.push(withRefs([esc(e.when), esc(e.title), ...(first !== undefined ? [esc(first)] : [])].join(" | "), e.refs));
+        for (const p of more) lines.push(`  ${p}`);
+      }
       break;
     case "steps":
-      f.steps.forEach((s, i) => lines.push(withRefs(`${i + 1}. ${stepSource(s.title, s.desc)}`, s.refs)));
+      f.steps.forEach((s, i) => {
+        const [first, ...more] = s.desc === undefined ? [] : s.desc.split("\n");
+        lines.push(withRefs(`${i + 1}. ${stepSource(s.title, first)}`, s.refs));
+        for (const p of more) lines.push(`   ${p}`);
+      });
       break;
     case "tree":
       treeSource(f.roots, 0, lines);
       break;
     case "cards":
-      for (const c of f.cards) lines.push(withRefs(`- ${stepSource(c.title, c.body)}`, c.refs));
+      for (const c of f.cards) {
+        const [first, ...more] = c.body === undefined ? [] : c.body.split("\n");
+        const head = c.value !== undefined ? `${esc(c.title)} | ${esc(c.value)}${first !== undefined ? ` | ${esc(first)}` : ""}` : stepSource(c.title, first);
+        lines.push(withRefs(`- ${head}`, c.refs));
+        for (const p of more) lines.push(`  ${p}`);
+        for (const it of c.items ?? []) lines.push(`  - ${it}`);
+      }
       break;
     case "progress":
       for (const it of f.items) lines.push(withRefs([esc(it.label), esc(it.valueText), esc(it.targetText)].join(" | "), it.refs));
@@ -177,7 +191,11 @@ export function toText(f: Figure): string {
       treeText(f.roots, 0, out);
       break;
     case "cards":
-      for (const c of f.cards) out.push(`- **${c.title}**${c.body ? `: ${c.body}` : ""}${c.refs.length ? ` ${refsText(c.refs)}` : ""}`);
+      for (const c of f.cards) {
+        const head = [c.value, c.body?.replace(/\n/g, " ")].filter(Boolean).join(" ");
+        out.push(`- **${c.title}**${head ? `: ${head}` : ""}${c.refs.length ? ` ${refsText(c.refs)}` : ""}`);
+        for (const it of c.items ?? []) out.push(`  - ${it}`);
+      }
       break;
     case "progress":
       for (const it of f.items) out.push(`- ${withRefs(`${it.label}: ${it.valueText} / ${it.targetText}（${share(it.value, it.target)}）`, it.refs)}`);
@@ -325,11 +343,11 @@ function scatterText(f: ScatterFigure, out: string[]): void {
 }
 
 function timelineText(f: TimelineFigure, out: string[]): void {
-  for (const e of f.events) out.push(`- ${e.when}: ${withRefs(e.desc === undefined ? e.title : `${e.title}（${e.desc}）`, e.refs)}`);
+  for (const e of f.events) out.push(`- ${e.when}: ${withRefs(e.desc === undefined ? e.title : `${e.title}（${e.desc.replace(/\n/g, " ")}）`, e.refs)}`);
 }
 
 function stepsText(f: StepsFigure, out: string[]): void {
-  f.steps.forEach((s, i) => out.push(`${i + 1}. ${withRefs(s.desc === undefined ? s.title : `${s.title}: ${s.desc}`, s.refs)}`));
+  f.steps.forEach((s, i) => out.push(`${i + 1}. ${withRefs(s.desc === undefined ? s.title : `${s.title}: ${s.desc.replace(/\n/g, " ")}`, s.refs)}`));
 }
 
 function treeText(nodes: TreeNode[], depth: number, out: string[]): void {

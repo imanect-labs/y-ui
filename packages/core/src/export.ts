@@ -92,7 +92,7 @@ function scatterTable(f: ScatterFigure): string {
   return `<table>${head}<tbody>${rows}</tbody></table>`;
 }
 
-const withDesc = (title: string, desc: string | undefined, r: number[]) => esc((desc === undefined ? title : `${title}（${desc}）`) + refs(r));
+const withDesc = (title: string, desc: string | undefined, r: number[]) => esc((desc === undefined ? title : `${title}（${desc.replace(/\n/g, " ")}）`) + refs(r));
 
 function treeList(nodes: TreeNode[]): string {
   return `<ul>${nodes.map((n) => `<li>${withDesc(n.title, n.desc, n.refs)}${n.children.length ? treeList(n.children) : ""}</li>`).join("")}</ul>`;
@@ -128,7 +128,7 @@ function otherHTML(f: Exclude<Figure, ChartFigure>): string {
     case "tree":
       return treeList(f.roots);
     case "cards":
-      return `<ul>${f.cards.map((c) => `<li><strong>${esc(c.title + refs(c.refs))}</strong>${c.body ? ` ${esc(c.body)}` : ""}</li>`).join("")}</ul>`;
+      return `<ul>${f.cards.map((c) => `<li><strong>${esc(c.title + refs(c.refs))}</strong>${c.value ? ` ${esc(c.value)}` : ""}${c.body ? ` ${esc(c.body.replace(/\n/g, " "))}` : ""}${c.items?.length ? `<ul>${c.items.map((it) => `<li>${esc(it)}</li>`).join("")}</ul>` : ""}</li>`).join("")}</ul>`;
     case "progress":
       return `<table><tbody>${f.items.map((it) => `<tr><th scope="row">${esc(it.label + refs(it.refs))}</th><td style="text-align:right">${esc(it.valueText)}</td><td style="text-align:right">${esc(it.targetText)}</td><td style="text-align:right">${esc(share(it.value, it.target))}</td></tr>`).join("")}</tbody></table>`;
     case "quadrant":

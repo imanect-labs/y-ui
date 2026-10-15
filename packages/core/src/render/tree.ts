@@ -6,15 +6,20 @@
  */
 
 import type { TreeFigure, TreeNode } from "../ir.js";
-import { BODY_SIZE, type Ctx } from "./frame.js";
+import type { Ctx } from "./frame.js";
 import { fit, wrap } from "./measure.js";
+import { HEAD, META, TEXT } from "./style.js";
 
 const NODE_MIN = 88;
 const NODE_MAX = 168;
-const H_GAP = 10;
-const V_GAP = 30;
-const ROW = 26;
+const H_GAP = 12;
+const V_GAP = 32;
+const ROW = 30;
 const INDENT = 22;
+/** 箱の中の行の高さ（見出し・説明）と、折れ線の角の丸み。 */
+const TITLE_LH = 18;
+const DESC_LH = 16;
+const ELBOW = 6;
 /** 縦に積む子の字下げ。 */
 const STACK_INDENT = 16;
 
@@ -64,6 +69,14 @@ function focusOf(n: TreeNode, shown: string[], x: number, y: number) {
 
 // ---------------------------------------------------------------- 組織図
 
+/** 親の下端 (x1, y1) から折れ点の高さ mid を通って子の上端 (x2, y2) へ。角は丸める。 */
+function elbow(x1: number, y1: number, mid: number, x2: number, y2: number): string {
+  if (Math.abs(x2 - x1) < 1) return `M${x1},${y1}V${y2}`;
+  const s = x2 > x1 ? 1 : -1;
+  const r = Math.min(ELBOW, Math.abs(x2 - x1) / 2, mid - y1, y2 - mid);
+  return `M${x1},${y1}V${mid - r}Q${x1},${mid} ${x1 + s * r},${mid}H${x2 - s * r}Q${x2},${mid} ${x2},${mid + r}V${y2}`;
+}
+
 function orgChart(ctx: Ctx, f: TreeFigure, top: number, nodeW: number, compact: boolean): number {
   const S = f.roots.reduce((a, r) => a + slots(r, 0, compact), 0);
   const total = S * nodeW + (S - 1) * H_GAP;
@@ -99,12 +112,12 @@ function orgChart(ctx: Ctx, f: TreeFigure, top: number, nodeW: number, compact: 
   const inStack = new Set([...stacked.values()].flat());
 
   // 箱の中の文字（縦に積む子は幅が狭い）
-  const pad = 8;
+  const pad = 10;
   const lines = placed.map((p, i) => {
     const w = (inStack.has(i) ? nodeW - STACK_INDENT : nodeW) - pad * 2;
-    return { title: wrap(p.node.title + refsOf(p.node.refs), w, BODY_SIZE + 1, ctx.measure, 2, 600), desc: p.node.desc ? wrap(p.node.desc, w, BODY_SIZE - 1, ctx.measure, 2) : [] };
+    return { title: wrap(p.node.title + refsOf(p.node.refs), w, TEXT, ctx.measure, 2, 600), desc: p.node.desc ? wrap(p.node.desc, w, META, ctx.measure, 2) : [] };
   });
-  const boxH = (i: number) => pad * 2 + lines[i]!.title.length * 17 + lines[i]!.desc.length * 15;
+  const boxH = (i: number) => pad * 2 + lines[i]!.title.length * TITLE_LH + lines[i]!.desc.length * DESC_LH;
 
   // 段ごとに箱の高さを揃える（縦に積む子は段に数えない）
   const D = Math.max(...placed.filter((_, i) => !inStack.has(i)).map((p) => p.depth)) + 1;
@@ -141,25 +154,26 @@ function orgChart(ctx: Ctx, f: TreeFigure, top: number, nodeW: number, compact: 
     const g = p.path[p.path.length - 1]!;
     if (inStack.has(i)) {
       const lx = par.x + STACK_INDENT / 2;
-      ctx.items.push({ t: "path", d: `M${lx},${par.y + par.h}V${b.y + b.h / 2}H${b.x}`, stroke: "axis", strokeWidth: 1.5, group: g });
+      const ly = b.y + b.h / 2;
+      ctx.items.push({ t: "path", d: `M${lx},${par.y + par.h}V${ly - ELBOW}Q${lx},${ly} ${lx + ELBOW},${ly}H${b.x}`, stroke: "border", strokeWidth: 1.5, group: g });
       return;
     }
     const pcx = par.x + par.w / 2;
     const mid = Math.round((par.y + par.h + b.y) / 2) + 0.5;
-    ctx.items.push({ t: "path", d: `M${pcx},${par.y + par.h}V${mid}H${p.cx}V${b.y}`, stroke: "axis", strokeWidth: 1.5, group: g });
+    ctx.items.push({ t: "path", d: elbow(pcx, par.y + par.h, mid, p.cx, b.y), stroke: "border", strokeWidth: 1.5, group: g });
   });
 
   placed.forEach((p, i) => {
     const g = p.path[p.path.length - 1]!;
     const b = boxes.get(i)!;
     const root = p.depth === 0;
-    ctx.items.push({ t: "rect", x: b.x + 0.5, y: b.y + 0.5, w: b.w - 1, h: b.h - 1, r: 8, fill: root ? "accentWash" : "surface2", stroke: root ? "accentLine" : "border", strokeWidth: 1, group: g, hint: p.node.desc ? `${p.node.title}: ${p.node.desc}` : p.node.title });
+    ctx.items.push({ t: "rect", x: b.x + 0.5, y: b.y + 0.5, w: b.w - 1, h: b.h - 1, r: 10, fill: root ? "accentWash" : "surface", stroke: root ? "accentLine" : "border", strokeWidth: 1, group: g, hint: p.node.desc ? `${p.node.title}: ${p.node.desc}` : p.node.title });
     const l = lines[i]!;
-    const blockH = l.title.length * 17 + l.desc.length * 15;
+    const blockH = l.title.length * TITLE_LH + l.desc.length * DESC_LH;
     const ty = b.y + (b.h - blockH) / 2;
     const cx = b.x + b.w / 2;
-    l.title.forEach((t, k) => ctx.items.push({ t: "text", x: cx, y: ty + 13 + k * 17, text: t, size: BODY_SIZE + 1, weight: 600, fill: "ink", anchor: "middle", group: g }));
-    l.desc.forEach((t, k) => ctx.items.push({ t: "text", x: cx, y: ty + l.title.length * 17 + 11 + k * 15, text: t, size: BODY_SIZE - 1, fill: "muted", anchor: "middle", group: g }));
+    l.title.forEach((t, k) => ctx.items.push({ t: "text", x: cx, y: ty + 13.5 + k * TITLE_LH, text: t, size: TEXT, weight: 600, fill: "ink", anchor: "middle", group: g }));
+    l.desc.forEach((t, k) => ctx.items.push({ t: "text", x: cx, y: ty + l.title.length * TITLE_LH + 12 + k * DESC_LH, text: t, size: META, fill: "muted", anchor: "middle", group: g }));
     ctx.targets.push({ hit: b, keep: p.path, ...focusOf(p.node, [...l.title, ...l.desc], cx, b.y) });
   });
   return bottom + 8;
@@ -186,7 +200,7 @@ function indented(ctx: Ctx, f: TreeFigure, top: number): number {
     if (r.parentRow === null) return;
     const px = dotX(r.depth - 1);
     const cy = rowY(i) + ROW / 2;
-    ctx.items.push({ t: "path", d: `M${px},${rowY(r.parentRow) + ROW / 2 + 5}V${cy}H${dotX(r.depth) - 6}`, stroke: "axis", strokeWidth: 1.5, group: r.path[r.path.length - 1]! });
+    ctx.items.push({ t: "path", d: `M${px},${rowY(r.parentRow) + ROW / 2 + 6}V${cy - ELBOW}Q${px},${cy} ${px + ELBOW},${cy}H${dotX(r.depth) - 7}`, stroke: "border", strokeWidth: 1.5, group: r.path[r.path.length - 1]! });
   });
 
   rows.forEach((r, i) => {
@@ -194,19 +208,19 @@ function indented(ctx: Ctx, f: TreeFigure, top: number): number {
     const cy = rowY(i) + ROW / 2;
     const x = dotX(r.depth);
     const branch = r.node.children.length > 0;
-    ctx.items.push({ t: "circle", cx: x, cy, r: branch ? 4.5 : 3.5, fill: branch ? "s1" : "axis", group: g });
+    ctx.items.push({ t: "circle", cx: x, cy, r: branch ? 5 : 3.5, fill: branch ? "s1" : "axis", ...(branch ? { stroke: "surface", strokeWidth: 2 } : {}), group: g });
     const tx = x + 12;
     const avail = ctx.width - ctx.pad - tx;
     const titleText = r.node.title + refsOf(r.node.refs);
     const weight = r.depth === 0 || branch ? 600 : 400;
-    const title = fit(titleText, avail, BODY_SIZE + 1, ctx.measure, weight);
-    ctx.items.push({ t: "text", x: tx, y: cy + 4.5, text: title, size: BODY_SIZE + 1, weight, fill: "ink", group: g });
-    if (r.node.desc) {
-      const used = ctx.measure(title, BODY_SIZE + 1, weight) + 10;
-      if (avail - used > 48) ctx.items.push({ t: "text", x: tx + used, y: cy + 4.5, text: fit(r.node.desc, avail - used, BODY_SIZE, ctx.measure), size: BODY_SIZE, fill: "muted", group: g });
-    }
+    const size = r.depth === 0 ? HEAD : TEXT;
+    const title = fit(titleText, avail, size, ctx.measure, weight);
+    ctx.items.push({ t: "text", x: tx, y: cy + 5, text: title, size, weight, fill: "ink", group: g });
+    const used = ctx.measure(title, size, weight) + 12;
+    const descFits = avail - used > 48;
+    if (r.node.desc && descFits) ctx.items.push({ t: "text", x: tx + used, y: cy + 5, text: fit(r.node.desc, avail - used, META, ctx.measure), size: META, fill: "muted", group: g });
     // 説明は幅が足りなければ出さないので、そのときも全文をツールチップで出す
-    const shown = [title, ...(r.node.desc && avail - ctx.measure(title, BODY_SIZE + 1, weight) - 10 > 48 ? [fit(r.node.desc, avail - ctx.measure(title, BODY_SIZE + 1, weight) - 10, BODY_SIZE, ctx.measure)] : r.node.desc ? ["…"] : [])];
+    const shown = [title, ...(r.node.desc ? (descFits ? [fit(r.node.desc, avail - used, META, ctx.measure)] : ["…"]) : [])];
     ctx.targets.push({ hit: { x: ctx.pad, y: rowY(i), w: ctx.width - ctx.pad * 2, h: ROW }, keep: r.path, ...focusOf(r.node, shown, tx + 30, rowY(i)) });
   });
   return rowY(rows.length) + 8;

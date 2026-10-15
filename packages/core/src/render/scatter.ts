@@ -75,15 +75,15 @@ export function layoutScatter(ctx: Ctx, f: ScatterFigure, top: number): number {
     const g = `p${i}`;
     const cx = X(p.x);
     const cy = Y(p.y);
-    ctx.items.push({ t: "circle", cx, cy, r: 5, fill: color(p.group), stroke: "surface", strokeWidth: 1.5, group: g, hint: `${p.label}: ${xName} ${formatValue(p.x, ctx.locale)}、${yName} ${formatValue(p.y, ctx.locale)}` });
+    ctx.items.push({ t: "circle", cx, cy, r: 6, fill: color(p.group), stroke: "surface", strokeWidth: 2, group: g, hint: `${p.label}: ${xName} ${formatValue(p.x, ctx.locale)}、${yName} ${formatValue(p.y, ctx.locale)}` });
     if (f.points.length <= LABEL_MAX) {
-      const text = fit(p.label + (p.refs.length ? ` ${p.refs.map((n) => `[${n}]`).join("")}` : ""), 96, SMALL_SIZE, ctx.measure);
-      const w = ctx.measure(text, SMALL_SIZE);
-      const toLeft = cx + 9 + w > right;
-      const box = { x: toLeft ? cx - 9 - w : cx + 9, y: cy - 8, w, h: 14 };
+      const text = fit(p.label + (p.refs.length ? ` ${p.refs.map((n) => `[${n}]`).join("")}` : ""), 104, SMALL_SIZE + 1, ctx.measure);
+      const w = ctx.measure(text, SMALL_SIZE + 1);
+      const toLeft = cx + 11 + w > right;
+      const box = { x: toLeft ? cx - 11 - w : cx + 11, y: cy - 8, w, h: 14 };
       if (!overlaps(box)) {
         taken.push(box);
-        ctx.items.push({ t: "text", x: toLeft ? cx - 9 : cx + 9, y: cy + 4, text, size: SMALL_SIZE, fill: "ink2", anchor: toLeft ? "end" : "start", group: g });
+        ctx.items.push({ t: "text", x: toLeft ? cx - 11 : cx + 11, y: cy + 4, text, size: SMALL_SIZE + 1, fill: "ink2", anchor: toLeft ? "end" : "start", group: g });
       }
     }
     ctx.targets.push({

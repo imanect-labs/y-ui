@@ -30,10 +30,12 @@ export interface Labels {
   count: string;
   fromPrev: string;
   fromFirst: string;
+  /** 進捗が目標に届いた項目（読み上げ）。 */
+  done: string;
 }
 
-export const LABELS_JA: Labels = { unit: (u) => `単位: ${u}`, note: (n) => `※ ${n}`, total: "合計", share: "割合", stepRate: "前段比", count: "数", fromPrev: "前の段階から", fromFirst: "最初から" };
-export const LABELS_EN: Labels = { unit: (u) => `Unit: ${u}`, note: (n) => `Note: ${n}`, total: "Total", share: "Share", stepRate: "Step rate", count: "Count", fromPrev: "From previous", fromFirst: "From first" };
+export const LABELS_JA: Labels = { unit: (u) => `単位: ${u}`, note: (n) => `※ ${n}`, total: "合計", share: "割合", stepRate: "前段比", count: "数", fromPrev: "前の段階から", fromFirst: "最初から", done: "達成" };
+export const LABELS_EN: Labels = { unit: (u) => `Unit: ${u}`, note: (n) => `Note: ${n}`, total: "Total", share: "Share", stepRate: "Step rate", count: "Count", fromPrev: "From previous", fromFirst: "From first", done: "done" };
 
 /** 数値に単位を付ける（英字で始まる単位は空白を挟む: `1,200 people`、`1,200人`）。 */
 export function withUnit(value: string, unit: string | undefined): string {

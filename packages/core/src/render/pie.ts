@@ -7,13 +7,14 @@
 
 import type { ChartFigure } from "../ir.js";
 import { share } from "../text.js";
-import { BODY_SIZE, type Ctx, formatValue, withUnit } from "./frame.js";
+import { type Ctx, formatValue, withUnit } from "./frame.js";
 import { fit } from "./measure.js";
+import { META, TEXT } from "./style.js";
 import { SERIES, type Token } from "./theme.js";
 
 const MAX_DIAMETER = 200;
-const ROW = 22;
-const DOT = 4;
+const ROW = 28;
+const DOT = 5;
 /** 凡例を横に置く最小の幅。これより狭ければ下に置く。 */
 const SIDE_LEGEND_MIN = 460;
 /** 凡例の幅の上限（値が項目名から離れすぎないように）。 */
@@ -48,7 +49,7 @@ export function layoutPie(ctx: Ctx, f: ChartFigure, top: number): number {
   const side = inner >= SIDE_LEGEND_MIN;
   const D = side ? Math.min(MAX_DIAMETER, inner * 0.4) : Math.min(MAX_DIAMETER, inner * 0.7);
   const R = D / 2;
-  const r = R * 0.6;
+  const r = R * 0.7;
   const cx = side ? ctx.pad + R : ctx.pad + inner / 2;
   const cy = top + 8 + R;
   const valueName = f.columns[1] || "値";
@@ -69,30 +70,30 @@ export function layoutPie(ctx: Ctx, f: ChartFigure, top: number): number {
   });
 
   // 中央の合計
-  ctx.items.push({ t: "text", x: cx, y: cy - 6, text: ctx.labels.total, size: BODY_SIZE, fill: "muted", anchor: "middle" });
+  ctx.items.push({ t: "text", x: cx, y: cy - 8, text: ctx.labels.total, size: META, fill: "muted", anchor: "middle" });
   const totalText = withUnit(formatValue(total, ctx.locale), unit);
-  let totalSize = 18;
+  let totalSize = 22;
   while (totalSize > 12 && ctx.measure(totalText, totalSize, 600) > r * 1.7) totalSize -= 1;
   ctx.items.push({ t: "text", x: cx, y: cy + totalSize * 0.75, text: fit(totalText, r * 1.8, totalSize, ctx.measure, 600), size: totalSize, weight: 600, fill: "ink", anchor: "middle", tabular: true });
 
   // 凡例（色の印・項目・値・割合）
-  const lx = side ? ctx.pad + D + 28 : ctx.pad;
+  const lx = side ? ctx.pad + D + 36 : ctx.pad;
   const lw = Math.min(LEGEND_MAX, side ? ctx.width - ctx.pad - lx : inner);
-  let ly = side ? top + 8 + Math.max(0, R - (f.rows.length * ROW) / 2) : cy + R + 16;
+  let ly = side ? top + 8 + Math.max(0, R - (f.rows.length * ROW) / 2) : cy + R + 20;
   const valueTexts = values.map((v) => formatValue(v, ctx.locale));
   const shareTexts = values.map((v) => share(v, total));
-  const valueW = Math.max(...valueTexts.map((t) => ctx.measure(t, BODY_SIZE)));
-  const shareW = Math.max(...shareTexts.map((t) => ctx.measure(t, BODY_SIZE, 600)));
-  const labelW = Math.max(40, lw - 14 - valueW - shareW - 24);
+  const valueW = Math.max(...valueTexts.map((t) => ctx.measure(t, META)));
+  const shareW = Math.max(...shareTexts.map((t) => ctx.measure(t, TEXT, 600)));
+  const labelW = Math.max(40, lw - 18 - valueW - shareW - 28);
   const legendTop = ly;
   f.rows.forEach((row, i) => {
     const y = ly + ROW / 2;
     const group = `s${i}`;
     const refs = row.refs.length ? ` ${row.refs.map((n) => `[${n}]`).join("")}` : "";
     ctx.items.push({ t: "circle", cx: lx + DOT + 1, cy: y, r: DOT, fill: sliceColor(i), group });
-    ctx.items.push({ t: "text", x: lx + 14, y: y + 4, text: fit(row.label + refs, labelW, BODY_SIZE, ctx.measure), size: BODY_SIZE, fill: "ink2", group });
-    ctx.items.push({ t: "text", x: lx + lw - shareW - 12, y: y + 4, text: valueTexts[i]!, size: BODY_SIZE, fill: "muted", anchor: "end", tabular: true, group });
-    ctx.items.push({ t: "text", x: lx + lw, y: y + 4, text: shareTexts[i]!, size: BODY_SIZE, weight: 600, fill: "ink", anchor: "end", tabular: true, group });
+    ctx.items.push({ t: "text", x: lx + 18, y: y + 4.5, text: fit(row.label + refs, labelW, TEXT, ctx.measure), size: TEXT, fill: "ink", group });
+    ctx.items.push({ t: "text", x: lx + lw - shareW - 14, y: y + 4.5, text: valueTexts[i]!, size: META, fill: "muted", anchor: "end", tabular: true, group });
+    ctx.items.push({ t: "text", x: lx + lw, y: y + 4.5, text: shareTexts[i]!, size: TEXT, weight: 600, fill: "ink", anchor: "end", tabular: true, group });
 
     // ホバー・フォーカス: 凡例の行と扇のどちらでも、その項目だけを残して強調する。
     const w = wedges[i]!;
