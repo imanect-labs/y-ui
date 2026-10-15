@@ -153,13 +153,8 @@ export function SceneSvg(props: { scene: Scene; theme?: ThemeMode; fluid?: boole
       ? h(
           "g",
           { key: "hits", "aria-hidden": true },
-          ...scene.targets.map((t, i) =>
-            h("rect", {
-              key: i,
-              x: t.hit.x,
-              y: t.hit.y,
-              width: Math.max(0, t.hit.w),
-              height: Math.max(0, t.hit.h),
+          ...scene.targets.flatMap((t, i) => {
+            const handlers = {
               fill: "transparent",
               style: { cursor: t.tip ? "default" : "pointer" },
               onPointerEnter: (e: PointerEvent) => e.pointerType === "mouse" && setActive(i),
@@ -168,8 +163,10 @@ export function SceneSvg(props: { scene: Scene; theme?: ThemeMode; fluid?: boole
                 pointer.current = e.pointerType;
               },
               onClick: () => pointer.current !== "mouse" && setActive((cur) => (cur === i ? null : i)),
-            }),
-          ),
+            };
+            const rect = h("rect", { key: `r${i}`, x: t.hit.x, y: t.hit.y, width: Math.max(0, t.hit.w), height: Math.max(0, t.hit.h), ...handlers });
+            return t.hitPath ? [rect, h("path", { key: `p${i}`, d: t.hitPath, ...handlers })] : [rect];
+          }),
         )
       : null,
   );

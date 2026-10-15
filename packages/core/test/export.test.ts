@@ -40,6 +40,12 @@ describe("書き出し", () => {
     expect(toHTML(fig("stat 実績\n売上 | 3,200万円 | 前年比 +18%"))).toContain("<td>3,200万円</td><td>前年比 +18%</td>");
   });
 
+  it("円グラフの表は割合の列を持つ", () => {
+    const html = toHTML(fig("pie 構成\n項目 | 件数\nA | 3\nB | 1"));
+    expect(html).toContain('<th scope="col">項目</th><th scope="col">件数</th><th scope="col">割合</th>');
+    expect(html).toContain('<th scope="row">A</th><td style="text-align:right">3</td><td style="text-align:right">75%</td>');
+  });
+
   it("貼り付け用の HTML は画像・見出し・ソースを持ち、ソースから図に戻せる", () => {
     const html = clipboardHTML(bar, { dataUrl: "data:image/png;base64,AAAA", width: 10, height: 20 });
     expect(html).toContain('<img src="data:image/png;base64,AAAA" width="10" height="20" alt="売上 &lt;比較&gt;">');

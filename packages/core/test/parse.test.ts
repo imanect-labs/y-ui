@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseBlock, type ChartFigure, type FlowFigure, type StackFigure, type StatFigure } from "../src/index.js";
+import { parseBlock, toSource, type ChartFigure, type FlowFigure, type StackFigure, type StatFigure } from "../src/index.js";
 
 const final = { final: true } as const;
 
@@ -167,7 +167,7 @@ describe("stack", () => {
 
 describe("エラーとストリーミング", () => {
   it("種類が分からなければ figure は null", () => {
-    const r = parseBlock("pie 構成比\nA | 1\n", final);
+    const r = parseBlock("gauge 達成率\nA | 1\n", final);
     expect(r.figure).toBeNull();
     expect(r.diagnostics[0]?.code).toBe("unknown_kind");
   });
@@ -184,5 +184,38 @@ describe("エラーとストリーミング", () => {
     expect(f.rows.map((x) => x.values[0])).toEqual([100]);
     // 確定すれば読む
     expect((parseBlock("bar 売上\n月 | 金額\n1月 | 100\n2月 | 15", final).figure as ChartFigure).rows).toHaveLength(2);
+  });
+});
+
+describe("pie", () => {
+  const final = { final: true };
+  it("項目と値を読み、別名（円グラフ・donut）も受ける", () => {
+    for (const head of ["pie", "円グラフ", "donut"]) {
+      const r = parseBlock(`${head} 売上の内訳 [2]\nunit: 億円\n事業 | 売上\nクラウド | 120\nオンプレ | 80 [3]\n`, final);
+      expect(r.figure).toMatchObject({ kind: "pie", title: "売上の内訳", refs: [2], unit: "億円", columns: ["事業", "売上"], rows: [{ label: "クラウド", values: [120] }, { label: "オンプレ", values: [80], refs: [3] }] });
+      expect(r.diagnostics).toEqual([]);
+    }
+  });
+
+  it("`項目: 値` と列名の無い表も受ける", () => {
+    expect(parseBlock("pie x\nA: 3\nB: 1\n", final).figure).toMatchObject({ columns: ["項目", "値"], rows: [{ label: "A", values: [3] }, { label: "B", values: [1] }] });
+  });
+
+  it("2 系列目以降・負の値・欠損は描かずに知らせる", () => {
+    const r = parseBlock("pie x\n項目 | 今年 | 昨年\nA | 3 | 1\nB | -1 | 2\nC | - | 2\nD | 0 | 1\n", final);
+    expect(r.figure).toMatchObject({ columns: ["項目", "今年"], rows: [{ label: "A", values: [3] }, { label: "D", values: [0] }] });
+    expect(r.diagnostics.map((d) => d.code)).toEqual(["extra_cells", "bad_number", "bad_number"]);
+  });
+
+  it("13 項目目以降は省略して知らせる", () => {
+    const body = Array.from({ length: 14 }, (_, i) => `項目${i + 1} | ${i + 1}`).join("\n");
+    const r = parseBlock(`pie x\n${body}\n`, final);
+    expect((r.figure as { rows: unknown[] }).rows).toHaveLength(12);
+    expect(r.diagnostics.some((d) => d.code === "limit_exceeded")).toBe(true);
+  });
+
+  it("ソースに戻して読み直すと同じ図になる", () => {
+    const f = parseBlock("pie 構成\nunit: %\n区分 | 比率\n国内 | 62.5\n海外 | 37.5\nnote: 2025年度\n", final).figure!;
+    expect(parseBlock(toSource(f), final).figure).toEqual(f);
   });
 });

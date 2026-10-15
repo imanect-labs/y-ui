@@ -3,6 +3,7 @@ import type { Figure, Kind } from "@imanect/yui";
 export const CATEGORIES = [
   "bar",
   "line",
+  "pie",
   "stat",
   "flow",
   "stack",

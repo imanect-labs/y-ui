@@ -110,7 +110,7 @@ describe("React", () => {
   });
 
   it("図にできないソースはそのまま表示する", () => {
-    expect(renderToStaticMarkup(createElement(YuiBlock, { source: "pie x\nA | 1\n" }))).toContain("<pre");
+    expect(renderToStaticMarkup(createElement(YuiBlock, { source: "gauge x\nA | 1\n" }))).toContain("<pre");
   });
 
   it("YuiFigure とコードブロックの言語名の判定", () => {
@@ -166,5 +166,30 @@ describe("ホバーの対象", () => {
   it("数値カード・構成図は対象を持たない", () => {
     expect(layout(fig("stat x\n売上 | 1\n"), { width: 480 }).targets).toEqual([]);
     expect(layout(fig("stack x\n- A\n- B\n"), { width: 480 }).targets).toEqual([]);
+  });
+});
+
+describe("pie", () => {
+  const fig = parseBlock("pie 内訳\nunit: 件\n区分 | 件数\nA | 3\nB | 1\nC | 0\n", { final: true }).figure!;
+
+  it("値が 0 より大きい項目だけ扇を描き、凡例と当たり判定は全項目に持つ", () => {
+    const scene = layout(fig);
+    const wedges = scene.items.filter((it) => it.t === "path" && it.group?.startsWith("s"));
+    expect(wedges).toHaveLength(2);
+    expect(scene.targets).toHaveLength(3);
+    expect(scene.targets.map((t) => Boolean(t.hitPath))).toEqual([true, true, false]);
+    expect(scene.targets[0]!.tip).toMatchObject({ title: "A", rows: [{ label: "件数", value: "3件" }, { label: "割合", value: "75%" }] });
+  });
+
+  it("中央に合計を出し、説明（desc）は値と割合の表にする", () => {
+    const svg = renderSVG(fig, { theme: "light" });
+    expect(svg).toContain(">4件<");
+    expect(svg).toContain("| A | 3 | 75% |");
+  });
+
+  it("1 項目だけでも一周の輪を描く", () => {
+    const one = parseBlock("pie x\nA | 5\n", { final: true }).figure!;
+    const ring = layout(one).items.find((it) => it.t === "path");
+    expect(ring && ring.t === "path" && (ring.d.match(/M/g) ?? []).length).toBe(2);
   });
 });

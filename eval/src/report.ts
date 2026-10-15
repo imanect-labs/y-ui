@@ -4,7 +4,7 @@ import { ARM_LABELS, type ArmId } from "./prompts.js";
 import type { ResultRecord } from "./run.js";
 
 /** 方式 A（現行 emit_ui）が表現できる課題の種類。A と B の比較はこの範囲で行う。 */
-export const COMMON_CATEGORIES = ["bar", "line", "stat", "long", "jpnum", "none-unneeded", "none-nodata"];
+export const COMMON_CATEGORIES = ["bar", "line", "pie", "stat", "long", "jpnum", "none-unneeded", "none-nodata"];
 
 /** 採用基準（docs/eval-plan.md §5 と一致させる）。 */
 export const CRITERIA = {

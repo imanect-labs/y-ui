@@ -5,6 +5,7 @@ import { toText } from "../text.js";
 import { layoutChart } from "./chart.js";
 import { drawNote, drawTitle, makeCtx, type LayoutOptions } from "./frame.js";
 import { layoutFlow } from "./flow.js";
+import { layoutPie } from "./pie.js";
 import type { Scene } from "./scene.js";
 import { layoutStack } from "./stack.js";
 import { layoutStat } from "./stat.js";
@@ -18,6 +19,9 @@ export function layout(f: Figure, opts: LayoutOptions = {}): Scene {
     case "bar":
     case "line":
       y = layoutChart(ctx, f, y);
+      break;
+    case "pie":
+      y = layoutPie(ctx, f, y);
       break;
     case "stat":
       y = layoutStat(ctx, f, y);

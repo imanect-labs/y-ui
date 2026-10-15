@@ -43,7 +43,8 @@ export function toFigure(j: Json): Figure {
   const title = isStr(j.title) ? j.title : "";
   switch (t) {
     case "bar":
-    case "line": {
+    case "line":
+    case "pie": {
       if (!isArr(j.cols) || !isArr(j.rows)) throw new ShapeError("cols / rows がありません");
       const columns = j.cols.map((c, i) => str(c, `cols[${i}]`));
       const rows = j.rows.map((r, i) => {

@@ -4,6 +4,7 @@ import type { Figure, Kind, ParseResult } from "./ir.js";
 import { Diagnostics, type Line, takeRefs } from "./lines.js";
 import { parseChart } from "./kinds/chart.js";
 import { parseFlow } from "./kinds/flow.js";
+import { parsePie } from "./kinds/pie.js";
 import { parseStack } from "./kinds/stack.js";
 import { parseStat } from "./kinds/stat.js";
 
@@ -17,6 +18,11 @@ const KIND_ALIASES: Record<string, Kind> = {
   line: "line",
   折れ線: "line",
   折れ線グラフ: "line",
+  pie: "pie",
+  donut: "pie",
+  円: "pie",
+  円グラフ: "pie",
+  ドーナツ: "pie",
   stat: "stat",
   stats: "stat",
   kpi: "stat",
@@ -77,7 +83,7 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
       title = first.text.trim();
       body = lines.slice(1);
     } else if (!kind) {
-      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / stat / flow / stack）`);
+      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / stat / flow / stack）`);
       return { figure: null, diagnostics: diags.list, pending };
     }
   }
@@ -93,6 +99,9 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
     case "bar":
     case "line":
       parseChart(figure, body, diags);
+      break;
+    case "pie":
+      parsePie(figure, body, diags);
       break;
     case "stat":
       parseStat(figure, body, diags);
@@ -120,6 +129,7 @@ function emptyFigure(kind: Kind, title: string, refs: number[]): Figure {
   switch (kind) {
     case "bar":
     case "line":
+    case "pie":
       return { kind, title, refs, columns: [], rows: [] };
     case "stat":
       return { kind, title, refs, items: [] };
@@ -134,6 +144,7 @@ export function isEmpty(f: Figure): boolean {
   switch (f.kind) {
     case "bar":
     case "line":
+    case "pie":
       return f.rows.length === 0;
     case "stat":
       return f.items.length === 0;

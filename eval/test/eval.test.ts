@@ -33,8 +33,8 @@ describe("課題セット", () => {
     expect(JSON.parse(JSON.stringify(buildTasks()))).toEqual(tasks);
   });
 
-  it("141 件・id は一意", () => {
-    expect(tasks).toHaveLength(141);
+  it("159 件・id は一意", () => {
+    expect(tasks).toHaveLength(159);
     expect(new Set(tasks.map((t) => t.id)).size).toBe(tasks.length);
   });
 });
@@ -144,11 +144,13 @@ describe("抽出", () => {
     expect(approxValidate({ version: 1, root: { component: "flowchart" } })[0]).toMatch(/unknown_component/);
   });
 
-  it("Shiki: 検証を通った最後の呼び出しを採り、円グラフは種類違いとする", () => {
-    const pie = { spec: { version: 1, root: { component: "chart", kind: "pie", data: [{ x: "A", y: 1 }] } } };
-    const r = extractShiki([{ name: "emit_ui", arguments: "{" }, { name: "emit_ui", arguments: JSON.stringify(pie) }]);
+  it("Shiki: 検証を通った最後の呼び出しを採り、円グラフは pie、散布図は種類違いとする", () => {
+    const spec = (kind: string) => JSON.stringify({ spec: { version: 1, root: { component: "chart", kind, data: [{ x: "A", y: 1 }] } } });
+    const r = extractShiki([{ name: "emit_ui", arguments: "{" }, { name: "emit_ui", arguments: spec("donut") }]);
     expect(r.syntaxOk).toBe(true);
-    expect(r.figures[0]).toMatchObject({ kind: "bar", incompatible: true });
+    expect(r.figures[0]).toMatchObject({ kind: "pie" });
+    expect(r.figures[0]).not.toHaveProperty("incompatible");
+    expect(extractShiki([{ name: "emit_ui", arguments: spec("scatter") }]).figures[0]).toMatchObject({ kind: "bar", incompatible: true });
   });
 
   it("Rust の文字列リテラル（行継続・エスケープ）", () => {

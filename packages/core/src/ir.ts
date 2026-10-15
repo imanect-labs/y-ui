@@ -5,7 +5,7 @@
  * LLM が書くソースは寛容に受けるが、IR は常にこの形に正規化されている。
  */
 
-export const KINDS = ["bar", "line", "stat", "flow", "stack"] as const;
+export const KINDS = ["bar", "line", "pie", "stat", "flow", "stack"] as const;
 export type Kind = (typeof KINDS)[number];
 
 /** 全図に共通する項目。 */
@@ -32,7 +32,8 @@ export interface ChartRow {
 }
 
 export interface ChartFigure extends FigureBase {
-  kind: "bar" | "line";
+  /** pie は 1 系列（columns[1]）だけを持ち、値はすべて 0 以上。 */
+  kind: "bar" | "line" | "pie";
   /** 列名。columns[0] はラベル列の見出し、columns[1..] が系列名。 */
   columns: string[];
   rows: ChartRow[];
@@ -98,6 +99,11 @@ export interface StackFigure extends FigureBase {
 }
 
 export type Figure = ChartFigure | StatFigure | FlowFigure | StackFigure;
+
+/** 表形式のデータを持つ図（bar / line / pie）。 */
+export function isChart(f: Figure): f is ChartFigure {
+  return f.kind === "bar" || f.kind === "line" || f.kind === "pie";
+}
 
 export type Severity = "error" | "warning" | "info";
 

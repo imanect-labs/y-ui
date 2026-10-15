@@ -3,7 +3,7 @@
  * 配線が正しいか（各方式で満点が出るか）を確かめるために使う。
  */
 
-import { toSource, type Figure } from "@imanect/yui";
+import { isChart, toSource, type Figure } from "@imanect/yui";
 import type { ChatFn } from "./arms.js";
 import type { ChatResult } from "./client.js";
 import type { ArmId } from "./prompts.js";
@@ -12,7 +12,8 @@ import type { EvalTask } from "./tasks/types.js";
 export function toJsonui(f: Figure): unknown {
   switch (f.kind) {
     case "bar":
-    case "line": {
+    case "line":
+    case "pie": {
       const j: Record<string, unknown> = { t: f.kind, title: f.title, cols: f.columns, rows: f.rows.map((r) => [r.label, ...r.values]) };
       if (f.unit !== undefined) j.unit = f.unit;
       return j;
@@ -66,7 +67,7 @@ export function toMermaid(f: Figure): string | null {
 }
 
 function toShikiSpec(f: Figure): unknown | null {
-  if (f.kind === "bar" || f.kind === "line") {
+  if (isChart(f)) {
     const data = f.rows.flatMap((r) => r.values.flatMap((v, i) => (v === null ? [] : [{ x: r.label, y: v, ...(f.columns.length > 2 ? { series: f.columns[i + 1] } : {}) }])));
     return { version: 1, root: { component: "chart", kind: f.kind, title: f.title, data } };
   }

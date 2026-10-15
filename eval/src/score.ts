@@ -4,7 +4,7 @@
  * 判定基準は docs/eval-plan.md で実行前に固定したもの。ここを変えたら計画書も直す。
  */
 
-import { parseNumber, type ChartFigure, type Figure, type FlowFigure, type StackFigure, type StatFigure } from "@imanect/yui";
+import { isChart, parseNumber, type ChartFigure, type Figure, type FlowFigure, type StackFigure, type StatFigure } from "@imanect/yui";
 import { matchByText, norm, similarity } from "./similarity.js";
 import type { EvalTask } from "./tasks/types.js";
 
@@ -42,7 +42,7 @@ function same(a: number, b: number): boolean {
 const SCALES = [1, 1e4, 1e-4, 1e8, 1e-8, 1e3, 1e-3, 1e6, 1e-6, 1e2, 1e-2];
 
 function numericValues(f: Figure): number[] {
-  if (f.kind === "bar" || f.kind === "line") return f.rows.flatMap((r) => r.values.filter((v): v is number => v !== null));
+  if (isChart(f)) return f.rows.flatMap((r) => r.values.filter((v): v is number => v !== null));
   if (f.kind === "stat") return f.items.flatMap((i) => (i.num === undefined ? [] : [i.num]));
   return [];
 }
@@ -73,7 +73,7 @@ function scoreFigure(task: EvalTask, gold: Figure, f: Figure): Score {
   // incompatible: Shiki の円グラフ・表など、bar/line に写したが種類としては別物の図（extract/shiki.ts）。
   const kindOk = task.acceptKinds.includes(f.kind) && !(f as { incompatible?: boolean }).incompatible;
   const base = { syntaxOk: true, produced: true, kindOk };
-  if ((gold.kind === "bar" || gold.kind === "line") && (f.kind === "bar" || f.kind === "line")) {
+  if (isChart(gold) && isChart(f)) {
     const s = scoreChart(gold, f);
     return { ...base, ...s, pass: kindOk && s.pass };
   }

@@ -9,7 +9,7 @@
  * あわせて、図が最初に描けるようになる位置と、解析にかかる時間を測る。
  */
 
-import { parseMarkdown, toSource, type Figure } from "@imanect/yui";
+import { isChart, parseMarkdown, toSource, type Figure } from "@imanect/yui";
 import type { EvalTask } from "./tasks/types.js";
 
 export interface TruncationCase {
@@ -22,7 +22,7 @@ export interface TruncationCase {
 function variants(f: Figure): { variant: string; src: string }[] {
   const canonical = toSource(f);
   const out = [{ variant: "canonical", src: canonical }];
-  if (f.kind === "bar" || f.kind === "line") {
+  if (isChart(f)) {
     const head = `| ${f.columns.join(" | ")} |\n|${f.columns.map(() => "---").join("|")}|\n`;
     const rows = f.rows.map((r) => `| ${r.label} | ${r.values.map((v) => (v === null ? "-" : v.toLocaleString("ja-JP"))).join(" | ")} |`).join("\n");
     out.push({ variant: "gfm-table", src: `${f.kind} | ${f.title}\n${f.unit ? `unit: ${f.unit}\n` : ""}${head}${rows}\n` });
@@ -55,6 +55,7 @@ function units(f: Figure): string[] {
   switch (f.kind) {
     case "bar":
     case "line":
+    case "pie":
       return [JSON.stringify(f.columns), ...f.rows.map((r) => JSON.stringify(r))];
     case "stat":
       return f.items.map((i) => JSON.stringify(i));
@@ -119,7 +120,7 @@ export function checkCase(c: TruncationCase): TruncationResult {
     if (!fig) continue;
     const u = units(fig);
     // 列名の行は、データ行が来るまで補完値のことがあるので、行が 1 つ以上あるときだけ比べる。
-    const comparable = (fig.kind === "bar" || fig.kind === "line") && fig.rows.length === 0 ? [] : u;
+    const comparable = isChart(fig) && fig.rows.length === 0 ? [] : u;
     comparable.forEach((x, k) => {
       if (finalUnits[k] !== x) {
         res.inconsistent++;
@@ -137,7 +138,7 @@ export function checkCase(c: TruncationCase): TruncationResult {
     const count = u.length + stackChildren(fig).flat().length;
     if (count < prevCount) res.shrinks++;
     prevCount = count;
-    if (res.firstFigureAt === null && comparable.length > (fig.kind === "bar" || fig.kind === "line" ? 1 : 0)) {
+    if (res.firstFigureAt === null && comparable.length > (isChart(fig) ? 1 : 0)) {
       res.firstFigureAt = Math.max(0, (i - blockStart) / Math.max(1, blockEnd - blockStart));
     }
   }

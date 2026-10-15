@@ -12,6 +12,7 @@ export const LIMITS = {
   textLength: 200,
   chartRows: 500,
   chartColumns: 13,
+  pieSlices: 12,
   statItems: 24,
   flowNodes: 60,
   flowEdges: 100,

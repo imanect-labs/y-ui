@@ -72,7 +72,7 @@ describe("toText", () => {
   });
 
   it("transformMarkdown は解析できないブロックを残す", () => {
-    const md = "前\n```ui\npie x\n```\n後\n```ui\nflow\nA -> B\n```";
-    expect(transformMarkdown(md, "text")).toBe("前\n```ui\npie x\n```\n後\n- A → B");
+    const md = "前\n```ui\ngauge x\n```\n後\n```ui\nflow\nA -> B\n```";
+    expect(transformMarkdown(md, "text")).toBe("前\n```ui\ngauge x\n```\n後\n- A → B");
   });
 });

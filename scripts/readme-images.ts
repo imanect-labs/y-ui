@@ -28,6 +28,15 @@ W4 | 1500 | 1300
 W5 | 1620 | 1250
 W6 | 1580 | 1420
 `,
+    pie: `pie Revenue by segment
+unit: $M
+Segment | Revenue
+Cloud | 145
+Support | 98
+On-premises | 52
+Training | 31
+Consulting | 24
+`,
     stat: `stat This month
 Revenue | $3.2M | +18% YoY
 New customers | 165
@@ -69,6 +78,15 @@ Q4 | 210 | 44
 第4週 | 1500 | 1300
 第5週 | 1620 | 1250
 第6週 | 1580 | 1420
+`,
+    pie: `pie 事業別の売上構成
+unit: 億円
+事業 | 売上
+クラウド | 145
+保守サポート | 98
+オンプレミス | 52
+研修 | 31
+コンサルティング | 24
 `,
     stat: `stat 今月の営業実績
 売上 | 3,200万円 | 前年比 +18%

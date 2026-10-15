@@ -137,7 +137,7 @@ function renderContext(t: Table, style: ContextStyle, fmt: (v: number) => string
 
 function chartGold(kind: Kind, t: Table): ChartFigure {
   return {
-    kind: kind as "bar" | "line",
+    kind: kind as "bar" | "line" | "pie",
     title: t.title,
     refs: [],
     columns: [t.label, ...t.series],
@@ -174,6 +174,47 @@ function chartTasks(category: "bar" | "line", count: number, seed: number): Eval
       expect: "figure",
       acceptKinds,
       gold: chartGold(acceptKinds[0]!, t),
+    });
+  }
+  return out;
+}
+
+// ------------------------------------------------------------ pie（構成比）
+
+/** 内訳の題材。合計が意味を持つもの（構成比を問える）だけ。 */
+const PIE_DOMAINS: Domain[] = [
+  { key: "segment", title: "事業別の売上構成", label: "事業", labels: ["クラウド", "オンプレミス", "保守サポート", "研修", "コンサルティング"], series: ["売上"], unit: "億円", range: [8, 180], timeSeries: false },
+  { key: "cost", title: "部門経費の内訳", label: "費目", labels: ["人件費", "外注費", "広告宣伝費", "旅費交通費", "通信費", "消耗品費"], series: ["金額"], unit: "万円", range: [30, 900], timeSeries: false },
+  { key: "ticket", title: "問い合わせの種類別の件数", label: "種類", labels: ["ログイン", "請求", "権限", "検索", "ファイル共有", "通知"], series: ["件数"], unit: "件", range: [15, 420], timeSeries: false },
+  { key: "age", title: "利用者の年代構成", label: "年代", labels: ["20代", "30代", "40代", "50代", "60代以上"], series: ["人数"], unit: "人", range: [40, 800], timeSeries: false },
+  { key: "survey", title: "満足度アンケートの回答", label: "回答", labels: ["満足", "やや満足", "どちらでもない", "やや不満", "不満"], series: ["回答数"], unit: "件", range: [6, 260], timeSeries: false },
+  { key: "share", title: "地域別の契約数", label: "地域", labels: ["関東", "近畿", "中部", "九州", "東北", "北海道"], series: ["契約数"], unit: "件", range: [20, 640], timeSeries: false },
+];
+
+function pieTasks(count: number, seed: number): EvalTask[] {
+  const r = rng(seed);
+  const out: EvalTask[] = [];
+  for (let i = 0; i < count; i++) {
+    const d = PIE_DOMAINS[i % PIE_DOMAINS.length]!;
+    const n = Math.min(d.labels.length, 3 + Math.floor(r() * 4));
+    // 回答・年代は順序があるので並べ替えない。他は資料の並びを毎回変える。
+    const ordered = d.key === "survey" || d.key === "age";
+    const labels = ordered ? d.labels.slice(0, n) : shuffle(r, d.labels).slice(0, n);
+    const t: Table = { title: d.title, label: d.label, series: d.series, unit: d.unit, decimals: 0, rows: labels.map((label) => ({ label, values: [between(r, d.range[0], d.range[1])] })) };
+    const style = STYLES[i % STYLES.length]!;
+    const explicit = i % 3 !== 2;
+    const question = explicit
+      ? pick(r, [`${t.title}を円グラフにして。`, `${t.title}の割合を円グラフで見せてください。`])
+      : pick(r, [`${t.title}の構成比がわかるように図で示して。`, `${t.title}の内訳を図にして、どこが大きいか見えるようにして。`]);
+    out.push({
+      id: `pie-${String(i + 1).padStart(3, "0")}`,
+      category: "pie",
+      question,
+      context: renderContext(t, style),
+      expect: "figure",
+      // 構成比を問われて棒グラフで答えるのも誤りではない（円グラフを指定された場合を除く）。
+      acceptKinds: explicit ? ["pie"] : ["pie", "bar"],
+      gold: chartGold("pie", t),
     });
   }
   return out;
@@ -402,6 +443,7 @@ export function generatedTasks(): EvalTask[] {
   return [
     ...chartTasks("bar", 25, 101),
     ...chartTasks("line", 20, 202),
+    ...pieTasks(18, 606),
     ...statTasks(20, 303),
     ...longTasks(10, 404),
     ...jpnumTasks(10, 505),

@@ -32,6 +32,7 @@ export function toSource(f: Figure): string {
   switch (f.kind) {
     case "bar":
     case "line":
+    case "pie":
       chartSource(f, lines);
       break;
     case "stat":
@@ -100,6 +101,9 @@ export function toText(f: Figure): string {
     case "line":
       chartText(f, out);
       break;
+    case "pie":
+      pieText(f, out);
+      break;
     case "stat":
       statText(f, out);
       break;
@@ -123,6 +127,25 @@ function chartText(f: ChartFigure, out: string[]): void {
     out.push(`| ${cells.join(" | ")} |`);
   }
   if (f.unit !== undefined) out.push("", `（単位: ${f.unit}）`);
+}
+
+/** 円グラフは、値と割合の表にする。 */
+function pieText(f: ChartFigure, out: string[]): void {
+  const total = f.rows.reduce((a, r) => a + (r.values[0] ?? 0), 0);
+  const head = [f.columns[0] || "項目", f.columns[1] || "値", "割合"];
+  out.push(`| ${head.map(esc).join(" | ")} |`, "| --- | ---: | ---: |");
+  for (const r of f.rows) {
+    const v = r.values[0] ?? 0;
+    out.push(`| ${withRefs(esc(r.label), r.refs)} | ${fmt.format(v)} | ${share(v, total)} |`);
+  }
+  if (f.unit !== undefined) out.push("", `（単位: ${f.unit}）`);
+}
+
+/** 割合の表記（10% 未満は小数 1 桁）。 */
+export function share(v: number, total: number): string {
+  if (total <= 0) return "-";
+  const p = (v / total) * 100;
+  return `${p < 10 ? p.toFixed(1) : Math.round(p)}%`;
 }
 
 function statText(f: StatFigure, out: string[]): void {

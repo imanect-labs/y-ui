@@ -28,6 +28,8 @@ export interface TipRow {
 export interface Target {
   /** 当たり判定。 */
   hit: { x: number; y: number; w: number; h: number };
+  /** 追加の当たり判定（矩形にならない形。円グラフの扇など）。SVG の path。 */
+  hitPath?: string;
   /** 強調するまとまり（これ以外のまとまりを薄くする）。空なら何も薄くしない。 */
   keep: string[];
   /** ツールチップ。x, y は指す位置（マークの上端の中央）。無ければ強調だけ。 */

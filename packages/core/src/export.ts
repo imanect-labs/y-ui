@@ -11,7 +11,7 @@
 import type { ChartFigure, Figure, FlowFigure, StackBox, StackFigure, StatFigure } from "./ir.js";
 import { layout, type LayoutOptions } from "./render/layout.js";
 import { sceneToSVG } from "./render/svg.js";
-import { toSource, toText } from "./text.js";
+import { share, toSource, toText } from "./text.js";
 
 export interface ExportOptions extends LayoutOptions {
   /** 書き出しの配色。既定は light（紙・文書に貼る前提）。 */
@@ -37,9 +37,16 @@ const nf = new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 20 });
 const refs = (r: number[]) => (r.length ? ` ${r.map((n) => `[${n}]`).join("")}` : "");
 
 function chartTable(f: ChartFigure): string {
-  const head = [f.columns[0] || "項目", ...f.columns.slice(1)];
+  const pie = f.kind === "pie";
+  const total = pie ? f.rows.reduce((a, r) => a + (r.values[0] ?? 0), 0) : 0;
+  const head = [f.columns[0] || "項目", ...f.columns.slice(1), ...(pie ? ["割合"] : [])];
+  const cell = (s: string) => `<td style="text-align:right">${esc(s)}</td>`;
   const rows = f.rows
-    .map((r) => `<tr><th scope="row">${esc(r.label + refs(r.refs))}</th>${r.values.map((v) => `<td style="text-align:right">${v === null ? "-" : esc(nf.format(v))}</td>`).join("")}</tr>`)
+    .map((r) => {
+      const values = r.values.map((v) => cell(v === null ? "-" : nf.format(v))).join("");
+      const ratio = pie ? cell(share(r.values[0] ?? 0, total)) : "";
+      return `<tr><th scope="row">${esc(r.label + refs(r.refs))}</th>${values}${ratio}</tr>`;
+    })
     .join("");
   const unit = f.unit === undefined ? "" : `<caption style="caption-side:bottom;text-align:left">単位: ${esc(f.unit)}</caption>`;
   return `<table>${unit}<thead><tr>${head.map((h) => `<th scope="col">${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table>`;

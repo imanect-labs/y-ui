@@ -61,6 +61,25 @@ W6 | 1580 | 1420
 ```
 ````
 
+### `pie`
+
+Donut chart for shares of a whole. The center shows the total; the legend lists each value and its percentage. Slices keep the order you write them in.
+
+<img src="docs/images/en-pie.png" width="640" alt="pie">
+
+````md
+```ui
+pie Revenue by segment
+unit: $M
+Segment | Revenue
+Cloud | 145
+Support | 98
+On-premises | 52
+Training | 31
+Consulting | 24
+```
+````
+
 ### `stat`
 
 KPI cards. Values are shown as written; the third column is a note.

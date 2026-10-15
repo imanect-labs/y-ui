@@ -123,13 +123,13 @@ function chartFigure(n: Record<string, J>): MaybeIncompatible {
     if (isNum(p.y)) cell.set(`${x}\u0000${s}`, p.y);
   }
   const f: ChartFigure & { incompatible?: boolean } = {
-    kind: kind === "line" || kind === "area" ? "line" : "bar",
+    kind: kind === "line" || kind === "area" ? "line" : kind === "pie" || kind === "donut" ? "pie" : "bar",
     title: isStr(n.title) ? n.title : "",
     refs: [],
     columns: [isStr(n.x_label) ? n.x_label : "項目", ...series],
     rows: xs.map((x) => ({ label: x, values: series.map((s) => cell.get(`${x}\u0000${s}`) ?? null), refs: [] })),
   };
-  if (!["bar", "line", "area", "combo"].includes(kind)) f.incompatible = true;
+  if (!["bar", "line", "area", "combo", "pie", "donut"].includes(kind)) f.incompatible = true;
   return f;
 }
 
