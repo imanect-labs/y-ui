@@ -644,6 +644,475 @@
       "diagnostics": []
     },
     {
+      "name": "edgeApp",
+      "source": "app 境界 [2]\nnote: 注記です\n# 見出しだけ\n## 本当の見出し\n> 説明 1\n> 説明 2\n- 名前＝text 必須 as name_1 例 山田 太郎\n* 年齢 = number 0..120 歳 初期 30 step 0\n+ 予算 = slider 10..1 step 2.5 初期 5 万円\n１. 人数 = count 1..5 初期 9\n種類 = select A=a | B=b | その他 multi 初期 b, a\n色 = choice 赤 | 青 初期 緑\n始業 = date 初期 2025/4/1\n期間 = date range 必須 初期 2025/4/1 〜 2025/4/3\n月 = month 初期 2025/04\n点 = rating 3 初期 9\n点2 = rating\n通知 = switch 初期 off\nメモ = textarea 初期 こんにちは\n名前 = text\n壊れ = slider 初期 1\nbutton 送る -> workflow:経費 申請\nbutton 二つ目 → ワークフロー 集計\nbutton 三つ目 => chat 確認\nbutton 四つ目 -> chat\nbutton 名無し -> \nsrc: data://x",
+      "figure": {
+        "kind": "app",
+        "title": "境界",
+        "refs": [
+          2
+        ],
+        "sections": [
+          {
+            "title": "本当の見出し",
+            "fields": [
+              {
+                "key": "name_1",
+                "label": "名前",
+                "type": "text",
+                "required": true,
+                "placeholder": "山田 太郎"
+              },
+              {
+                "key": "年齢",
+                "label": "年齢",
+                "type": "number",
+                "required": false,
+                "min": 0,
+                "max": 120,
+                "step": 1,
+                "initial": 30,
+                "unit": "歳"
+              },
+              {
+                "key": "予算",
+                "label": "予算",
+                "type": "slider",
+                "required": false,
+                "min": 1,
+                "max": 10,
+                "step": 2.5
+              },
+              {
+                "key": "1. 人数",
+                "label": "1. 人数",
+                "type": "count",
+                "required": false,
+                "min": 1,
+                "max": 5,
+                "step": 1,
+                "initial": 9
+              },
+              {
+                "key": "種類",
+                "label": "種類",
+                "type": "choice",
+                "required": false,
+                "options": [
+                  {
+                    "label": "A",
+                    "value": "a"
+                  },
+                  {
+                    "label": "B",
+                    "value": "b"
+                  }
+                ],
+                "multi": true,
+                "other": true,
+                "initial": [
+                  "b",
+                  "a"
+                ]
+              },
+              {
+                "key": "色",
+                "label": "色",
+                "type": "choice",
+                "required": false,
+                "options": [
+                  {
+                    "label": "赤",
+                    "value": "赤"
+                  },
+                  {
+                    "label": "青",
+                    "value": "青"
+                  }
+                ]
+              },
+              {
+                "key": "始業",
+                "label": "始業",
+                "type": "date",
+                "required": false
+              },
+              {
+                "key": "期間",
+                "label": "期間",
+                "type": "daterange",
+                "required": true
+              },
+              {
+                "key": "月",
+                "label": "月",
+                "type": "month",
+                "required": false,
+                "initial": "2025-04"
+              },
+              {
+                "key": "点",
+                "label": "点",
+                "type": "rating",
+                "required": false,
+                "max": 3,
+                "min": 1,
+                "initial": 3
+              },
+              {
+                "key": "点2",
+                "label": "点2",
+                "type": "rating",
+                "required": false,
+                "max": 5,
+                "min": 1
+              },
+              {
+                "key": "通知",
+                "label": "通知",
+                "type": "toggle",
+                "required": false,
+                "initial": false
+              },
+              {
+                "key": "メモ",
+                "label": "メモ",
+                "type": "textarea",
+                "required": false,
+                "initial": "こんにちは"
+              },
+              {
+                "key": "名前",
+                "label": "名前",
+                "type": "text",
+                "required": false
+              }
+            ],
+            "actions": [
+              {
+                "id": "a1",
+                "label": "送る",
+                "target": {
+                  "kind": "workflow",
+                  "name": "経費 申請"
+                },
+                "confirm": true
+              },
+              {
+                "id": "a2",
+                "label": "二つ目",
+                "target": {
+                  "kind": "workflow",
+                  "name": "集計"
+                },
+                "confirm": true
+              },
+              {
+                "id": "a3",
+                "label": "三つ目",
+                "target": {
+                  "kind": "chat"
+                },
+                "confirm": true
+              }
+            ],
+            "desc": "説明 1\n説明 2"
+          }
+        ],
+        "note": "注記です",
+        "src": "data://x"
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "送る",
+          "target": {
+            "kind": "workflow",
+            "name": "経費 申請"
+          },
+          "confirm": true
+        },
+        {
+          "id": "a2",
+          "label": "二つ目",
+          "target": {
+            "kind": "workflow",
+            "name": "集計"
+          },
+          "confirm": true
+        },
+        {
+          "id": "a3",
+          "label": "三つ目",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": true
+        }
+      ],
+      "diagnostics": [
+        {
+          "line": 21,
+          "code": "unrecognized_line"
+        },
+        {
+          "line": 25,
+          "code": "limit_exceeded"
+        },
+        {
+          "line": 26,
+          "code": "unrecognized_line"
+        }
+      ]
+    },
+    {
+      "name": "overflowSections",
+      "source": "app x\n## 機能0\n> d\n値0 = text\n## 機能1\n> d\n値1 = text\n## 機能2\n> d\n値2 = text\n## 機能3\n> d\n値3 = text\n## 機能4\n> d\n値4 = text\n## 機能5\n> d\n値5 = text\n## 機能6\n> d\n値6 = text\n## 機能7\n> d\n値7 = text\n## 機能8\n> d\n値8 = text\n",
+      "figure": {
+        "kind": "app",
+        "title": "x",
+        "refs": [],
+        "sections": [
+          {
+            "title": "機能0",
+            "fields": [
+              {
+                "key": "値0",
+                "label": "値0",
+                "type": "text",
+                "required": false
+              }
+            ],
+            "actions": [],
+            "desc": "d"
+          },
+          {
+            "title": "機能1",
+            "fields": [
+              {
+                "key": "値1",
+                "label": "値1",
+                "type": "text",
+                "required": false
+              }
+            ],
+            "actions": [],
+            "desc": "d"
+          },
+          {
+            "title": "機能2",
+            "fields": [
+              {
+                "key": "値2",
+                "label": "値2",
+                "type": "text",
+                "required": false
+              }
+            ],
+            "actions": [],
+            "desc": "d"
+          },
+          {
+            "title": "機能3",
+            "fields": [
+              {
+                "key": "値3",
+                "label": "値3",
+                "type": "text",
+                "required": false
+              }
+            ],
+            "actions": [],
+            "desc": "d"
+          },
+          {
+            "title": "機能4",
+            "fields": [
+              {
+                "key": "値4",
+                "label": "値4",
+                "type": "text",
+                "required": false
+              }
+            ],
+            "actions": [],
+            "desc": "d"
+          },
+          {
+            "title": "機能5",
+            "fields": [
+              {
+                "key": "値5",
+                "label": "値5",
+                "type": "text",
+                "required": false
+              }
+            ],
+            "actions": [],
+            "desc": "d"
+          }
+        ]
+      },
+      "actions": [],
+      "diagnostics": [
+        {
+          "line": 20,
+          "code": "limit_exceeded"
+        }
+      ]
+    },
+    {
+      "name": "askEdge",
+      "source": "ask 確認 [1]\n> 前置き\nQ: 質問1 （複数可） 例 書いて\n- A: 説明 A\n- B\n- その他（自由に）\n質問：質問2 optional\n1. X\n2. Y\n? 自由 例 なんでも\nbutton 送信\n? 選択肢が一つ\n- だけ\n",
+      "figure": {
+        "kind": "ask",
+        "title": "確認",
+        "refs": [
+          1
+        ],
+        "questions": [
+          {
+            "id": "q1",
+            "text": "質問1",
+            "options": [
+              {
+                "label": "A",
+                "desc": "説明 A"
+              },
+              {
+                "label": "B"
+              }
+            ],
+            "multi": true,
+            "other": true,
+            "required": true,
+            "placeholder": "書いて"
+          },
+          {
+            "id": "q2",
+            "text": "質問2",
+            "options": [
+              {
+                "label": "X"
+              },
+              {
+                "label": "Y"
+              }
+            ],
+            "multi": false,
+            "other": false,
+            "required": false
+          },
+          {
+            "id": "q3",
+            "text": "自由",
+            "options": [],
+            "multi": false,
+            "other": false,
+            "required": true,
+            "placeholder": "なんでも"
+          },
+          {
+            "id": "q4",
+            "text": "選択肢が一つ",
+            "options": [],
+            "multi": false,
+            "other": false,
+            "required": true
+          }
+        ],
+        "intro": "前置き",
+        "submitLabel": "送信"
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "送信",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        }
+      ],
+      "diagnostics": [
+        {
+          "line": 0,
+          "code": "unrecognized_line"
+        }
+      ]
+    },
+    {
+      "name": "planEdge",
+      "source": "計画 進め方\n> 前置き\n| 手順 | 内容 |\n|---|---|\n| 1 | 検索 | 規程 |\nSTEP2: 比較表\n   - 列を決める\n   追加の説明\nStep 3〜4: まとめ [3]\nnote: 概算\nrevise: なし\n",
+      "figure": {
+        "kind": "plan",
+        "title": "進め方",
+        "refs": [],
+        "steps": [
+          {
+            "title": "検索",
+            "refs": [],
+            "desc": "規程"
+          },
+          {
+            "title": "比較表",
+            "refs": [],
+            "desc": "追加の説明\n列を決める"
+          },
+          {
+            "title": "Step 3〜4",
+            "refs": [
+              3
+            ],
+            "desc": "まとめ"
+          }
+        ],
+        "revise": false,
+        "intro": "前置き",
+        "note": "概算"
+      },
+      "actions": [
+        {
+          "id": "approve",
+          "label": "この計画で進める",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "name": "plain",
+      "source": "bar x\na | 1\n",
+      "figure": {
+        "kind": "bar",
+        "title": "x",
+        "refs": [],
+        "columns": [
+          "項目",
+          "値"
+        ],
+        "rows": [
+          {
+            "label": "a",
+            "values": [
+              1
+            ],
+            "refs": []
+          }
+        ]
+      },
+      "actions": [],
+      "diagnostics": [
+        {
+          "line": 2,
+          "code": "missing_header"
+        }
+      ]
+    },
+    {
       "name": "plan",
       "source": "plan 調査の進め方\n> 次の手順で進めます。\n1. 社内文書を検索する: 経費規程と過去の申請\n2. 比較表を作る\n3. 要点をまとめる\nbutton 進める\nrevise: off\n",
       "figure": {
@@ -893,6 +1362,187 @@
       "input": {
         "comment": "x"
       },
+      "expect": {
+        "ok": false,
+        "values": {},
+        "errors": {
+          "": "ボタンが見つかりません"
+        }
+      }
+    },
+    {
+      "source": "edgeApp",
+      "action": "a1",
+      "input": {
+        "name_1": "",
+        "年齢": "１２０",
+        "予算": 3,
+        "人数": "2",
+        "種類": [
+          "a",
+          "自由",
+          "b",
+          "a"
+        ],
+        "色": "緑",
+        "始業": "2025-04-31",
+        "期間": "2025-04-01/2025-04-01",
+        "月": "2025-00",
+        "点": "3",
+        "点2": true,
+        "通知": false,
+        "メモ": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "名前": "改行\nあり"
+      },
+      "expect": {
+        "ok": false,
+        "values": {
+          "年齢": 120,
+          "予算": 3,
+          "種類": [
+            "a",
+            "自由",
+            "b"
+          ],
+          "期間": "2025-04-01/2025-04-01",
+          "点": 3,
+          "点2": 1,
+          "通知": false
+        },
+        "errors": {
+          "name_1": "入力してください",
+          "色": "選択肢から選んでください",
+          "始業": "日付が正しくありません",
+          "月": "日付が正しくありません",
+          "メモ": "10000 文字までです",
+          "名前": "改行は入れられません"
+        }
+      }
+    },
+    {
+      "source": "edgeApp",
+      "action": "a1",
+      "input": {
+        "name_1": "山田",
+        "年齢": "1e2",
+        "予算": "abc",
+        "人数": 1.5,
+        "種類": "a",
+        "色": "赤",
+        "点": 0,
+        "点2": 5,
+        "通知": "on",
+        "名前": 3
+      },
+      "expect": {
+        "ok": false,
+        "values": {
+          "name_1": "山田",
+          "年齢": 100,
+          "色": "赤",
+          "点2": 5
+        },
+        "errors": {
+          "予算": "数値で入力してください",
+          "種類": "選択肢から選んでください",
+          "期間": "入力してください",
+          "点": "1〜3 で選んでください",
+          "通知": "オンかオフにしてください",
+          "名前": "文字で入力してください"
+        }
+      }
+    },
+    {
+      "source": "edgeApp",
+      "action": "a3",
+      "input": {},
+      "expect": {
+        "ok": false,
+        "values": {},
+        "errors": {
+          "name_1": "入力してください",
+          "期間": "入力してください"
+        }
+      }
+    },
+    {
+      "source": "edgeApp",
+      "action": "a9",
+      "input": {},
+      "expect": {
+        "ok": false,
+        "values": {},
+        "errors": {
+          "": "ボタンが見つかりません"
+        }
+      }
+    },
+    {
+      "source": "askEdge",
+      "action": "a1",
+      "input": {
+        "q1": [
+          "A",
+          "自由",
+          "B"
+        ],
+        "q2": "X",
+        "q3": "  なにか  "
+      },
+      "expect": {
+        "ok": false,
+        "values": {
+          "q1": [
+            "A",
+            "自由",
+            "B"
+          ],
+          "q2": "X",
+          "q3": "なにか"
+        },
+        "errors": {
+          "q4": "回答してください"
+        }
+      }
+    },
+    {
+      "source": "askEdge",
+      "action": "a1",
+      "input": {
+        "q1": [
+          "自由1",
+          "自由2"
+        ],
+        "q2": "Z",
+        "q3": 5
+      },
+      "expect": {
+        "ok": false,
+        "values": {},
+        "errors": {
+          "q1": "その他は 1 つまでです",
+          "q2": "選択肢から選んでください",
+          "q3": "2000 文字までの文字で回答してください",
+          "q4": "回答してください"
+        }
+      }
+    },
+    {
+      "source": "planEdge",
+      "action": "approve",
+      "input": {
+        "comment": "x"
+      },
+      "expect": {
+        "ok": true,
+        "values": {},
+        "errors": {}
+      }
+    },
+    {
+      "source": "planEdge",
+      "action": "revise",
+      "input": {},
       "expect": {
         "ok": false,
         "values": {},
