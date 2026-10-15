@@ -56,6 +56,12 @@ function slots(n: TreeNode, d: number, compact: boolean): number {
   return n.children.reduce((a, c) => a + slots(c, d + 1, compact), 0);
 }
 
+/** 文字を「…」で省いたときだけツールチップを出し、それ以外は強調と読み上げだけにする。 */
+function focusOf(n: TreeNode, shown: string[], x: number, y: number) {
+  if (shown.some((l) => l.endsWith("…"))) return { tip: { title: n.title, rows: [], ...(n.desc ? { footer: n.desc } : {}), x, y } };
+  return { say: n.desc ? `${n.title}、${n.desc}` : n.title };
+}
+
 // ---------------------------------------------------------------- 組織図
 
 function orgChart(ctx: Ctx, f: TreeFigure, top: number, nodeW: number, compact: boolean): number {
@@ -154,7 +160,7 @@ function orgChart(ctx: Ctx, f: TreeFigure, top: number, nodeW: number, compact: 
     const cx = b.x + b.w / 2;
     l.title.forEach((t, k) => ctx.items.push({ t: "text", x: cx, y: ty + 13 + k * 17, text: t, size: BODY_SIZE + 1, weight: 600, fill: "ink", anchor: "middle", group: g }));
     l.desc.forEach((t, k) => ctx.items.push({ t: "text", x: cx, y: ty + l.title.length * 17 + 11 + k * 15, text: t, size: BODY_SIZE - 1, fill: "muted", anchor: "middle", group: g }));
-    ctx.targets.push({ hit: b, keep: p.path, tip: { title: p.node.title, rows: [], ...(p.node.desc ? { footer: p.node.desc } : {}), x: cx, y: b.y } });
+    ctx.targets.push({ hit: b, keep: p.path, ...focusOf(p.node, [...l.title, ...l.desc], cx, b.y) });
   });
   return bottom + 8;
 }
@@ -199,7 +205,9 @@ function indented(ctx: Ctx, f: TreeFigure, top: number): number {
       const used = ctx.measure(title, BODY_SIZE + 1, weight) + 10;
       if (avail - used > 48) ctx.items.push({ t: "text", x: tx + used, y: cy + 4.5, text: fit(r.node.desc, avail - used, BODY_SIZE, ctx.measure), size: BODY_SIZE, fill: "muted", group: g });
     }
-    ctx.targets.push({ hit: { x: ctx.pad, y: rowY(i), w: ctx.width - ctx.pad * 2, h: ROW }, keep: r.path, tip: { title: r.node.title, rows: [], ...(r.node.desc ? { footer: r.node.desc } : {}), x: tx + 30, y: rowY(i) } });
+    // 説明は幅が足りなければ出さないので、そのときも全文をツールチップで出す
+    const shown = [title, ...(r.node.desc && avail - ctx.measure(title, BODY_SIZE + 1, weight) - 10 > 48 ? [fit(r.node.desc, avail - ctx.measure(title, BODY_SIZE + 1, weight) - 10, BODY_SIZE, ctx.measure)] : r.node.desc ? ["…"] : [])];
+    ctx.targets.push({ hit: { x: ctx.pad, y: rowY(i), w: ctx.width - ctx.pad * 2, h: ROW }, keep: r.path, ...focusOf(r.node, shown, tx + 30, rowY(i)) });
   });
   return rowY(rows.length) + 8;
 }

@@ -32,6 +32,8 @@ export interface Target {
   hitPath?: string;
   /** 強調するまとまり（これ以外のまとまりを薄くする）。空なら何も薄くしない。 */
   keep: string[];
+  /** 読み上げる文（ツールチップを出さない対象のため。tip があれば tip の内容を読む）。 */
+  say?: string;
   /** ツールチップ。x, y は指す位置（マークの上端の中央）。無ければ強調だけ。 */
   tip?: { title: string; rows: TipRow[]; footer?: string; x: number; y: number };
   /** 縦の補助線（折れ線）。 */

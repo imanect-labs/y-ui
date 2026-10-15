@@ -43,9 +43,15 @@ export function layoutSeq(ctx: Ctx, f: TimelineFigure | StepsFigure, top: number
   return row ? horizontal(ctx, f.kind, list, top) : vertical(ctx, f.kind, list, top);
 }
 
-/** 全文（ツールチップと読み上げ用）。 */
-function tipOf(kind: "timeline" | "steps", it: SeqItem, x: number, y: number) {
-  return { title: kind === "timeline" ? `${it.head}　${it.title}` : `${it.head}. ${it.title}`, rows: [], ...(it.desc ? { footer: it.desc } : {}), x, y };
+/**
+ * 項目のホバー・キーボードの中身。文字を「…」で省いたときだけツールチップで全文を出し、
+ * 省いていなければ強調と読み上げだけにする（見えている文字をツールチップで隠さないため）。
+ */
+function focusOf(kind: "timeline" | "steps", it: SeqItem, lines: string[][], x: number, y: number) {
+  const title = kind === "timeline" ? `${it.head}　${it.title}` : `${it.head}. ${it.title}`;
+  const cut = lines.some((ls) => ls.some((l) => l.endsWith("…")));
+  if (cut) return { tip: { title, rows: [], ...(it.desc ? { footer: it.desc } : {}), x, y } };
+  return { say: it.desc ? `${title}、${it.desc}` : title };
 }
 
 // ---------------------------------------------------------------- 横並び
@@ -63,9 +69,9 @@ function horizontal(ctx: Ctx, kind: "timeline" | "steps", list: SeqItem[], top: 
 
   let axisY: number;
   let textTop: number;
+  const heads = list.map((it) => fit(it.head, textW, BODY_SIZE, ctx.measure, 600));
   if (kind === "timeline") {
     // 時期（上）・軸と点・出来事（下）
-    const heads = list.map((it) => fit(it.head, textW, BODY_SIZE, ctx.measure, 600));
     axisY = top + 30;
     ctx.items.push({ t: "path", d: `M${ctx.pad},${axisY}H${ctx.width - ctx.pad}`, stroke: "axis", strokeWidth: 2 });
     list.forEach((_, i) => {
@@ -94,7 +100,7 @@ function horizontal(ctx: Ctx, kind: "timeline" | "steps", list: SeqItem[], top: 
     titles[i]!.forEach((l, k) => ctx.items.push({ t: "text", x, y: textTop + 13 + k * TITLE_LH, text: l, size: TITLE, weight: 600, fill: "ink", group: `e${i}` }));
     const dy = textTop + titles[i]!.length * TITLE_LH + 4;
     descs[i]!.forEach((l, k) => ctx.items.push({ t: "text", x, y: dy + 12 + k * DESC_LH, text: l, size: BODY_SIZE, fill: "ink2", group: `e${i}` }));
-    ctx.targets.push({ hit: { x: x - gap / 2, y: top, w: colW + gap, h: textTop - top + titleH + descH + 8 }, keep: [`e${i}`], tip: tipOf(kind, it, x + 6, axisY - (kind === "timeline" ? 26 : 14)) });
+    ctx.targets.push({ hit: { x: x - gap / 2, y: top, w: colW + gap, h: textTop - top + titleH + descH + 8 }, keep: [`e${i}`], ...focusOf(kind, it, [titles[i]!, descs[i]!, kind === "timeline" ? [heads[i]!] : []], x + 6, axisY - (kind === "timeline" ? 26 : 14)) });
   });
   return textTop + titleH + (descH ? descH + 4 : 0) + 8;
 }
@@ -148,7 +154,8 @@ function vertical(ctx: Ctx, kind: "timeline" | "steps", list: SeqItem[], top: nu
     r.title.forEach((l, k) => ctx.items.push({ t: "text", x: textX, y: ty + 13 + k * TITLE_LH, text: l, size: TITLE, weight: 600, fill: "ink", group: g }));
     const dy = ty + r.title.length * TITLE_LH + 2;
     r.desc.forEach((l, k) => ctx.items.push({ t: "text", x: textX, y: dy + 12 + k * DESC_LH, text: l, size: BODY_SIZE, fill: "ink2", group: g }));
-    ctx.targets.push({ hit: { x: ctx.pad, y: y0 - gap / 2, w: inner, h: r.h + gap }, keep: [g], tip: tipOf(kind, it, textX + 40, y0) });
+    const head = kind === "timeline" ? [fit(it.head, headW, BODY_SIZE, ctx.measure, 600)] : [];
+    ctx.targets.push({ hit: { x: ctx.pad, y: y0 - gap / 2, w: inner, h: r.h + gap }, keep: [g], ...focusOf(kind, it, [r.title, r.desc, head], textX + 40, y0) });
   });
   return y - gap + 10;
 }

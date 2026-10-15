@@ -245,7 +245,7 @@ function Interactive(props: {
     border: `1px solid ${paint("border", mode)}`,
     boxShadow: "0 4px 12px -2px rgb(0 0 0 / 0.12), 0 2px 6px -3px rgb(0 0 0 / 0.1)",
   };
-  const text = tip ? [tip.title, ...tip.rows.map((r) => `${r.label} ${r.value}`), tip.footer ?? ""].filter(Boolean).join("、") : "";
+  const text = tip ? [tip.title, ...tip.rows.map((r) => `${r.label} ${r.value}`), tip.footer ?? ""].filter(Boolean).join("、") : (target?.say ?? "");
 
   return h(
     "div",

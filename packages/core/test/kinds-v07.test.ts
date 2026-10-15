@@ -128,13 +128,16 @@ describe("テキスト化と描画", () => {
     expect(toHTML(all[2]!)).toContain("<li>社長<ul><li>営業<ul><li>東</li>");
   });
 
-  it.each([640, 360])("幅 %ipx: 項目ごとにホバーの対象があり、全文を出す", (width) => {
+  it.each([640, 360])("幅 %ipx: 項目ごとにホバーの対象があり、読み上げる。省いた文字はツールチップで出す", (width) => {
     const [tl, st, tr, sc] = all.map((f) => layout(f, { width }));
-    expect(tl!.targets.map((t) => t.tip?.footer)).toEqual([undefined, "クラウド版を開始"]);
-    expect(st!.targets.map((t) => t.tip?.title)).toEqual(["1. 申請", "2. 承認"]);
+    expect(tl!.targets.map((t) => t.say)).toEqual(["2015年　創業", "2021年　100 社を突破、クラウド版を開始"]);
+    expect(st!.targets.map((t) => t.say)).toEqual(["1. 申請、入力する", "2. 承認"]);
+    expect([...tl!.targets, ...st!.targets, ...tr!.targets].every((t) => t.tip === undefined)).toBe(true);
     // 木は祖先ごと残す（東 → 営業 → 社長）
-    const east = tr!.targets.find((t) => t.tip?.title === "東")!;
+    const east = tr!.targets.find((t) => t.say === "東")!;
     expect(east.keep).toHaveLength(3);
+    const long = layout(fig(`steps 長い\n1. ${"とても長い見出し".repeat(12)}\n`), { width });
+    expect(long.targets[0]!.tip?.title).toContain("1. とても長い見出し");
     expect(sc!.targets[1]!.tip!.rows).toEqual([
       { label: "従業員", value: "40", token: "s1" },
       { label: "売上", value: "55" },
