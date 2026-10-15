@@ -185,6 +185,22 @@ button Submit -> workflow expense-approval
 Month = month required
 button Run report -> workflow monthly-report
 `,
+    ask: `ask Before I start
+> A few quick questions.
+? Which period should I cover?
+- Last 12 months
+- Last 3 years: better for trends
+? What output do you need? multi
+- Table
+- Chart
+- Other
+`,
+    plan: `plan Research plan
+> I'll proceed in these steps.
+1. Search internal documents: expense rules and past claims
+2. Build a comparison table
+3. Summarize the key points
+`,
   },
   ja: {
     bar: `bar 四半期ごとの売上と利益
@@ -373,6 +389,22 @@ button 申請する -> workflow 経費申請
 部署 = choice 営業 | 開発 | 管理 multi
 button 集計する -> workflow 月次集計
 button 会話で相談する -> chat
+`,
+    ask: `ask 調べる前の確認
+> いくつか教えてください。
+? 対象の期間は？
+- 直近 1 年
+- 直近 3 年: 傾向を見るならこちら
+? 出力の形式は？ multi
+- 表
+- グラフ
+- その他
+`,
+    plan: `plan 調査の進め方
+> 次の手順で進めます。
+1. 社内文書を検索する: 経費規程と過去の申請
+2. 比較表を作る
+3. 要点をまとめる
 `,
   },
 };
