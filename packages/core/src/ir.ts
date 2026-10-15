@@ -5,7 +5,7 @@
  * LLM が書くソースは寛容に受けるが、IR は常にこの形に正規化されている。
  */
 
-export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree", "cards", "progress", "funnel", "quadrant", "gantt"] as const;
+export const KINDS = ["bar", "line", "pie", "scatter", "stat", "flow", "stack", "timeline", "steps", "tree", "cards", "progress", "funnel", "quadrant", "gantt", "calc"] as const;
 export type Kind = (typeof KINDS)[number];
 
 /** 全図に共通する項目。 */
@@ -234,6 +234,42 @@ export interface GanttFigure extends FigureBase {
   noYear: boolean;
 }
 
+/** calc の入力（スライダー・数の増減・選択・オンオフ）。 */
+export interface CalcInput {
+  type: "input";
+  name: string;
+  control: "slider" | "count" | "choice" | "toggle";
+  min: number;
+  max: number;
+  step: number;
+  initial: number;
+  /** choice の選択肢（表示名と値）。 */
+  options?: { label: string; value: number }[];
+  unit?: string;
+}
+
+/** calc の式。expr は構文木（calc/expr.ts の Expr）。 */
+export interface CalcFormula {
+  type: "formula";
+  name: string;
+  /** 正規形の式（名前のまま）。 */
+  source: string;
+  expr: import("./calc/expr.js").Expr;
+  unit?: string;
+  /** 表示の小数桁（既定 0。値が 1 未満なら有効数字 2 桁）。 */
+  round?: number;
+}
+
+export interface CalcFigure extends FigureBase {
+  kind: "calc";
+  /** 書かれた順の定義（式は前の名前だけを参照する）。 */
+  defs: (CalcInput | CalcFormula)[];
+  /** 大きく出す結果（無ければ最後の式）。 */
+  show: string[];
+  /** 内訳に出さない式。 */
+  hide: string[];
+}
+
 export type Figure =
   | ChartFigure
   | ScatterFigure
@@ -247,7 +283,8 @@ export type Figure =
   | ProgressFigure
   | FunnelFigure
   | QuadrantFigure
-  | GanttFigure;
+  | GanttFigure
+  | CalcFigure;
 
 /** 表形式のデータを持つ図（bar / line / pie）。 */
 export function isChart(f: Figure): f is ChartFigure {

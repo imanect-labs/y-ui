@@ -1,0 +1,35 @@
+{
+  "runId": "2026-10-15T12-28-59-761Z",
+  "outDir": "eval/runs/2026-10-15-luna-v08b",
+  "models": [
+    "luna-go"
+  ],
+  "efforts": [
+    "low"
+  ],
+  "arms": [
+    "C",
+    "F",
+    "H"
+  ],
+  "seeds": 3,
+  "tasks": [
+    "quadrant-001",
+    "quadrant-002",
+    "quadrant-003",
+    "quadrant-004",
+    "quadrant-005",
+    "quadrant-006",
+    "gantt-001",
+    "gantt-002",
+    "gantt-003",
+    "gantt-004",
+    "gantt-005",
+    "gantt-006"
+  ],
+  "concurrency": 4,
+  "shiki": {
+    "commit": "b8e109c"
+  },
+  "mock": false
+}

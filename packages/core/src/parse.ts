@@ -10,6 +10,7 @@ import { parseSteps, parseTimeline } from "./kinds/seq.js";
 import { parseTree } from "./kinds/tree.js";
 import { parseCards, parseFunnel, parseProgress } from "./kinds/v08.js";
 import { parseGantt, parseQuadrant } from "./kinds/v08b.js";
+import { parseCalc } from "./kinds/calc.js";
 import { parseStack } from "./kinds/stack.js";
 import { parseStat } from "./kinds/stat.js";
 
@@ -61,6 +62,10 @@ const KIND_ALIASES: Record<string, Kind> = {
   ガント: "gantt",
   ガントチャート: "gantt",
   工程表: "gantt",
+  calc: "calc",
+  計算: "calc",
+  試算: "calc",
+  calculator: "calc",
   stat: "stat",
   stats: "stat",
   kpi: "stat",
@@ -121,7 +126,7 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
       title = first.text.trim();
       body = lines.slice(1);
     } else if (!kind) {
-      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt）`);
+      diags.add(first.no, "error", "unknown_kind", `図の種類が分かりません: ${m?.[1] ?? first.text.trim()}（bar / line / pie / scatter / stat / flow / stack / timeline / steps / tree / cards / progress / funnel / quadrant / gantt / calc）`);
       return { figure: null, diagnostics: diags.list, pending };
     }
   }
@@ -177,6 +182,9 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
     case "gantt":
       parseGantt(figure, body, diags);
       break;
+    case "calc":
+      parseCalc(figure, body, diags);
+      break;
   }
 
   if (opts.final && isEmpty(figure)) {
@@ -220,6 +228,8 @@ function emptyFigure(kind: Kind, title: string, refs: number[]): Figure {
       return { kind, title, refs, xLabel: "", yLabel: "", quadrants: ["", "", "", ""], items: [] };
     case "gantt":
       return { kind, title, refs, tasks: [], noYear: true };
+    case "calc":
+      return { kind, title, refs, defs: [], show: [], hide: [] };
   }
 }
 
@@ -253,5 +263,7 @@ export function isEmpty(f: Figure): boolean {
       return f.items.length === 0;
     case "gantt":
       return f.tasks.length === 0;
+    case "calc":
+      return !f.defs.some((d) => d.type === "formula");
   }
 }

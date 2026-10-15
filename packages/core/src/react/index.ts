@@ -27,6 +27,9 @@ import { parseBlock } from "../parse.js";
 import { layout, type LayoutOptions } from "../render/layout.js";
 import type { Item, Scene, Target } from "../render/scene.js";
 import { FONT, paint, themeCss, type ThemeMode, type Token } from "../render/theme.js";
+import { CalcView } from "./calc.js";
+
+export { CalcView, type CalcViewProps } from "./calc.js";
 
 export interface YuiFigureProps extends Omit<LayoutOptions, "width"> {
   figure: Figure;
@@ -290,6 +293,12 @@ function Interactive(props: {
 
 /** 図を描く。幅を指定しなければ親の幅に合わせて描き直す。 */
 export function YuiFigure(props: YuiFigureProps): ReactElement {
+  // calc は操作できる HTML の部品で描く（静止画は SVG の書き出し）
+  if (props.figure.kind === "calc") return h(CalcView, { figure: props.figure, theme: props.theme ?? "auto", locale: props.locale ?? "ja-JP", ...(props.className ? { className: props.className } : {}) });
+  return h(SceneFigure, props);
+}
+
+function SceneFigure(props: YuiFigureProps): ReactElement {
   const { figure, theme, width, className, interactive, ...layoutOpts } = props;
   const [ref, w] = useContainerWidth(width);
   const scene = useMemo(() => layout(figure, { ...layoutOpts, width: w }), [figure, w, layoutOpts.locale, layoutOpts.measure, layoutOpts.labels]);

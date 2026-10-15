@@ -11,6 +11,7 @@ import { layoutSeq } from "./seq.js";
 import { layoutTree } from "./tree.js";
 import { layoutCards, layoutFunnel, layoutProgress } from "./v08.js";
 import { layoutGantt, layoutQuadrant } from "./v08b.js";
+import { layoutCalc } from "./calc.js";
 import type { Scene } from "./scene.js";
 import { layoutStack } from "./stack.js";
 import { layoutStat } from "./stat.js";
@@ -61,6 +62,9 @@ export function layout(f: Figure, opts: LayoutOptions = {}): Scene {
       break;
     case "gantt":
       y = layoutGantt(ctx, f, y);
+      break;
+    case "calc":
+      y = layoutCalc(ctx, f, y, opts.calcInputs);
       break;
   }
   y = drawNote(ctx, f, y);

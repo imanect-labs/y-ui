@@ -5,7 +5,8 @@
  * - toText: Yui 非対応の場所に貼るためのテキスト化 Markdown（表・リスト）。
  */
 
-import type { ChartFigure, Figure, FlowFigure, FunnelFigure, QuadrantFigure, ScatterFigure, StackBox, StackFigure, StatFigure, StepsFigure, TimelineFigure, TreeNode } from "./ir.js";
+import { formatCalc, runCalc, shownFormulas } from "./calc/run.js";
+import type { CalcFigure, ChartFigure, Figure, FlowFigure, FunnelFigure, QuadrantFigure, ScatterFigure, StackBox, StackFigure, StatFigure, StepsFigure, TimelineFigure, TreeNode } from "./ir.js";
 import { parseMarkdown } from "./markdown.js";
 
 function refsText(refs: number[]): string {
@@ -80,6 +81,9 @@ export function toSource(f: Figure): string {
       break;
     case "gantt":
       for (const t of f.tasks) lines.push(withRefs([esc(t.label), esc(t.startText), ...(t.endText ? [esc(t.endText)] : [])].join(" | "), t.refs));
+      break;
+    case "calc":
+      calcSource(f, lines);
       break;
   }
   if (f.src !== undefined) lines.push(`src: ${f.src}`);
@@ -188,6 +192,9 @@ export function toText(f: Figure): string {
     case "gantt":
       for (const t of f.tasks) out.push(`- ${withRefs(`${t.label}: ${t.endText ? `${t.startText} 〜 ${t.endText}` : t.startText}`, t.refs)}`);
       break;
+    case "calc":
+      calcText(f, out);
+      break;
   }
   if (f.note !== undefined) out.push("", `※ ${f.note}`);
   return out.join("\n");
@@ -250,6 +257,50 @@ function stackText(f: StackFigure, out: string[]): void {
       for (const c of b.children) out.push(`  - ${withRefs(c.desc === undefined ? c.title : `${c.title}（${c.desc}）`, c.refs)}`);
     }
   });
+}
+
+function calcSource(f: CalcFigure, lines: string[]): void {
+  for (const d of f.defs) {
+    const unit = d.unit ? ` ${d.unit}` : "";
+    if (d.type === "formula") {
+      lines.push(`${d.name} = ${d.source}${unit}${d.round !== undefined ? ` round ${d.round}` : ""}`);
+      continue;
+    }
+    switch (d.control) {
+      case "slider":
+        lines.push(`${d.name} = slider ${d.min}..${d.max} step ${d.step} 初期 ${d.initial}${unit}`);
+        break;
+      case "count":
+        lines.push(`${d.name} = count ${d.min}..${d.max} 初期 ${d.initial}${unit}`);
+        break;
+      case "choice":
+        lines.push(`${d.name} = choice ${d.options!.map((o) => `${o.label}=${o.value}`).join(" | ")}`);
+        break;
+      case "toggle":
+        lines.push(`${d.name} = toggle${d.initial ? " 初期 オン" : ""}`);
+        break;
+    }
+  }
+  if (f.show.length) lines.push(`show ${f.show.join(" | ")}`);
+  if (f.hide.length) lines.push(`hide: ${f.hide.join(", ")}`);
+}
+
+/** 計算はテキストにすると操作できないので、初期値での結果と式を並べる。 */
+function calcText(f: CalcFigure, out: string[]): void {
+  const v = runCalc(f);
+  const show = new Set(shownFormulas(f).map((x) => x.name));
+  out.push("入力（初期値）:");
+  for (const d of f.defs) {
+    if (d.type !== "input") continue;
+    const label = d.control === "choice" ? (d.options!.find((o) => o.value === d.initial)?.label ?? String(d.initial)) : d.control === "toggle" ? (d.initial ? "オン" : "オフ") : `${fmt.format(d.initial)}${d.unit ?? ""}`;
+    out.push(`- ${d.name}: ${label}`);
+  }
+  out.push("", "結果:");
+  for (const d of f.defs) {
+    if (d.type !== "formula" || f.hide.includes(d.name)) continue;
+    const value = `${formatCalc(v.get(d.name) ?? null, d.round, "ja-JP")}${d.unit ?? ""}`;
+    out.push(`- ${show.has(d.name) ? `**${d.name}**` : d.name}: ${value}（= ${d.source}）`);
+  }
 }
 
 /** 項目が入る象限の名前（`（すぐやる）`）。名前が無ければ空文字。 */

@@ -29,6 +29,8 @@ export const LIMITS = {
   funnelStages: 10,
   quadrantItems: 30,
   ganttTasks: 30,
+  calcDefs: 30,
+  calcExprLength: 200,
 } as const;
 
 export class Diagnostics {

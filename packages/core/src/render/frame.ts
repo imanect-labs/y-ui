@@ -12,6 +12,8 @@ export interface LayoutOptions {
   locale?: string;
   /** 文字幅の計測（ブラウザなら canvas の measureText などに差し替えられる）。 */
   measure?: Measure;
+  /** calc の入力の現在値（書き出しで、操作した後の状態を描くため）。無ければ初期値。 */
+  calcInputs?: ReadonlyMap<string, number>;
   /** 定型の文言。既定はロケールが ja なら日本語、それ以外は英語。渡した項目だけを上書きする。 */
   labels?: Partial<Labels>;
 }
