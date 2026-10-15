@@ -70,6 +70,15 @@ note: 申請は上長の承認後に経理へ回ります。
   plan: "plan 調査の進め方\n> 次の手順で進めます。\n1. 社内文書を検索する: 経費規程と過去の申請\n2. 比較表を作る\n3. 要点をまとめる\nbutton 進める\nrevise: off\n",
 };
 
+/** フェンスの情報文字列で種類が分かっているブロック（` ```ui:app ` など・先頭行が見出しかデータか）。 */
+const HINTED: Record<string, { kind: "app" | "ask" | "plan"; source: string }> = {
+  hintedApp: { kind: "app", source: "金額 = number 必須 円 as amount\n区分 = choice A | B\nbutton 送る -> chat\n" },
+  hintedAppTitle: { kind: "app", source: "経費の申請\n金額 = number 必須\nbutton 送る -> chat\n" },
+  hintedAsk: { kind: "ask", source: "? 地域は\n- 関東\n- 関西\n" },
+  hintedPlan: { kind: "plan", source: "1. 調べる\n2. まとめる\n" },
+  hintedButton: { kind: "app", source: "button 送る -> chat\n名前 = text\n" },
+};
+
 const VALUES: { source: string; action: string; input: Record<string, unknown> }[] = [
   { source: "full", action: "a1", input: { 件名: "", amount: "0", 区分: "家賃", 日付: "2025-02-30", 立替: "yes" } },
   { source: "full", action: "a1", input: { 件名: "出張", amount: "12,300", 区分: "交通費", 日付: "2025-04-01", 内容: "", 立替: false, 余計: "x" } },
@@ -90,11 +99,16 @@ const VALUES: { source: string; action: string; input: Record<string, unknown> }
   { source: "askEdge", action: "a1", input: { q1: ["自由1", "自由2"], q2: "Z", q3: 5 } },
   { source: "planEdge", action: "approve", input: { comment: "x" } },
   { source: "planEdge", action: "revise", input: {} },
+  { source: "hintedApp", action: "a1", input: { amount: "", 区分: "A" } },
 ];
 
-const cases = Object.entries(SOURCES).map(([name, source]) => {
-  const r = parseBlock(source, { final: true });
-  return { name, source, figure: r.figure as Figure, actions: r.figure ? figureActions(r.figure) : [], diagnostics: r.diagnostics.map((d) => ({ line: d.line, code: d.code })) };
+const entries: [string, string, "app" | "ask" | "plan" | undefined][] = [
+  ...Object.entries(SOURCES).map(([name, source]) => [name, source, undefined] as [string, string, undefined]),
+  ...Object.entries(HINTED).map(([name, h]) => [name, h.source, h.kind] as [string, string, "app" | "ask" | "plan"]),
+];
+const cases = entries.map(([name, source, kind]) => {
+  const r = parseBlock(source, { final: true, ...(kind ? { kind } : {}) });
+  return { name, source, ...(kind ? { kind } : {}), figure: r.figure as Figure, actions: r.figure ? figureActions(r.figure) : [], diagnostics: r.diagnostics.map((d) => ({ line: d.line, code: d.code })) };
 });
 const values = VALUES.map((v) => ({ ...v, expect: validateActionValues(cases.find((c) => c.name === v.source)!.figure, v.action, v.input) }));
 writeFileSync(join(import.meta.dirname, "../spec-tests/app.json"), `${JSON.stringify({ note: "scripts/app-fixtures.ts で生成。TS 版と Rust 版の、操作を持つ種類（app・ask・plan）のパーサ・ボタン・値の検証が同じ結果を出すかを確かめる。", cases, values }, null, 2)}\n`);

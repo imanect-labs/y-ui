@@ -9,7 +9,7 @@ const data = JSON.parse(readFileSync(join(import.meta.dirname, "../../../spec-te
 describe("操作を持つ種類の共通課題集", () => {
   for (const c of data.cases) {
     it(c.name, () => {
-      const r = parseBlock(c.source, { final: true });
+      const r = parseBlock(c.source, { final: true, ...(c.kind ? { kind: c.kind } : {}) });
       expect(r.figure).toEqual(c.figure);
       expect(figureActions(r.figure!)).toEqual(c.actions);
       expect(r.diagnostics.map((d) => ({ line: d.line, code: d.code }))).toEqual(c.diagnostics);

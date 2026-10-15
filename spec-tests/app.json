@@ -1149,6 +1149,230 @@
         }
       ],
       "diagnostics": []
+    },
+    {
+      "name": "hintedApp",
+      "source": "金額 = number 必須 円 as amount\n区分 = choice A | B\nbutton 送る -> chat\n",
+      "kind": "app",
+      "figure": {
+        "kind": "app",
+        "title": "",
+        "refs": [],
+        "sections": [
+          {
+            "fields": [
+              {
+                "key": "amount",
+                "label": "金額",
+                "type": "number",
+                "required": true,
+                "unit": "円"
+              },
+              {
+                "key": "区分",
+                "label": "区分",
+                "type": "choice",
+                "required": false,
+                "options": [
+                  {
+                    "label": "A",
+                    "value": "A"
+                  },
+                  {
+                    "label": "B",
+                    "value": "B"
+                  }
+                ]
+              }
+            ],
+            "actions": [
+              {
+                "id": "a1",
+                "label": "送る",
+                "target": {
+                  "kind": "chat"
+                },
+                "confirm": false
+              }
+            ]
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "送る",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "name": "hintedAppTitle",
+      "source": "経費の申請\n金額 = number 必須\nbutton 送る -> chat\n",
+      "kind": "app",
+      "figure": {
+        "kind": "app",
+        "title": "経費の申請",
+        "refs": [],
+        "sections": [
+          {
+            "fields": [
+              {
+                "key": "金額",
+                "label": "金額",
+                "type": "number",
+                "required": true
+              }
+            ],
+            "actions": [
+              {
+                "id": "a1",
+                "label": "送る",
+                "target": {
+                  "kind": "chat"
+                },
+                "confirm": false
+              }
+            ]
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "送る",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "name": "hintedAsk",
+      "source": "? 地域は\n- 関東\n- 関西\n",
+      "kind": "ask",
+      "figure": {
+        "kind": "ask",
+        "title": "",
+        "refs": [],
+        "questions": [
+          {
+            "id": "q1",
+            "text": "地域は",
+            "options": [
+              {
+                "label": "関東"
+              },
+              {
+                "label": "関西"
+              }
+            ],
+            "multi": false,
+            "other": false,
+            "required": true
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "回答する",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "name": "hintedPlan",
+      "source": "1. 調べる\n2. まとめる\n",
+      "kind": "plan",
+      "figure": {
+        "kind": "plan",
+        "title": "",
+        "refs": [],
+        "steps": [
+          {
+            "title": "調べる",
+            "refs": []
+          },
+          {
+            "title": "まとめる",
+            "refs": []
+          }
+        ],
+        "revise": true
+      },
+      "actions": [
+        {
+          "id": "approve",
+          "label": "この計画で進める",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        },
+        {
+          "id": "revise",
+          "label": "修正を依頼",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "name": "hintedButton",
+      "source": "button 送る -> chat\n名前 = text\n",
+      "kind": "app",
+      "figure": {
+        "kind": "app",
+        "title": "",
+        "refs": [],
+        "sections": [
+          {
+            "fields": [
+              {
+                "key": "名前",
+                "label": "名前",
+                "type": "text",
+                "required": false
+              }
+            ],
+            "actions": [
+              {
+                "id": "a1",
+                "label": "送る",
+                "target": {
+                  "kind": "chat"
+                },
+                "confirm": false
+              }
+            ]
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "送る",
+          "target": {
+            "kind": "chat"
+          },
+          "confirm": false
+        }
+      ],
+      "diagnostics": []
     }
   ],
   "values": [
@@ -1548,6 +1772,23 @@
         "values": {},
         "errors": {
           "": "ボタンが見つかりません"
+        }
+      }
+    },
+    {
+      "source": "hintedApp",
+      "action": "a1",
+      "input": {
+        "amount": "",
+        "区分": "A"
+      },
+      "expect": {
+        "ok": false,
+        "values": {
+          "区分": "A"
+        },
+        "errors": {
+          "amount": "入力してください"
         }
       }
     }

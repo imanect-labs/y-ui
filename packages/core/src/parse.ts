@@ -269,9 +269,13 @@ export function parseBlock(source: string, opts: ParseOptions = {}): ParseResult
   return { figure, diagnostics: diags.list, pending };
 }
 
-/** 種類が別に分かっているとき、先頭行が見出しだけの行か。 */
+/**
+ * 種類が別に分かっているとき、先頭行が見出しだけの行か。
+ * データの行（表・矢印・箇条書き・番号付きの手順・`ラベル = 種類` の部品・`? 質問`・`button`）は見出しにしない
+ * （` ```ui:app ` の先頭の部品や ` ```ui:ask ` の最初の質問を見出しとして消さない）。
+ */
 function isTitleLine(text: string): boolean {
-  return !/[|\t]|->|→|^\s*[-*+]\s/.test(text);
+  return !/[|\t=＝]|->|→|^\s*[-*+]\s|^\s*[0-9]{1,3}[.)]\s|^\s*[?？]\s|^\s*(?:Q|質問)\s*[:：]|^\s*button\s/i.test(text);
 }
 
 function emptyFigure(kind: Kind, title: string, refs: number[]): Figure {
