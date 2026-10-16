@@ -78,7 +78,7 @@ export const KIND_ALIASES: Readonly<Record<string, Kind>> = {
   proscons: "proscons",
   "pros-cons": "proscons",
   pros_cons: "proscons",
-  メリット・デメリット: "proscons",
+  "メリット・デメリット": "proscons",
   メリットデメリット: "proscons",
   長所短所: "proscons",
   swot: "swot",
