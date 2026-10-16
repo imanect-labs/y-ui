@@ -47,6 +47,16 @@ function fromHandwritten(h: Handwritten, category: "flow" | "stack" | "timeline"
   };
 }
 
+/**
+ * calc の期待値を有効数字 10 桁に丸める。`**` などの浮動小数の結果は Node（V8）の版で末尾の桁が変わり、
+ * コミット済みの tasks.jsonl と生成器の出力が CI（Node 22）と公開（Node 24）で食い違うため。
+ * 採点は 0.5% の許容で比べるので、丸めの影響は無い。
+ */
+function roundCheck(c: { inputs: Record<string, number>; expect: Record<string, number> }) {
+  const expect = Object.fromEntries(Object.entries(c.expect).map(([k, v]) => [k, Number(v.toPrecision(10))]));
+  return { ...c, expect };
+}
+
 export function buildTasks(): EvalTask[] {
   return [
     ...generatedTasks(),
@@ -58,7 +68,7 @@ export function buildTasks(): EvalTask[] {
     ...CARDS_TASKS.map((h) => fromHandwritten(h, "cards")),
     ...QUADRANT_TASKS.map((h) => fromHandwritten(h, "quadrant")),
     ...GANTT_TASKS.map((h) => fromHandwritten(h, "gantt")),
-    ...CALC_TASKS.map((h) => ({ ...fromHandwritten(h, "calc"), calcChecks: h.checks })),
+    ...CALC_TASKS.map((h) => ({ ...fromHandwritten(h, "calc"), calcChecks: h.checks.map(roundCheck) })),
     ...COMPARE_TASKS.map((h) => fromHandwritten(h, "compare")),
     ...PROSCONS_TASKS.map((h) => fromHandwritten(h, "proscons")),
     ...SWOT_TASKS.map((h) => fromHandwritten(h, "swot")),
