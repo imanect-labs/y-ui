@@ -193,3 +193,39 @@ describe("pie", () => {
     expect(ring && ring.t === "path" && (ring.d.match(/M/g) ?? []).length).toBe(2);
   });
 });
+
+describe("目盛り", () => {
+  // 図に描いた目盛りの文字（数字だけのテキスト）を拾う
+  const tickTexts = (src: string) =>
+    layout(fig(src), { width: 640 })
+      .items.filter((it): it is Extract<typeof it, { t: "text" }> => it.t === "text" && it.tabular === true)
+      .map((it) => it.text);
+
+  it("値がすべて整数なら、目盛りも整数だけ（人数・回数）", () => {
+    const people = tickTexts("line 週ごとの利用者\nunit: 人\n週 | 人数\n1週 | 3\n2週 | 12\n3週 | 7\n");
+    expect(people.length).toBeGreaterThan(2);
+    expect(people.every((t) => /^\d+$/.test(t)), people.join(",")).toBe(true);
+    const tiny = tickTexts("bar 回数\n日 | 回数\n月 | 1\n火 | 2\n");
+    expect(tiny.every((t) => /^\d+$/.test(t)), tiny.join(",")).toBe(true);
+  });
+
+  it("小数を含む値は従来どおり細かく刻み、隣どうしが同じ表記にならない", async () => {
+    const cost = tickTexts("line コスト\nunit: セント\n日 | コスト\n1日 | 0.1\n2日 | 0.35\n3日 | 0.2\n");
+    expect(cost.some((t) => t.includes(".")), cost.join(",")).toBe(true);
+    // 0.5 セント未満の幅でも、目盛りの数字が重ならない（以前は小数 1 桁に丸めて「0」が並んだ）
+    const { formatTick, niceTicks, tickStep } = await import("../src/render/frame.js");
+    const ticks = niceTicks(0, 0.004);
+    const labels = ticks.map((t) => formatTick(t, "ja-JP", tickStep(ticks)));
+    expect(new Set(labels).size, labels.join(",")).toBe(ticks.length);
+    expect(new Set(ticks.map((t) => formatTick(t, "ja-JP"))).size).toBeLessThan(ticks.length);
+  });
+
+  it("整数の間隔は 1 未満にせず 2.5 刻みも使わない", async () => {
+    const { niceTicks, tickDigits } = await import("../src/render/frame.js");
+    expect(niceTicks(0, 12, 5, true)).toEqual([0, 5, 10, 15]);
+    expect(niceTicks(0, 2, 5, true)).toEqual([0, 1, 2]);
+    expect(niceTicks(0, 12)).toEqual([0, 2.5, 5, 7.5, 10, 12.5]);
+    expect(niceTicks(0, 2)).toEqual([0, 0.5, 1, 1.5, 2]);
+    expect([tickDigits(undefined), tickDigits(5), tickDigits(0.5), tickDigits(0.25), tickDigits(0.001)]).toEqual([1, 1, 1, 2, 3]);
+  });
+});
