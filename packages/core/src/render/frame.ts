@@ -130,16 +130,24 @@ export function formatValue(v: number, locale: string): string {
  * （0.5 セント刻みが「0」「0」と重なるのを防ぐ）。渡さなければ小数 1 桁まで。
  */
 export function formatTick(v: number, locale: string, step?: number): string {
-  return new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: tickDigits(step) }).format(v);
+  const digits = tickDigits(step);
+  const compact = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: digits });
+  const label = compact.format(v);
+  if (step === undefined || (label !== compact.format(v + step) && label !== compact.format(v - step))) return label;
+  // 短縮表記（「1万」など）で隣と同じになるなら、桁を省かない表記にする（10,000 と 10,001 を書き分ける）
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(v);
 }
 
-/** 間隔 `step` の目盛りを書き分けるのに要る小数の桁数（1〜6）。 */
+/** 間隔 `step` の目盛りを書き分けるのに要る小数の桁数（1〜20）。 */
 export function tickDigits(step: number | undefined): number {
   if (step === undefined || !(step > 0) || step >= 1) return 1;
-  for (let d = 1; d < 6; d++) {
-    if (Math.abs(step * 10 ** d - Math.round(step * 10 ** d)) < 1e-9) return d;
+  for (let d = 1; d < 20; d++) {
+    const scaled = step * 10 ** d;
+    const rounded = Math.round(scaled);
+    // 丸めて 0 になる桁ではまだ書き分けられない。誤差は値の大きさに比例させて判定する
+    if (rounded !== 0 && Math.abs(scaled - rounded) <= 1e-9 * Math.abs(scaled)) return d;
   }
-  return 6;
+  return 20;
 }
 
 /** 目盛りの間隔（目盛りが 2 つ以上あるときの隣との差）。 */

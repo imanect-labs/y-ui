@@ -227,5 +227,17 @@ describe("目盛り", () => {
     expect(niceTicks(0, 12)).toEqual([0, 2.5, 5, 7.5, 10, 12.5]);
     expect(niceTicks(0, 2)).toEqual([0, 0.5, 1, 1.5, 2]);
     expect([tickDigits(undefined), tickDigits(5), tickDigits(0.5), tickDigits(0.25), tickDigits(0.001)]).toEqual([1, 1, 1, 2, 3]);
+    expect([tickDigits(1e-7), tickDigits(1e-11)]).toEqual([7, 11]);
+  });
+
+  it("ごく小さい間隔や短縮表記でも、隣どうしの目盛りの数字が重ならない", async () => {
+    const { formatTick, niceTicks, tickStep } = await import("../src/render/frame.js");
+    const { scatterTicks } = await import("../src/render/scatter.js");
+    for (const ticks of [niceTicks(0, 0.0000004), scatterTicks(10000, 10004, 5, true), niceTicks(0, 120000)]) {
+      const labels = ticks.map((t) => formatTick(t, "ja-JP", tickStep(ticks)));
+      expect(new Set(labels).size, labels.join(",")).toBe(ticks.length);
+    }
+    // 重ならないときは短縮表記のまま
+    expect(formatTick(40000, "ja-JP", 20000)).toBe("4万");
   });
 });
