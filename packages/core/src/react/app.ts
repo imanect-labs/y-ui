@@ -69,7 +69,7 @@ export function AppView(props: AppViewProps): ReactElement {
   );
 }
 
-interface SectionProps {
+export interface SectionProps {
   section: AppSection;
   sectionId: string;
   c: (t: Parameters<typeof paint>[0]) => string;
@@ -192,7 +192,7 @@ function SectionView(p: SectionProps): ReactElement {
   );
 }
 
-interface FieldProps {
+export interface FieldProps {
   field: AppField;
   id: string;
   value: AppValue;
@@ -203,7 +203,8 @@ interface FieldProps {
   disabled: boolean;
 }
 
-function FieldView(p: FieldProps): ReactElement {
+/** 入力部品 1 つ（エディタのキャンバスでも同じ見た目で描くため外に出す）。 */
+export function FieldView(p: FieldProps): ReactElement {
   const { field: x, id, value, c, ja } = p;
   const errId = `${id}-e`;
   const common = { id, disabled: p.disabled, "aria-invalid": p.error ? true : undefined, "aria-describedby": p.error ? errId : undefined, "aria-required": x.required || undefined };
@@ -289,7 +290,7 @@ function FieldView(p: FieldProps): ReactElement {
       const on = value === true;
       return h(
         "div",
-        { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 36, alignSelf: "end" } },
+        { "data-field": "toggle", style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 36, alignSelf: "end" } },
         h("span", { id: `${id}-l`, style: { fontSize: 13, fontWeight: 500, color: c("ink2") } }, x.label),
         h(
           "button",
@@ -301,7 +302,7 @@ function FieldView(p: FieldProps): ReactElement {
   }
   return h(
     "div",
-    { style: { display: "grid", gap: 6, gridColumn: x.type === "textarea" ? "1 / -1" : undefined, alignContent: "start" } },
+    { "data-field": x.type, style: { display: "grid", gap: 6, gridColumn: x.type === "textarea" ? "1 / -1" : undefined, alignContent: "start" } },
     x.type === "count" || x.type === "choice" || x.type === "rating" || x.type === "daterange" ? h("span", { id: `${id}-l`, style: { fontSize: 13, fontWeight: 500, color: c("ink2"), display: "flex", gap: 6, alignItems: "baseline" } }, x.label, x.required ? h("span", { style: { fontSize: 11, color: c("muted"), fontWeight: 400 } }, ja ? "必須" : "Required") : null) : label,
     control,
     p.error ? h("div", { id: errId, style: { fontSize: 12, color: c("s5") } }, p.error) : null,

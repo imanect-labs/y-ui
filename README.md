@@ -352,6 +352,22 @@ downloadFigure(figure, "png", { scale: 2 });       // or "svg"; colors baked in 
 
 One layout drives both SVG and React output, so exports look exactly like the screen. On screen, charts show values on hover (or with arrow keys) and highlight the category; flowcharts highlight the hovered box and its connections. The default look is quiet — outlined cards, dashed grid lines, muted seasonal hues — and the palette is validated for color-vision deficiencies in both light and dark. Dark mode follows `<html class="dark">` or `data-theme`, then the OS. Override anything with CSS variables (`--yui-s1` … `--yui-s8`, `--yui-ink`, `--yui-font`, …).
 
+## Building screens with drag and drop
+
+`app` screens (inputs and buttons) can be built without writing the syntax. A checker points at the exact input or setting that would change on save or that targets an unavailable workflow. Design: [docs/editor.md](docs/editor.md) (Japanese).
+
+```tsx
+import { toSource } from "@imanect/yui";
+import { checkEditable, hasErrors } from "@imanect/yui/editor";
+import { AppEditor } from "@imanect/yui/editor/react";
+
+const r = checkEditable(source); // refuses sources with unreadable lines
+if (r.ok) setFigure(r.figure);
+// workflows is the closed set of targets; without it no workflow can be chosen
+<AppEditor figure={figure} onChange={setFigure} workflows={workflows} onProblems={(p) => setCanSave(!hasErrors(p))} />;
+const saved = toSource(figure);
+```
+
 ## Does it work with small models?
 
 We compared Yui against a JSON tool-call UI spec on Gemma 4 31B (141 tasks): Yui reached 92–99% versus 72–91%, with a quarter to a third of the tokens and half the latency. Flowcharts and architecture diagrams, which the JSON approach could barely produce, came out right 70–80% of the time. Details (Japanese): [docs/eval-results-2026-10-12-gemma.md](docs/eval-results-2026-10-12-gemma.md).

@@ -42,6 +42,12 @@ const TYPES: Record<string, AppField["type"]> = {
 };
 const NUM = "(-?\\d+(?:\\.\\d+)?)";
 const RANGE = new RegExp(`^${NUM}\\s*(?:\\.\\.|〜|~|～)\\s*${NUM}\\s*`);
+/** 片側だけの範囲（`1..`・`..100`）。読まずに警告する（単位に紛れ込ませない）。 */
+const HALF_RANGE = new RegExp(`^(?:${NUM}\\s*(?:\\.\\.|〜|~|～)|(?:\\.\\.|〜|~|～)\\s*${NUM})\\s*`);
+/** 選択肢・初期値の区切り（`\\|` は区切りでなく文字の `|`）。 */
+const OPTION_SEP = /(?<!\\)[|｜]/;
+const INITIAL_SEP = /(?<!\\)[,、|]/;
+const unescapeBar = (s: string) => s.replace(/\\([|｜])/g, "$1");
 const KEY = /(?:^|\s)as\s+([A-Za-z_][\w.-]{0,63})(?=\s|$)/;
 const REQUIRED = /(?:^|\s)(?:必須|required)(?=\s|$)/i;
 const MULTI = /(?:^|\s)(?:multi|複数)(?=\s|$)/i;
@@ -200,8 +206,8 @@ function readField(name: string, typeWord: string, opts: string, line: number, d
     // 選択肢は `a | b | c`（`表示名=値` も可）。例・初期は後ろに書く
     const { rest, values } = takeValued(s);
     const options = rest
-      .split(/\s*[|｜]\s*/)
-      .map((o) => o.trim())
+      .split(OPTION_SEP)
+      .map((o) => unescapeBar(o.trim()))
       .filter(Boolean)
       .map((o) => {
         const kv = /^(.+?)\s*[=＝]\s*(.+)$/.exec(o);
@@ -219,7 +225,7 @@ function readField(name: string, typeWord: string, opts: string, line: number, d
     if (other || otherIdx >= 0) field.other = true;
     const init = values["初期"];
     if (init) {
-      const picked = init.split(/\s*[,、|]\s*/).filter((v) => field.options!.some((o) => o.value === v || o.label === v)).map((v) => field.options!.find((o) => o.value === v || o.label === v)!.value);
+      const picked = init.split(INITIAL_SEP).map((v) => unescapeBar(v.trim())).filter((v) => field.options!.some((o) => o.value === v || o.label === v)).map((v) => field.options!.find((o) => o.value === v || o.label === v)!.value);
       if (picked.length) field.initial = multi ? picked : picked[0]!;
     }
     return field;
@@ -234,6 +240,9 @@ function readField(name: string, typeWord: string, opts: string, line: number, d
       const [a, b] = [+r[1]!, +r[2]!];
       [field.min, field.max] = a <= b ? [a, b] : [b, a];
       tail = tail.slice(r[0].length).trim();
+    } else if (type === "number" && HALF_RANGE.test(tail)) {
+      diags.add(line, "warning", "unrecognized_line", `範囲は「最小..最大」の両方を書いてください（片側だけの範囲は読みません）: ${name}`);
+      tail = tail.replace(HALF_RANGE, "").trim();
     } else if (type !== "number") {
       diags.add(line, "warning", "unrecognized_line", `${type} には範囲（最小..最大）が要ります: ${name}`);
       return null;

@@ -22,6 +22,11 @@ function esc(cell: string): string {
   return cell.replace(/\|/g, "\\|");
 }
 
+/** choice の選択肢・初期値。全角の ｜ も区切りなので、前にバックスラッシュを付ける。 */
+function escChoice(v: string): string {
+  return v.replace(/[|｜]/g, "\\$&");
+}
+
 function num(v: number | null): string {
   return v === null ? "-" : String(v);
 }
@@ -226,7 +231,7 @@ const MARK_TEXT = { yes: "✓", no: "✗", partial: "△" } as const;
 
 function fieldSource(x: AppField): string {
   const parts = [`${x.label} = ${x.type}`];
-  if (x.type === "choice") parts.push(x.options!.map((o) => (o.label === o.value ? o.value : `${o.label}=${o.value}`)).join(" | "));
+  if (x.type === "choice") parts.push(x.options!.map((o) => (o.label === o.value ? escChoice(o.value) : `${escChoice(o.label)}=${escChoice(o.value)}`)).join(" | "));
   if (x.type === "rating") parts.push(String(x.max ?? 5));
   else if (x.min !== undefined && x.max !== undefined) parts.push(`${x.min}..${x.max}`);
   if (x.unit) parts.push(x.unit);
@@ -237,7 +242,8 @@ function fieldSource(x: AppField): string {
   if (x.step !== undefined && x.type !== "count") parts.push(`step ${x.step}`);
   if (x.initial !== undefined) {
     const v = x.initial;
-    parts.push(`初期 ${typeof v === "boolean" ? (v ? "オン" : "オフ") : Array.isArray(v) ? v.join(", ") : v}`);
+    const one = (y: string | number) => (x.type === "choice" ? escChoice(String(y)) : String(y));
+    parts.push(`初期 ${typeof v === "boolean" ? (v ? "オン" : "オフ") : Array.isArray(v) ? v.map(one).join(", ") : one(v)}`);
   }
   if (x.placeholder) parts.push(`例 ${x.placeholder}`);
   return parts.join(" ");

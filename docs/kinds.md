@@ -879,7 +879,8 @@ button 会話で相談する -> chat
 **書き方**
 
 - `## 見出し` で機能を分け、`> 説明`
-- 入力は「ラベル = 種類」（text・textarea・number・choice・date・month・toggle・slider・count）。`必須`・`例 …`・`初期 …`・`as キー`
+- 入力は「ラベル = 種類」（text・textarea・number・choice・date・daterange・month・toggle・slider・count・rating）。`必須`・`例 …`・`初期 …`・`as キー`
+- 選択肢の中の縦棒は前にバックスラッシュを付ける（`A\|B`）。数値の範囲は「最小..最大」の両方を書く（片側だけは読まずに警告）
 - ボタンは「button ラベル -> workflow 名前」か「-> chat」
 
 **オプション行**: `note:` 注記、`src:` データ参照（ホストが解決）

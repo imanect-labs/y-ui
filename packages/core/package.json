@@ -1,6 +1,6 @@
 {
   "name": "@imanect/yui",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "description": "Yui（結）: Markdown の ```ui ブロックに図を書くための、LLM が書きやすい小さな記法。パーサ・SVG レンダラー・React 部品",
   "keywords": [
     "markdown",
@@ -37,6 +37,14 @@
     "./react": {
       "types": "./dist/react/index.d.ts",
       "import": "./dist/react/index.js"
+    },
+    "./editor": {
+      "types": "./dist/editor/index.d.ts",
+      "import": "./dist/editor/index.js"
+    },
+    "./editor/react": {
+      "types": "./dist/editor/react/index.d.ts",
+      "import": "./dist/editor/react/index.js"
     },
     "./export": {
       "types": "./dist/export.d.ts",
