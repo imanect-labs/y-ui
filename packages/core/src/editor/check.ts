@@ -129,22 +129,25 @@ function checkField(x: AppField, at: ProblemPath, t: T, add: Add): void {
     if (label.length > LIMITS.appLabel) add("error", "too_long", t(`ラベルは ${LIMITS.appLabel} 文字までです（いま ${label.length} 文字）`, `Up to ${LIMITS.appLabel} characters (now ${label.length})`), { ...at, prop: "label" });
     if (/[=＝]/.test(label)) add("error", "label_char", t("ラベルに「=」は使えません（ラベルと種類の区切りのため）", 'Labels can\'t contain "=" (it separates the label from the type)'), { ...at, prop: "label" });
     if (/^(?:(?:[-*+・•]|\d{1,3}[.)])\s|#{1,6}(?:\s|$)|>)/.test(label)) add("error", "label_start", t("ラベルを「-」「#」「>」「1.」などで始めると、箇条書き・見出し・説明として読まれます", 'Labels starting with "-", "#", ">" or "1." are read as list, heading or description'), { ...at, prop: "label" });
+    if (/^(?:note|注記|注|src|source|出典)\s*[:：]/i.test(label)) add("error", "label_start", t("ラベルを「note:」「注記:」などで始めると、注記・出典の行として読まれます", 'Labels starting with "note:" are read as the note line'), { ...at, prop: "label" });
     if (/^(?:button|ボタン)\s/i.test(label)) add("error", "label_start", t("ラベルを「button」で始めると、ボタンとして読まれます", 'Labels starting with "button" are read as a button'), { ...at, prop: "label" });
     if (label.normalize("NFKC") !== label) add("error", "label_width", t(`ラベルの全角の英数字・記号は半角で保存されます（「${label.normalize("NFKC")}」）`, `Full-width characters are saved as half-width ("${label.normalize("NFKC")}")`), { ...at, prop: "label" });
   }
   if (x.key !== x.label && !KEY_RE.test(x.key)) add("error", "key_format", t("送る名前（key）は英字か _ で始まる英数字・_・.・- の 64 文字までです。ラベルと同じにするなら空にしてください", "The key must start with a letter or _ and use letters, digits, _ . - (up to 64)"), { ...at, prop: "key" });
 
+  if (x.placeholder !== undefined && !(x.type === "text" || x.type === "textarea" || x.type === "number")) add("error", "no_placeholder", t("この種類の部品には入力の例を付けられません", "This input type has no placeholder"), { ...at, prop: "placeholder" });
   for (const prop of ["placeholder", "unit"] as const) {
     const v = x[prop];
     if (v === undefined) continue;
     const name = prop === "placeholder" ? t("入力の例", "Placeholder") : t("単位", "Unit");
+    if (v !== v.trim()) add("error", "spaces", t(`${name}の前後の空白は保存されません。外してください`, `Spaces around the ${name} aren't saved`), { ...at, prop });
     if (BREAK.test(v)) add("error", "newline", t(`${name}に改行は入れられません`, `${name} can't contain a line break`), { ...at, prop });
     const m = RESERVED_RE.exec(v);
     if (m) add("error", "reserved_word", t(`${name}の「${m[1]}」は設定の言葉として読まれます。言い換えるか、前後の空白を外してください`, `"${m[1]}" in ${name} is read as a setting word`), { ...at, prop });
     if (AS_RE.test(v)) add("error", "reserved_word", t(`${name}の「as …」は送る名前の指定として読まれます`, `"as …" in ${name} is read as the key`), { ...at, prop });
     if (v.length > LIMITS.textLength) add("error", "too_long", t(`${name}は ${LIMITS.textLength} 文字までです`, `Up to ${LIMITS.textLength} characters`), { ...at, prop });
   }
-  if (x.unit !== undefined && /^\s*-?\d/.test(x.unit)) add("error", "unit_number", t("単位を数字で始めると、範囲や値として読まれます", "A unit starting with a digit is read as a range or value"), { ...at, prop: "unit" });
+  if (x.unit !== undefined && /^\s*(?:-?\d|\.\.|[〜~～])/.test(x.unit)) add("error", "unit_number", t("単位を数字や「..」「〜」で始めると、範囲や値として読まれます", "A unit starting with a digit or \"..\" is read as a range or value"), { ...at, prop: "unit" });
 
   const numeric = x.type === "number" || x.type === "slider" || x.type === "count";
   if (numeric) {
@@ -156,6 +159,7 @@ function checkField(x: AppField, at: ProblemPath, t: T, add: Add): void {
   }
   if (x.type === "rating" && (x.max === undefined || x.max < 2 || x.max > 10)) add("error", "rating_max", t("評価の段階は 2〜10 です", "Rating must be 2–10"), { ...at, prop: "max" });
   if (x.type === "choice") checkOptions(x, at, t, add);
+  if (typeof x.initial === "string" && x.initial !== x.initial.trim()) add("error", "spaces", t("初期値の前後の空白は保存されません。外してください", "Spaces around the initial value aren't saved"), { ...at, prop: "initial" });
   if (typeof x.initial === "string" && (BREAK.test(x.initial) || RESERVED_RE.test(x.initial))) add("error", "reserved_word", t("初期値に改行や設定の言葉（必須・例 など）は入れられません", "Initial value can't contain line breaks or setting words"), { ...at, prop: "initial" });
 }
 
@@ -173,7 +177,7 @@ function checkOptions(x: AppField, at: ProblemPath, t: T, add: Add): void {
     if (/[=＝]/.test(o.label) || /[=＝]/.test(o.value)) add("error", "option_char", t(`${n}に「=」は使えません（表示名と値の区切りのため）`, `${n} can't contain "="`), p);
     if (/[,、]/.test(o.value) && x.initial !== undefined) add("error", "option_char", t(`${n}に「,」「、」があると初期値に選べません`, `${n} with "," can't be the initial value`), p);
     if (/^(その他|other)$/i.test(o.value.trim())) add("error", "option_other", t(`「${o.value}」は選択肢でなく「その他も受ける」の設定になります。設定のほうを使ってください`, `"${o.value}" is read as the "Other" setting`), p);
-    if (RESERVED_RE.test(o.label) || RESERVED_RE.test(o.value)) add("error", "reserved_word", t(`${n}に設定の言葉（必須・multi など）は入れられません`, `${n} can't contain setting words`), p);
+    if (RESERVED_RE.test(o.label) || RESERVED_RE.test(o.value) || AS_RE.test(o.label) || AS_RE.test(o.value)) add("error", "reserved_word", t(`${n}に設定の言葉（必須・multi など）は入れられません`, `${n} can't contain setting words`), p);
     if (o.label.length > LIMITS.appLabel) add("error", "too_long", t(`${n}は ${LIMITS.appLabel} 文字までです`, `${n}: up to ${LIMITS.appLabel} characters`), p);
     if (seen.has(o.value)) add("error", "option_dup", t(`${n}が前の選択肢と重なっています`, `${n} duplicates another option`), p);
     seen.add(o.value);

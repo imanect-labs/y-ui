@@ -139,6 +139,11 @@ describe("editor: チェッカー（記法で書けないもの）", () => {
     ["選択肢のその他", { options: [{ label: "a", value: "a" }, { label: "その他", value: "その他" }] }, "choice", "option_other", "options"],
     ["選択肢が 1 つ", { options: [{ label: "a", value: "a" }] }, "choice", "options_few", "options"],
     ["評価の段階", { max: 20 }, "rating", "rating_max", "max"],
+    ["ラベルの先頭の note:", { label: "note: 備考", key: "note: 備考" }, "text", "label_start", "label"],
+    ["例の前後の空白", { placeholder: " 例えば " }, "text", "spaces", "placeholder"],
+    ["例を持てない種類の例", { placeholder: "x" }, "date", "no_placeholder", "placeholder"],
+    ["単位が .. で始まる", { unit: "..円" }, "number", "unit_number", "unit"],
+    ["選択肢の中の as", { options: [{ label: "as x", value: "as x" }, { label: "c", value: "c" }] }, "choice", "reserved_word", "options"],
   ])("%s は場所つきのエラーになり、往復で変わることを未然に防ぐ", (_, patch, type, code, prop) => {
     const f = one(patch, type);
     const p = checkApp(f).find((x) => x.code === code);
@@ -252,12 +257,16 @@ describe("editor: 不変条件（乱数）", () => {
   // 記法の区切り・予約語・全角・空白を混ぜた文字片
   const PIECES = ["A", "金額", " ", "=", "＝", "|", "\\", "->", "#", "> ", "- ", "1. ", "必須", "multi", "as x", "例", "初期", "1..", "..2", "ＡＢ", "（", "、", ",", "その他", "button ", "note: ", "[1]", "\n"];
   let seed = 7;
-  const rand = (n: number) => ((seed = (seed * 1103515245 + 12345) % 2 ** 31), seed % n);
+  // 32 ビットの線形合同法。下位ビットは周期が短いので、上位ビットから取る（偏らずに全部の文字片を選ぶため）
+  const rand = (n: number) => {
+    seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
+    return (seed >>> 8) % n;
+  };
   const text = () => Array.from({ length: 1 + rand(4) }, () => PIECES[rand(PIECES.length)]).join("");
 
-  it("エラーが無ければ、保存しても内容が変わらない（2000 通り）", () => {
+  it("エラーが無ければ、保存しても内容が変わらない（5000 通り）", () => {
     let checked = 0;
-    for (let i = 0; i < 2000; i++) {
+    for (let i = 0; i < 5000; i++) {
       let f = emptyApp(rand(3) ? "画面" : text());
       const type = FIELD_TYPES[rand(FIELD_TYPES.length)]!;
       f = must(insertField(f, { section: 0, index: 0 }, newField(f, type)));
@@ -277,6 +286,9 @@ describe("editor: 不変条件（乱数）", () => {
       }
     }
     // 意味のある数の図がエラーなしで通っていること（全部エラーでは検査にならない）
-    expect(checked).toBeGreaterThan(50);
+    expect(checked).toBeGreaterThan(60);
+    // 文字片がすべて選ばれていること（乱数が偏ると検査の範囲が狭くなる）
+    seed = 7;
+    expect(new Set(Array.from({ length: 2000 }, () => rand(PIECES.length))).size).toBe(PIECES.length);
   });
 });
