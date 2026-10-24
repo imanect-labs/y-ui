@@ -716,6 +716,7 @@ function fromHint(f: AppFigure, i: WorkflowInputHint, ja: boolean): AppField {
   const x = newField(emptyApp(), i.type ?? "text", label, ja);
   const out: AppField = { ...x, label, key: ascii ? i.key : label, required: i.required ?? false };
   if ((i.type ?? "text") === "choice" && i.options && i.options.length >= 2) out.options = i.options.map((v) => ({ label: v, value: v }));
+  if ((i.type ?? "text") === "choice" && i.multi) out.multi = true;
   if (i.min !== undefined && i.max !== undefined) Object.assign(out, { min: i.min, max: i.max });
   return out;
 }

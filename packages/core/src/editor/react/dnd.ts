@@ -38,7 +38,7 @@ export function useDnd<T>(root: { current: HTMLElement | null }, opts: DndOption
   const [drag, setDrag] = useState<DragState<T> | null>(null);
   const optsRef = useRef(opts);
   optsRef.current = opts;
-  const live = useRef<{ item: T; label: string; x: number; y: number; over: DropSpot | null; scroller: HTMLElement | null } | null>(null);
+  const live = useRef<{ item: T; label: string; x: number; y: number; over: DropSpot | null; scroller: HTMLElement | null; frame: HTMLElement | null } | null>(null);
   const suppressClick = useRef(false);
   /** 指に付いてくる札（呼ぶ側が描き、ここで位置を動かす）。 */
   const ghost = useRef<HTMLElement | null>(null);
@@ -97,13 +97,15 @@ export function useDnd<T>(root: { current: HTMLElement | null }, opts: DndOption
       d.x = x;
       d.y = y;
       const r = locate(d.item, x, y);
-      if (ghost.current) ghost.current.style.transform = `translate(${x + 12}px, ${y + 12}px)`;
+      // transform のある祖先（ダイアログなど）の中では position: fixed がその祖先を基準にするので、ずれを引く
+      const o = originOf(d.frame);
+      if (ghost.current) ghost.current.style.transform = `translate(${x + 12 - o.x}px, ${y + 12 - o.y}px)`;
       const ln = line.current;
       if (ln) {
         ln.style.display = r.line ? "block" : "none";
         if (r.line) {
           const v = r.line.vertical;
-          ln.style.transform = `translate(${v ? r.line.x - 1 : r.line.x}px, ${v ? r.line.y : r.line.y - 1}px)`;
+          ln.style.transform = `translate(${(v ? r.line.x - 1 : r.line.x) - o.x}px, ${(v ? r.line.y : r.line.y - 1) - o.y}px)`;
           ln.style.width = `${v ? 3 : r.line.length}px`;
           ln.style.height = `${v ? r.line.length : 3}px`;
         }
@@ -150,7 +152,8 @@ export function useDnd<T>(root: { current: HTMLElement | null }, opts: DndOption
         started = true;
         document.documentElement.style.userSelect = "none";
         const first = locate(item, x, y);
-        live.current = { item, label, x, y, over: first.over, scroller: scrollParent(root.current) };
+        // スクロール領域と、fixed の基準になる祖先は掴んだときに一度だけ探す（動かすたびに祖先を辿らない）
+        live.current = { item, label, x, y, over: first.over, scroller: scrollParent(root.current), frame: fixedFrame(root.current) };
         setDrag({ item, label, over: first.over });
         // 札と線は描かれた直後に位置を合わせる
         requestAnimationFrame(() => follow(x, y));
@@ -205,6 +208,27 @@ export function useDnd<T>(root: { current: HTMLElement | null }, opts: DndOption
   );
 
   return { drag, start, suppressClick, ghost, line };
+}
+
+/**
+ * position: fixed の要素の基準になる祖先。transform・translate・filter などのある祖先があれば、
+ * fixed は画面でなくその祖先（の中身の左上）を基準にする（ダイアログの中など）。無ければ null（画面が基準）。
+ * 札と線は root の中に描くので、root から上を辿る。
+ */
+function fixedFrame(el: HTMLElement | null): HTMLElement | null {
+  for (let p: HTMLElement | null = el; p; p = p.parentElement) {
+    const s = getComputedStyle(p);
+    const t = s as CSSStyleDeclaration & { translate?: string; scale?: string; rotate?: string };
+    if (s.transform !== "none" || (t.translate && t.translate !== "none") || (t.scale && t.scale !== "none") || (t.rotate && t.rotate !== "none") || s.filter !== "none" || s.perspective !== "none" || /paint|layout|strict|content/.test(s.contain) || /transform|filter/.test(s.willChange)) return p;
+  }
+  return null;
+}
+
+/** fixed の基準の位置（画面の座標）。祖先がスクロールしていれば、その分もずれる。 */
+function originOf(frame: HTMLElement | null): { x: number; y: number } {
+  if (!frame) return { x: 0, y: 0 };
+  const r = frame.getBoundingClientRect();
+  return { x: r.left + frame.clientLeft - frame.scrollLeft, y: r.top + frame.clientTop - frame.scrollTop };
 }
 
 function scrollParent(el: HTMLElement | null): HTMLElement | null {

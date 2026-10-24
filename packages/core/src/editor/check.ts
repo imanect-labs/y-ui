@@ -39,6 +39,8 @@ export interface WorkflowInputHint {
   type?: AppField["type"];
   required?: boolean;
   options?: string[];
+  /** choice で複数を選ぶ（値の配列を受ける入力）。 */
+  multi?: boolean;
   min?: number;
   max?: number;
 }
