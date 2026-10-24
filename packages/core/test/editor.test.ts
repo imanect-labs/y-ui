@@ -151,6 +151,12 @@ describe("editor: チェッカー（記法で書けないもの）", () => {
     expect(p!.message.length).toBeGreaterThan(5);
   });
 
+  it("表示名と値が違う選択肢は、表示名に as や設定の言葉があっても書ける（`as x=y` は読み直せる）", () => {
+    const f = one({ options: [{ label: "as x", value: "y" }, { label: "multi", value: "m" }] }, "choice");
+    expect(codes(f, W)).not.toContain("reserved_word");
+    expect(same(back(f), f)).toBe(true);
+  });
+
   it("選択肢の中の | は書ける（\\| で保存される）", () => {
     const f = one({ options: [{ label: "A|B", value: "A|B" }, { label: "全角｜も", value: "全角｜も" }] }, "choice");
     expect(hasErrors(checkApp(f, W))).toBe(false);

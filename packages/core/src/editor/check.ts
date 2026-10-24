@@ -59,7 +59,8 @@ export interface CheckContext {
 /** 部品の文字に紛れると、オプションとして読まれてしまう単語（空白で区切られたとき）。 */
 const RESERVED = ["必須", "required", "multi", "複数", "other", "その他を受ける", "例", "e.g.", "placeholder", "初期", "初期値", "initial", "default", "step", "刻み"];
 const RESERVED_RE = new RegExp(`(?:^|\\s)(${RESERVED.map((w) => w.replace(/\./g, "\\.")).join("|")})(?=\\s|$)`, "i");
-const AS_RE = /(?:^|\s)as\s+[A-Za-z_]/;
+/** パーサが送る名前の指定（`as キー`）として読む形（kinds/app.ts の KEY と同じ）。 */
+const AS_RE = /(?:^|\s)as\s+[A-Za-z_][\w.-]{0,63}(?=\s|$)/;
 const KEY_RE = /^[A-Za-z_][\w.-]{0,63}$/;
 const BAD_TARGET = /[:/\\<>"'`{}]/;
 const ARROW = /->|→|=>/;
@@ -177,7 +178,9 @@ function checkOptions(x: AppField, at: ProblemPath, t: T, add: Add): void {
     if (/[=＝]/.test(o.label) || /[=＝]/.test(o.value)) add("error", "option_char", t(`${n}に「=」は使えません（表示名と値の区切りのため）`, `${n} can't contain "="`), p);
     if (/[,、]/.test(o.value) && x.initial !== undefined) add("error", "option_char", t(`${n}に「,」「、」があると初期値に選べません`, `${n} with "," can't be the initial value`), p);
     if (/^(その他|other)$/i.test(o.value.trim())) add("error", "option_other", t(`「${o.value}」は選択肢でなく「その他も受ける」の設定になります。設定のほうを使ってください`, `"${o.value}" is read as the "Other" setting`), p);
-    if (RESERVED_RE.test(o.label) || RESERVED_RE.test(o.value) || AS_RE.test(o.label) || AS_RE.test(o.value)) add("error", "reserved_word", t(`${n}に設定の言葉（必須・multi など）は入れられません`, `${n} can't contain setting words`), p);
+    // 書いたときの形（表示名と値が同じなら値だけ、違えば `表示名=値`）で、設定の言葉として読まれるかを見る
+    const written = o.label === o.value ? o.value : `${o.label}=${o.value}`;
+    if (RESERVED_RE.test(written) || AS_RE.test(written)) add("error", "reserved_word", t(`${n}に設定の言葉（必須・multi など）は入れられません`, `${n} can't contain setting words`), p);
     if (o.label.length > LIMITS.appLabel) add("error", "too_long", t(`${n}は ${LIMITS.appLabel} 文字までです`, `${n}: up to ${LIMITS.appLabel} characters`), p);
     if (seen.has(o.value)) add("error", "option_dup", t(`${n}が前の選択肢と重なっています`, `${n} duplicates another option`), p);
     seen.add(o.value);
