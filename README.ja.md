@@ -355,6 +355,22 @@ downloadFigure(figure, "png", { scale: 2 });       // "svg" も可。色は焼�
 
 描画は 1 本のレイアウトから SVG と React の両方を作るので、画面と書き出しの見た目がずれません。画面では、グラフにカーソルを載せる（または矢印キーで動かす）と値が出てその項目が強調され、流れ図は載せた箱とつながりが強調されます。既定の見た目は控えめで（枠線のカード・破線の目盛り・彩度を抑えた四季の色）、系列の色は色覚多様性のシミュレーションで明暗それぞれ検証しています。ダークモードは `<html class="dark">` か `data-theme` に、無ければ OS の設定に従います。`--yui-s1`〜`--yui-s8`・`--yui-ink`・`--yui-font` などの CSS 変数で差し替えられます。
 
+## 画面の組み立て（ドラッグ＆ドロップ）
+
+`app`（入力とボタンの画面）は、記法を書かずに組み立てられます。チェッカーが、保存すると内容が変わってしまう設定や選べない実行先を、部品の場所つきで知らせます。設計: [docs/editor.md](docs/editor.md)。
+
+```tsx
+import { toSource } from "@imanect/yui";
+import { checkEditable, hasErrors } from "@imanect/yui/editor";
+import { AppEditor } from "@imanect/yui/editor/react";
+
+const r = checkEditable(source); // 読めない行のあるソースは開かない
+if (r.ok) setFigure(r.figure);
+// workflows は選べる実行先（閉じた集合）。渡さなければどのワークフローも選べない
+<AppEditor figure={figure} onChange={setFigure} workflows={workflows} onProblems={(p) => setCanSave(!hasErrors(p))} />;
+const saved = toSource(figure);
+```
+
 ## 小さなモデルで書けるか
 
 Gemma 4 31B（141 課題）で、JSON をツール呼び出しで出す方式と比べました。Yui は 92〜99%（JSON 方式は 72〜91%）で、トークンは 4 分の 1〜3 分の 1、応答時間は約半分でした。JSON 方式ではほぼ描けなかった流れ図・構成図も 70〜80% 描けています。詳細は [docs/eval-results-2026-10-12-gemma.md](docs/eval-results-2026-10-12-gemma.md)、評価計画は [docs/eval-plan.md](docs/eval-plan.md)。

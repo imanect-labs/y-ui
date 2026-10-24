@@ -75,6 +75,24 @@ describe("app: 記法", () => {
     expect((r.figure as AppFigure).sections).toHaveLength(6);
     expect(r.diagnostics.filter((d) => d.code === "limit_exceeded")).toHaveLength(1);
   });
+  it("選択肢の中の | は \\| と書く（初期値も）・往復できる", () => {
+    const f = fig("app x\n区分 = choice A\\|B | C 初期 A\\|B\n");
+    expect(f.sections[0]!.fields[0]!.options!.map((o) => o.value)).toEqual(["A|B", "C"]);
+    expect(f.sections[0]!.fields[0]!.initial).toBe("A|B");
+    expect(toSource(f)).toContain("choice A\\|B | C 初期 A\\|B");
+    expect(fig(toSource(f))).toEqual(f);
+  });
+
+  it("片側だけの範囲は読まずに警告する（単位に紛れ込ませない）", () => {
+    const r = parse("app x\n金額 = number 1.. 円\n");
+    const x = (r.figure as AppFigure).sections[0]!.fields[0]!;
+    expect([x.min, x.max, x.unit]).toEqual([undefined, undefined, "円"]);
+    expect(r.diagnostics.map((d) => d.message)).toEqual([expect.stringContaining("両方を書いてください")]);
+    // 単位が続けて書かれていても同じ
+    const g = parse("app x\n金額 = number 1..円\n");
+    expect((g.figure as AppFigure).sections[0]!.fields[0]!.unit).toBe("円");
+    expect(g.diagnostics).toHaveLength(1);
+  });
 });
 
 describe("app: 値の検証", () => {

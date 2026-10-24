@@ -217,7 +217,7 @@ const INFO: Record<Kind, KindInfo> = {
   app: {
     name: "アプリ（入力と実行）",
     use: "入力部品とボタンを並べ、押すとホストがその値でワークフローを起動する（Yui は実行しない）。機能ごとに分けて並べられる。",
-    syntax: ["`## 見出し` で機能を分け、`> 説明`", "入力は「ラベル = 種類」（text・textarea・number・choice・date・month・toggle・slider・count）。`必須`・`例 …`・`初期 …`・`as キー`", "ボタンは「button ラベル -> workflow 名前」か「-> chat」"],
+    syntax: ["`## 見出し` で機能を分け、`> 説明`", "入力は「ラベル = 種類」（text・textarea・number・choice・date・daterange・month・toggle・slider・count・rating）。`必須`・`例 …`・`初期 …`・`as キー`", "選択肢の中の縦棒は前にバックスラッシュを付ける（`A\\|B`）。数値の範囲は「最小..最大」の両方を書く（片側だけは読まずに警告）", "ボタンは「button ラベル -> workflow 名前」か「-> chat」"],
     options: COMMON,
     limits: [`機能 ${LIMITS.appSections}、入力 1 機能 ${LIMITS.appSectionFields}・全体 ${LIMITS.appFields}、ボタン 1 機能 ${LIMITS.appSectionActions}`],
     instead: "画面の中で計算が完結するなら calc。",

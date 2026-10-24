@@ -1084,6 +1084,196 @@
       "diagnostics": []
     },
     {
+      "name": "escapedChoice",
+      "source": "app 区分\n記号 = choice A\\|B | C｜D | 表示\\|名=v\\|1 初期 A\\|B, v\\|1 multi\n単位 = choice 1\\| | 2\n全角 = choice A\\｜B ｜ C\nbutton 送る -> workflow 記号\n",
+      "figure": {
+        "kind": "app",
+        "title": "区分",
+        "refs": [],
+        "sections": [
+          {
+            "fields": [
+              {
+                "key": "記号",
+                "label": "記号",
+                "type": "choice",
+                "required": false,
+                "options": [
+                  {
+                    "label": "A|B",
+                    "value": "A|B"
+                  },
+                  {
+                    "label": "C",
+                    "value": "C"
+                  },
+                  {
+                    "label": "D",
+                    "value": "D"
+                  },
+                  {
+                    "label": "表示|名",
+                    "value": "v|1"
+                  }
+                ],
+                "multi": true,
+                "initial": [
+                  "A|B",
+                  "v|1"
+                ]
+              },
+              {
+                "key": "単位",
+                "label": "単位",
+                "type": "choice",
+                "required": false,
+                "options": [
+                  {
+                    "label": "1|",
+                    "value": "1|"
+                  },
+                  {
+                    "label": "2",
+                    "value": "2"
+                  }
+                ]
+              },
+              {
+                "key": "全角",
+                "label": "全角",
+                "type": "choice",
+                "required": false,
+                "options": [
+                  {
+                    "label": "A｜B",
+                    "value": "A｜B"
+                  },
+                  {
+                    "label": "C",
+                    "value": "C"
+                  }
+                ]
+              }
+            ],
+            "actions": [
+              {
+                "id": "a1",
+                "label": "送る",
+                "target": {
+                  "kind": "workflow",
+                  "name": "記号"
+                },
+                "confirm": true
+              }
+            ]
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "送る",
+          "target": {
+            "kind": "workflow",
+            "name": "記号"
+          },
+          "confirm": true
+        }
+      ],
+      "diagnostics": []
+    },
+    {
+      "name": "halfRange",
+      "source": "app 範囲\n下限 = number 1.. 円\n上限 = number ..100\n全角 = number 1〜 個 必須\n両方 = number 1..2 円\n続けて = number 1..円\nbutton 送る -> workflow 範囲\n",
+      "figure": {
+        "kind": "app",
+        "title": "範囲",
+        "refs": [],
+        "sections": [
+          {
+            "fields": [
+              {
+                "key": "下限",
+                "label": "下限",
+                "type": "number",
+                "required": false,
+                "unit": "円"
+              },
+              {
+                "key": "上限",
+                "label": "上限",
+                "type": "number",
+                "required": false
+              },
+              {
+                "key": "全角",
+                "label": "全角",
+                "type": "number",
+                "required": true,
+                "unit": "個"
+              },
+              {
+                "key": "両方",
+                "label": "両方",
+                "type": "number",
+                "required": false,
+                "min": 1,
+                "max": 2,
+                "unit": "円"
+              },
+              {
+                "key": "続けて",
+                "label": "続けて",
+                "type": "number",
+                "required": false,
+                "unit": "円"
+              }
+            ],
+            "actions": [
+              {
+                "id": "a1",
+                "label": "送る",
+                "target": {
+                  "kind": "workflow",
+                  "name": "範囲"
+                },
+                "confirm": true
+              }
+            ]
+          }
+        ]
+      },
+      "actions": [
+        {
+          "id": "a1",
+          "label": "送る",
+          "target": {
+            "kind": "workflow",
+            "name": "範囲"
+          },
+          "confirm": true
+        }
+      ],
+      "diagnostics": [
+        {
+          "line": 2,
+          "code": "unrecognized_line"
+        },
+        {
+          "line": 3,
+          "code": "unrecognized_line"
+        },
+        {
+          "line": 4,
+          "code": "unrecognized_line"
+        },
+        {
+          "line": 6,
+          "code": "unrecognized_line"
+        }
+      ]
+    },
+    {
       "name": "plain",
       "source": "bar x\na | 1\n",
       "figure": {
@@ -1789,6 +1979,28 @@
         },
         "errors": {
           "amount": "入力してください"
+        }
+      }
+    },
+    {
+      "source": "escapedChoice",
+      "action": "a1",
+      "input": {
+        "記号": [
+          "A|B",
+          "C",
+          "v|1",
+          "A"
+        ],
+        "単位": "1|"
+      },
+      "expect": {
+        "ok": false,
+        "values": {
+          "単位": "1|"
+        },
+        "errors": {
+          "記号": "選択肢から選んでください"
         }
       }
     }
