@@ -125,18 +125,64 @@ export function formatValue(v: number, locale: string): string {
   return new Intl.NumberFormat(locale, { maximumFractionDigits: Math.abs(v) < 10 ? 2 : 1 }).format(v);
 }
 
-export function formatTick(v: number, locale: string): string {
-  return new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 }).format(v);
+/**
+ * 目盛りの数値。`step`（目盛りの間隔）を渡すと、隣どうしが同じ表記にならない桁数まで出す
+ * （0.5 セント刻みが「0」「0」と重なるのを防ぐ）。渡さなければ小数 1 桁まで。
+ */
+export function formatTick(v: number, locale: string, step?: number): string {
+  const digits = tickDigits(step);
+  const compact = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: digits });
+  const label = compact.format(v);
+  if (step === undefined || (label !== compact.format(v + step) && label !== compact.format(v - step))) return label;
+  // 短縮表記（「1万」など）で隣と同じになるなら、桁を省かない表記にする（10,000 と 10,001 を書き分ける）
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(v);
 }
 
-/** 区切りのよい目盛り（0 を含む）。 */
-export function niceTicks(min: number, max: number, count = 5): number[] {
+/** 間隔 `step` の目盛りを書き分けるのに要る小数の桁数（1〜20）。 */
+export function tickDigits(step: number | undefined): number {
+  if (step === undefined || !(step > 0) || step >= 1) return 1;
+  for (let d = 1; d < 20; d++) {
+    const scaled = step * 10 ** d;
+    const rounded = Math.round(scaled);
+    // 丸めて 0 になる桁ではまだ書き分けられない。誤差は値の大きさに比例させて判定する
+    if (rounded !== 0 && Math.abs(scaled - rounded) <= 1e-9 * Math.abs(scaled)) return d;
+  }
+  return 20;
+}
+
+/** 目盛りの間隔（目盛りが 2 つ以上あるときの隣との差）。 */
+export function tickStep(ticks: number[]): number | undefined {
+  return ticks.length > 1 ? Math.abs(ticks[1]! - ticks[0]!) : undefined;
+}
+
+/** 値がすべて整数か（人数・回数のような量。目盛りも整数だけにする）。 */
+export function allIntegers(values: Iterable<number | null | undefined>): boolean {
+  let any = false;
+  for (const v of values) {
+    if (v === null || v === undefined) continue;
+    if (!Number.isInteger(v)) return false;
+    any = true;
+  }
+  return any;
+}
+
+/**
+ * 区切りのよい間隔。`integer` なら 1 未満にせず、2.5 刻みも使わない
+ * （値が整数だけの図で 0, 2.5, 5… や 0.5 刻みの目盛りを出さない）。
+ */
+export function niceStep(raw: number, integer = false): number {
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const multiples = integer && mag <= 1 ? [1, 2, 5, 10] : [1, 2, 2.5, 5, 10];
+  const step = multiples.map((m) => m * mag).find((s) => s >= raw) ?? 10 * mag;
+  return integer ? Math.max(1, Math.round(step)) : step;
+}
+
+/** 区切りのよい目盛り（0 を含む）。`integer` は {@link niceStep} を参照。 */
+export function niceTicks(min: number, max: number, count = 5, integer = false): number[] {
   let lo = Math.min(0, min);
   let hi = Math.max(0, max);
   if (lo === hi) hi = lo + 1;
-  const raw = (hi - lo) / count;
-  const mag = 10 ** Math.floor(Math.log10(raw));
-  const step = ([1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw) ?? 10 * mag);
+  const step = niceStep((hi - lo) / count, integer);
   lo = Math.floor(lo / step) * step;
   hi = Math.ceil(hi / step) * step;
   const ticks: number[] = [];

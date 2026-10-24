@@ -9,7 +9,7 @@
 
 import type { ChartFigure } from "../ir.js";
 import { share } from "../text.js";
-import { type Ctx, drawLegend, formatTick, formatValue, niceTicks, withUnit } from "./frame.js";
+import { allIntegers, type Ctx, drawLegend, formatTick, formatValue, niceTicks, tickStep, withUnit } from "./frame.js";
 import { fit } from "./measure.js";
 import { META, TEXT } from "./style.js";
 import { SERIES, type Token } from "./theme.js";
@@ -31,7 +31,7 @@ export function layoutRadar(ctx: Ctx, f: ChartFigure, top: number): number {
   const cx = ctx.pad + inner / 2;
   const cy = y + 28 + R;
   const max = Math.max(...f.rows.flatMap((r) => r.values.map((v) => v ?? 0)), 0);
-  const ticks = niceTicks(0, max > 0 ? max : 1, 4);
+  const ticks = niceTicks(0, max > 0 ? max : 1, 4, allIntegers(f.rows.flatMap((r) => r.values)));
   const top1 = ticks[ticks.length - 1]!;
   const angle = (i: number) => -Math.PI / 2 + (i / n) * Math.PI * 2;
   const pt = (i: number, v: number) => [cx + Math.cos(angle(i)) * R * (v / top1), cy + Math.sin(angle(i)) * R * (v / top1)] as const;
@@ -46,7 +46,7 @@ export function layoutRadar(ctx: Ctx, f: ChartFigure, top: number): number {
     ctx.items.push({ t: "path", d: `M${cx},${cy}L${f2(x)},${f2(yy)}`, stroke: "grid", strokeWidth: 1 });
   });
   // 目盛りの値（12 時の軸の上）
-  ticks.slice(1).forEach((t) => ctx.items.push({ t: "text", x: cx + 6, y: cy - R * (t / top1) - 3, text: formatTick(t, ctx.locale), size: META - 1, fill: "muted", tabular: true }));
+  ticks.slice(1).forEach((t) => ctx.items.push({ t: "text", x: cx + 6, y: cy - R * (t / top1) - 3, text: formatTick(t, ctx.locale, tickStep(ticks)), size: META - 1, fill: "muted", tabular: true }));
 
   // 系列
   series.forEach((_, s) => {

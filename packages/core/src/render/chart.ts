@@ -6,7 +6,7 @@
  */
 
 import type { ChartFigure } from "../ir.js";
-import { BODY_SIZE, type Ctx, drawLegend, formatTick, formatValue, niceTicks, SMALL_SIZE } from "./frame.js";
+import { allIntegers, BODY_SIZE, type Ctx, drawLegend, formatTick, formatValue, niceTicks, SMALL_SIZE, tickStep } from "./frame.js";
 import { fit } from "./measure.js";
 import { barPath, type TipRow } from "./scene.js";
 import { SERIES } from "./theme.js";
@@ -55,6 +55,11 @@ function tipRows(ctx: Ctx, f: ChartFigure, values: (number | null)[]): TipRow[] 
   return rows;
 }
 
+/** 値がすべて整数か（人数・回数の図。目盛りも整数だけにする・積み上げの合計も整数になる）。 */
+function integerValues(f: ChartFigure): boolean {
+  return allIntegers(f.rows.flatMap((r) => r.values));
+}
+
 /** 行の値が描く範囲の端（積み上げは正と負の合計、それ以外は値そのもの）。 */
 function rowExtent(f: ChartFigure, values: (number | null)[]): [number, number] {
   const vs = values.filter((v): v is number => v !== null && v !== undefined);
@@ -85,10 +90,10 @@ function vertical(ctx: Ctx, f: ChartFigure, top: number): number {
   const S = Math.max(1, f.columns.length - 1);
   const R = f.rows.length;
   const [lo, hi] = extent(f);
-  const ticks = niceTicks(lo, hi);
+  const ticks = niceTicks(lo, hi, 5, integerValues(f));
   const tMin = ticks[0]!;
   const tMax = ticks[ticks.length - 1]!;
-  const tickLabels = ticks.map((t) => formatTick(t, ctx.locale));
+  const tickLabels = ticks.map((t) => formatTick(t, ctx.locale, tickStep(ticks)));
   const left = ctx.pad + Math.max(...tickLabels.map((l) => ctx.measure(l, SMALL_SIZE))) + 8;
   const right = ctx.width - ctx.pad;
   const plotTop = top + 6;
@@ -232,7 +237,7 @@ function horizontalBars(ctx: Ctx, f: ChartFigure, top: number): number {
   const thick = stacked || S === 1 ? 14 : Math.max(6, Math.min(12, 30 / S));
   const rowH = stacked || S === 1 ? 24 : S * (thick + GAP) + 10;
   const [lo, hi] = extent(f);
-  const ticks = niceTicks(lo, hi, 4);
+  const ticks = niceTicks(lo, hi, 4, integerValues(f));
   const tMin = ticks[0]!;
   const tMax = ticks[ticks.length - 1]!;
   const labelW = Math.min(Math.max(...f.rows.map((r) => ctx.measure(r.label, BODY_SIZE))), ctx.width * 0.32);
@@ -246,7 +251,7 @@ function horizontalBars(ctx: Ctx, f: ChartFigure, top: number): number {
   ticks.forEach((t) => {
     const xx = Math.round(xOf(t)) + 0.5;
     ctx.items.push({ t: "path", d: `M${xx},${plotTop}V${plotBottom}`, stroke: t === 0 ? "axis" : "grid", strokeWidth: 1, ...(t === 0 ? {} : { dash: GRID_DASH }) });
-    ctx.items.push({ t: "text", x: xx, y: plotBottom + 14, text: formatTick(t, ctx.locale), size: SMALL_SIZE, fill: "muted", anchor: "middle", tabular: true });
+    ctx.items.push({ t: "text", x: xx, y: plotBottom + 14, text: formatTick(t, ctx.locale, tickStep(ticks)), size: SMALL_SIZE, fill: "muted", anchor: "middle", tabular: true });
   });
 
   f.rows.forEach((r, i) => {

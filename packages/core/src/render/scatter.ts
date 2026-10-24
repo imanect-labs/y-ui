@@ -6,7 +6,7 @@
  */
 
 import type { ScatterFigure } from "../ir.js";
-import { type Ctx, drawLegend, formatTick, formatValue, SMALL_SIZE } from "./frame.js";
+import { allIntegers, type Ctx, drawLegend, formatTick, formatValue, niceStep, SMALL_SIZE, tickStep } from "./frame.js";
 import { fit } from "./measure.js";
 import { SERIES, type Token } from "./theme.js";
 
@@ -15,7 +15,7 @@ const LABEL_MAX = 15;
 const GRID_DASH = "2 3";
 
 /** 区切りのよい目盛り。0 は、値の範囲の半分より近い場合だけ含める。 */
-export function scatterTicks(min: number, max: number, count = 5): number[] {
+export function scatterTicks(min: number, max: number, count = 5, integer = false): number[] {
   let lo = min;
   let hi = max;
   if (lo >= 0 && lo < hi * 0.5) lo = 0;
@@ -24,9 +24,7 @@ export function scatterTicks(min: number, max: number, count = 5): number[] {
     lo -= Math.abs(lo) * 0.1 || 1;
     hi += Math.abs(hi) * 0.1 || 1;
   }
-  const raw = (hi - lo) / count;
-  const mag = 10 ** Math.floor(Math.log10(raw));
-  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw) ?? 10 * mag;
+  const step = niceStep((hi - lo) / count, integer);
   const a = Math.floor(lo / step) * step;
   const b = Math.ceil(hi / step) * step;
   const ticks: number[] = [];
@@ -41,9 +39,11 @@ export function layoutScatter(ctx: Ctx, f: ScatterFigure, top: number): number {
   if (f.points.length === 0) return y;
 
   const [labelName, xName, yName] = [f.columns[0] || "項目", f.columns[1] || "X", f.columns[2] || "Y"];
-  const xt = scatterTicks(Math.min(...f.points.map((p) => p.x)), Math.max(...f.points.map((p) => p.x)));
-  const yt = scatterTicks(Math.min(...f.points.map((p) => p.y)), Math.max(...f.points.map((p) => p.y)));
-  const yLabels = yt.map((t) => formatTick(t, ctx.locale));
+  const xs = f.points.map((p) => p.x);
+  const ys = f.points.map((p) => p.y);
+  const xt = scatterTicks(Math.min(...xs), Math.max(...xs), 5, allIntegers(xs));
+  const yt = scatterTicks(Math.min(...ys), Math.max(...ys), 5, allIntegers(ys));
+  const yLabels = yt.map((t) => formatTick(t, ctx.locale, tickStep(yt)));
   // 縦軸の名前（左上）
   ctx.items.push({ t: "text", x: ctx.pad, y: y + 12, text: fit(yName, ctx.width - ctx.pad * 2, SMALL_SIZE, ctx.measure), size: SMALL_SIZE, fill: "muted" });
   y += 20;
@@ -63,7 +63,7 @@ export function layoutScatter(ctx: Ctx, f: ScatterFigure, top: number): number {
   xt.forEach((t, i) => {
     const xx = Math.round(X(t)) + 0.5;
     ctx.items.push({ t: "path", d: `M${xx},${plotTop}V${plotBottom}`, stroke: i === 0 ? "axis" : "grid", strokeWidth: 1, ...(i === 0 ? {} : { dash: GRID_DASH }) });
-    ctx.items.push({ t: "text", x: xx, y: plotBottom + 15, text: formatTick(t, ctx.locale), size: SMALL_SIZE, fill: "muted", anchor: "middle", tabular: true });
+    ctx.items.push({ t: "text", x: xx, y: plotBottom + 15, text: formatTick(t, ctx.locale, tickStep(xt)), size: SMALL_SIZE, fill: "muted", anchor: "middle", tabular: true });
   });
   // 横軸の名前（右下）
   ctx.items.push({ t: "text", x: right, y: plotBottom + 32, text: fit(xName, right - left, SMALL_SIZE, ctx.measure), size: SMALL_SIZE, fill: "muted", anchor: "end" });
