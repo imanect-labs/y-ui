@@ -1,6 +1,6 @@
 # Yui ロードマップ
 
-今の位置は 0.8.0（公開待ち。0.6・0.7 は公開せずに 0.8.0 にまとめた）。対応する種類は 27（グラフ: bar / line / pie / scatter / radar / treemap、数値: stat / progress / funnel、流れ・時間: flow / steps / timeline / gantt、構造・整理: stack / tree / quadrant / cards / callout / map、比較・判断: compare / proscons / swot / checklist、操作: calc / app / ask / plan）で、パーサ・SVG・React（ホバーとキーボード・操作）・書き出し（PNG / SVG / クリップボード）がある。Shiki の emit_ui を Yui に置き換える計画: [emit-ui-replacement.md](emit-ui-replacement.md)（imanect-labs/shiki-platform#604）。
+今の位置は 0.9.0（公開待ち。0.8.1 まで公開済み）。0.9.0 で app の画面を組み立てるエディタ（[editor.md](editor.md)）を足した。対応する種類は 27（グラフ: bar / line / pie / scatter / radar / treemap、数値: stat / progress / funnel、流れ・時間: flow / steps / timeline / gantt、構造・整理: stack / tree / quadrant / cards / callout / map、比較・判断: compare / proscons / swot / checklist、操作: calc / app / ask / plan）で、パーサ・SVG・React（ホバーとキーボード・操作）・書き出し（PNG / SVG / クリップボード）がある。Shiki の emit_ui を Yui に置き換える計画: [emit-ui-replacement.md](emit-ui-replacement.md)（imanect-labs/shiki-platform#604）。
 
 この文書の順番で進める。v0.6・v0.7・Shiki 側の組み込みは並行する。
 
@@ -72,6 +72,7 @@
 | 項目 | 状態 |
 |---|---|
 | ノート（TipTap）と文書の中でも ```ui を図として描き、編集できるようにする | 調査中 |
+| ミニアプリの画面をドラッグ＆ドロップで組み立てる（app のエディタ・チェッカー。[docs/editor.md](editor.md)） | Yui 側は実装済み（0.9.0）。Shiki への組み込みは実装中 |
 | チャット・ノートの書き出し（Markdown・docx・PDF）で、図を画像か表に置き換える（`docs/export.md` §3） | 未着手 |
 | 新しい種類を足すたびに `yui_guide.md` を更新し、`emit_ui` に頼っている図（円グラフ・散布図）を Yui に移す | v0.7 に合わせて |
 

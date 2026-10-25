@@ -24,7 +24,7 @@ The parser is lenient with what models naturally write (GFM tables, Mermaid-styl
 npm install @imanect/yui
 ```
 
-`react` (>= 18) is an optional peer dependency, needed only for `@imanect/yui/react`.
+`react` (>= 18) is an optional peer dependency, needed only for `@imanect/yui/react` and `@imanect/yui/editor/react`.
 
 ## React
 
@@ -80,9 +80,25 @@ for (const seg of parseMarkdown(streamingText)) {
 toText(figure); // plain-Markdown fallback (tables / lists)
 ```
 
+## Building `app` screens with drag and drop
+
+`@imanect/yui/editor` (no React) edits an `app` figure as data and checks it: every problem points at the exact input or setting, including anything that would change when saved as source. `@imanect/yui/editor/react` adds the drag-and-drop editor.
+
+```tsx
+import { toSource } from "@imanect/yui";
+import { checkEditable, hasErrors } from "@imanect/yui/editor";
+import { AppEditor } from "@imanect/yui/editor/react";
+
+const r = checkEditable(source); // refuses sources with unreadable lines
+if (r.ok) setFigure(r.figure);
+<AppEditor figure={figure} onChange={setFigure} workflows={workflows} onProblems={(p) => setCanSave(!hasErrors(p))} />;
+const saved = toSource(figure);
+```
+
 ## Docs
 
 - Notation spec (Japanese): [docs/spec.md](https://github.com/imanect-labs/y-ui/blob/main/docs/spec.md)
+- Drag-and-drop editor (Japanese): [docs/editor.md](https://github.com/imanect-labs/y-ui/blob/main/docs/editor.md)
 - Evaluation with small models (Japanese): [docs/eval-results-2026-10-12-gemma.md](https://github.com/imanect-labs/y-ui/blob/main/docs/eval-results-2026-10-12-gemma.md)
 
 ## License
