@@ -177,8 +177,10 @@ export async function run(cfg: RunConfig, log: (msg: string) => void = console.l
   const path = resultsPath(cfg.outDir);
   const done = new Set(readResults(cfg.outDir).filter((r) => r.ok).map((r) => r.key));
   // Shiki の説明は作業ツリーから読むので、コミットだけでは入力を復元できない。読んだ本文も残す。
-  if (cfg.shiki?.yuiGuide) writeFileSync(join(cfg.outDir, "shiki-yui_guide.md"), `${cfg.shiki.yuiGuide}\n`);
-  const shiki = cfg.shiki ? { commit: cfg.shiki.commit, ...(cfg.shiki.yuiGuide ? { yuiGuideSha256: sha256(cfg.shiki.yuiGuide) } : {}) } : null;
+  // ハッシュは保存したファイルの中身（末尾の改行を含む）に対して取る（sha256sum で照合できる）。
+  const guideFile = cfg.shiki?.yuiGuide ? `${cfg.shiki.yuiGuide}\n` : null;
+  if (guideFile) writeFileSync(join(cfg.outDir, "shiki-yui_guide.md"), guideFile);
+  const shiki = cfg.shiki ? { commit: cfg.shiki.commit, ...(guideFile ? { yuiGuideSha256: sha256(guideFile) } : {}) } : null;
   writeFileSync(
     join(cfg.outDir, "config.json"),
     JSON.stringify({ ...cfg, tasks: cfg.tasks.map((t) => t.id), shiki }, null, 2),

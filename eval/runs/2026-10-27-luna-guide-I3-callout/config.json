@@ -28,7 +28,7 @@
   "concurrency": 6,
   "shiki": {
     "commit": "a3a201f",
-    "yuiGuideSha256": "124a69ffe951f681fb8154b2aca1a9ea1f073ef668576af7c7b23c817b2898dd"
+    "yuiGuideSha256": "0d980f47411a879b8f07c315a079fc3978a03d92bafbcbdcf350bcfa2cae81eb"
   },
   "mock": false
 }
