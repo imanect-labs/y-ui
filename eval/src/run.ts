@@ -1,5 +1,6 @@
 /** 評価の実行。結果は 1 生成 1 行の JSONL に追記し、途中から再開できる。 */
 
+import { createHash } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -175,9 +176,12 @@ export async function run(cfg: RunConfig, log: (msg: string) => void = console.l
   mkdirSync(cfg.outDir, { recursive: true });
   const path = resultsPath(cfg.outDir);
   const done = new Set(readResults(cfg.outDir).filter((r) => r.ok).map((r) => r.key));
+  // Shiki の説明は作業ツリーから読むので、コミットだけでは入力を復元できない。読んだ本文も残す。
+  if (cfg.shiki?.yuiGuide) writeFileSync(join(cfg.outDir, "shiki-yui_guide.md"), `${cfg.shiki.yuiGuide}\n`);
+  const shiki = cfg.shiki ? { commit: cfg.shiki.commit, ...(cfg.shiki.yuiGuide ? { yuiGuideSha256: sha256(cfg.shiki.yuiGuide) } : {}) } : null;
   writeFileSync(
     join(cfg.outDir, "config.json"),
-    JSON.stringify({ ...cfg, tasks: cfg.tasks.map((t) => t.id), shiki: cfg.shiki ? { commit: cfg.shiki.commit } : null }, null, 2),
+    JSON.stringify({ ...cfg, tasks: cfg.tasks.map((t) => t.id), shiki }, null, 2),
   );
 
   const jobs: (() => Promise<void>)[] = [];
@@ -256,4 +260,9 @@ export async function rescore(outDir: string, tasks: EvalTask[], shiki: ShikiToo
   }
   writeFileSync(resultsPath(outDir), `${out.join("\n")}\n`);
   return n;
+}
+
+/** 評価の入力（Shiki の説明）の本文を識別する。 */
+export function sha256(text: string): string {
+  return createHash("sha256").update(text).digest("hex");
 }

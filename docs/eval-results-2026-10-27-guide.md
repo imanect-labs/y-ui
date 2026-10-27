@@ -55,6 +55,8 @@ F は Shiki の main で出荷中の説明で、5 種類以外を「描けない
 
 ## 実行
 
+各実行の `shiki-yui_guide.md` が、その実行で読んだ Shiki の決まりの本文（`config.json` の `shiki.yuiGuideSha256` はその SHA-256）。Shiki のコミット（`a3a201f`）は早見を組み込む前の main で、I・I2 の決まりは組み込み中の作業ツリーから読んだ。早見と書き方はこのリポジトリの定義から作り、I は calc・callout を直す前、I2 は calc を直した後、I3 は callout も直した後の定義。
+
 - F: `eval/runs/2026-10-27-luna-guide-F-main`（`--shiki-root` は shiki-platform の main `a3a201f`）
 - I（1 回目）: `eval/runs/2026-10-27-luna-guide-I`
 - I（直した後）: `eval/runs/2026-10-27-luna-guide-I2`、`eval/runs/2026-10-27-luna-guide-I3-callout`

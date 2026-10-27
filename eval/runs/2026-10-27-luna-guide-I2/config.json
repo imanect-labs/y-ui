@@ -296,7 +296,8 @@
   ],
   "concurrency": 6,
   "shiki": {
-    "commit": "a3a201f"
+    "commit": "a3a201f",
+    "yuiGuideSha256": "124a69ffe951f681fb8154b2aca1a9ea1f073ef668576af7c7b23c817b2898dd"
   },
   "mock": false
 }

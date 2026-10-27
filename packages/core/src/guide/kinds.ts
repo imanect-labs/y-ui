@@ -42,7 +42,7 @@ export const KIND_GUIDE: Record<Kind, KindGuide> = {
     name: "折れ線グラフ",
     use: "時期ごとの推移。系列が 2 つ以上なら凡例が付く。",
     syntax: ["書き方は bar と同じ"],
-    options: ["`unit:` 単位", "`stacked: true` 積み上げ（面グラフの代わり）"],
+    options: ["`unit:` 単位"],
     limits: [`${LIMITS.chartRows} 行 × ${LIMITS.chartColumns} 列`],
     instead: "項目どうしの比較は bar。",
     spec: "5.1 bar / line",
