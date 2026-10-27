@@ -48,27 +48,45 @@ describe("レイアウト", () => {
 
   it("狭い幅で項目名が区画に入らない棒グラフは、行が少なくても横向きにする", () => {
     const f = fig("bar 部署別\n部署 | 件数\nカスタマーサクセス本部 第一グループ | 412\nエンタープライズ営業本部 | 288\n経営企画室 | 120\n");
-    const ends = (w: number) => layout(f, { width: w }).items.filter((i) => i.t === "text" && i.anchor === "end" && !/^[\d,]+$/.test(i.text)).length;
-    expect(ends(320)).toBe(3);
+    const names = (w: number) => layout(f, { width: w }).items.filter((i) => i.t === "text" && i.anchor === "end" && !/^[\d,]+$/.test(i.text)).length;
+    expect(names(320)).toBe(3);
     // 広い幅で項目名が入るなら縦のまま
-    expect(ends(1200)).toBe(0);
+    expect(names(1200)).toBe(0);
   });
 
-  it("間引いた横軸のラベルは、両端でも図の外へはみ出さない", () => {
-    const rows = Array.from({ length: 12 }, (_, i) => `2024年${i + 1}月 | ${100 + i}`).join("\n");
-    const scene = layout(fig(`line 推移\n月 | 売上\n${rows}\n`), { width: 320 });
-    for (const it of scene.items) {
-      if (it.t !== "text" || it.anchor !== "middle") continue;
-      const w = estimate(it.text, it.size, it.weight);
-      expect(it.x - w / 2, it.text).toBeGreaterThanOrEqual(12 - 0.5);
-      expect(it.x + w / 2, it.text).toBeLessThanOrEqual(320 - 12 + 0.5);
+  it("項目名が区画に入る棒グラフは、狭い幅でも縦のまま（判定と描画で同じ区画の幅を使う）", () => {
+    const f = fig("bar 流入元\n流入元 | 件数\n紹介 | 40\nメール | 25\n自然検索 | 60\n検索広告 | 30\nSNS広告 | 20\n");
+    const sc = layout(f, { width: 320 });
+    expect(sc.items.filter((i) => i.t === "text" && i.anchor === "end" && !/^[\d,]+$/.test(i.text))).toHaveLength(0);
+    expect(sc.items.filter((i) => i.t === "text" && i.anchor === "middle" && /紹介|メール|検索|SNS/.test(i.text))).toHaveLength(5);
+  });
+
+  it("間引いた横軸のラベルは、図の外へはみ出さず、隣どうし重ならない", () => {
+    const rows = Array.from({ length: 7 }, (_, i) => `2024年度第${i + 1}期 | ${100 + i}`).join("\n");
+    for (const width of [360, 640]) {
+      const scene = layout(fig(`line 推移\n期 | 売上\n${rows}\n`), { width });
+      const pad = width < 400 ? 12 : 16;
+      const spans = scene.items
+        .filter((i): i is Extract<typeof i, { t: "text" }> => i.t === "text" && i.anchor === "middle" && i.text.startsWith("2024"))
+        .map((i) => [i.x - estimate(i.text, i.size) / 2, i.x + estimate(i.text, i.size) / 2] as const);
+      expect(spans.length).toBeGreaterThan(1);
+      spans.forEach(([l, r], k) => {
+        expect(l, `${width}px`).toBeGreaterThanOrEqual(pad - 0.5);
+        expect(r, `${width}px`).toBeLessThanOrEqual(width - pad + 0.5);
+        if (k > 0) expect(l, `${width}px: 前のラベルと重なる`).toBeGreaterThanOrEqual(spans[k - 1]![1]);
+      });
     }
   });
 
   it("比較表: 印の横に文字が入らない狭い列は印だけを描き、値はツールチップで見せる", () => {
-    const src = "compare 方式\n観点 | ACL | RBAC | ABAC | ReBAC | 個別索引\n表現力 | △ 個別指定のみ | △ 役職単位 | ✓ 属性 | ✓ 継承 | ✓\n";
+    const src = "compare 方式\n観点 | ACL | RBAC | ABAC | ReBAC | 個別索引\n表現力 | △ 個別指定のみ | △ 役職単位 | ✓ 属性 | ✓ 継承 | ✓ 可\n";
     const narrow = layout(fig(src), { width: 320 });
-    expect(narrow.items.some((i) => i.t === "text" && /個別指定|役職/.test(i.text))).toBe(false);
+    // 1 文字ずつ縦に折り返さない（セルの文字の断片を描かない）
+    const texts = narrow.items.filter((i): i is Extract<typeof i, { t: "text" }> => i.t === "text");
+    const rowTop = texts.find((i) => i.text === "表現力")!.y - 10;
+    expect(texts.filter((i) => i.y >= rowTop && /^(個|役|属|継)/.test(i.text))).toHaveLength(0);
+    // 1 行に入る短い文字は残す
+    expect(texts.some((i) => i.text === "可")).toBe(true);
     expect(narrow.targets[0]?.tip?.rows.map((r) => r.value).join(" ")).toContain("個別指定のみ");
     const wide = layout(fig(src), { width: 900 });
     expect(wide.items.some((i) => i.t === "text" && i.text.includes("個別指定のみ"))).toBe(true);
@@ -84,8 +102,16 @@ describe("レイアウト", () => {
 
 describe("折り返し", () => {
   it("開き括弧と続く英単語の間では折らない", () => {
-    const lines = wrap("テナントとスコープで候補を絞る（pre-filter）", 110, 13);
-    expect(lines.some((l) => l.includes("（pre-filter）"))).toBe(true);
+    const lines = wrap("検索結果を絞る（post-filter）で二段目", 150, 13);
+    expect(lines.some((l) => l.includes("（post-filter）")), lines.join("/")).toBe(true);
+  });
+
+  it("括弧ごとまとめた語が 1 行に入らなくても、幅を超える行を作らない", () => {
+    for (const [text, width] of [["モデル（GPT-4o）を使う", 50], ["権限は「ReBAC」で判定する", 50], ["APIは（REST）とする", 45], ["a supercalifragilistic word", 60]] as const) {
+      const lines = wrap(text, width, 13, estimate, 9);
+      expect(lines.join("").replace(/\s+/g, ""), text).toBe(text.replace(/\s+/g, ""));
+      for (const l of lines) expect(estimate(l, 13), `${text}: 「${l}」`).toBeLessThanOrEqual(width);
+    }
   });
 });
 

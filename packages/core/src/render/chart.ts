@@ -79,10 +79,10 @@ export function layoutChart(ctx: Ctx, f: ChartFigure, y0: number): number {
   if (f.rows.length === 0) return y;
 
   const maxLabel = Math.max(...f.rows.map((r) => ctx.measure(r.label, SMALL_SIZE)));
-  const plotWidth = ctx.width - ctx.pad * 2 - 48;
-  const band = plotWidth / f.rows.length;
-  // 行が少ないのに項目名が区画に入らない（狭い画面・長い項目名）ときも横向きにする。縦のままだと
-  // 項目名が間引かれ、どの棒が何か分からなくなる（行が多い時系列は 1.6 倍まで間引いてよい）
+  const { band } = verticalAxis(ctx, f);
+  // 縦のままだと横軸の項目名を間引くことになるなら横向きにする。棒が 6 本以下で間引くと、
+  // 名前の無い棒が大半になり何の棒か分からない（狭い画面・長い項目名）。7 本以上は、項目名が
+  // 区画の 1.6 倍を超えるまでは 1 つおきに間引いて縦のまま描く（従来どおり）
   const crowded = f.rows.length > 6 ? maxLabel > band * 1.6 : maxLabel + 6 > band;
   const horizontal = f.kind === "bar" && (f.horizontal === true || f.rows.length > 14 || crowded);
   return horizontal ? horizontalBars(ctx, f, y) : vertical(ctx, f, y);
@@ -90,20 +90,24 @@ export function layoutChart(ctx: Ctx, f: ChartFigure, y0: number): number {
 
 // ---------------------------------------------------------------- 縦向き（棒・折れ線）
 
-function vertical(ctx: Ctx, f: ChartFigure, top: number): number {
-  const S = Math.max(1, f.columns.length - 1);
-  const R = f.rows.length;
+/** 縦向きの目盛りと描画域の左右・1 行の区画の幅（向きの判定と描画で同じ値を使う）。 */
+function verticalAxis(ctx: Ctx, f: ChartFigure) {
   const [lo, hi] = extent(f);
   const ticks = niceTicks(lo, hi, 5, integerValues(f));
-  const tMin = ticks[0]!;
-  const tMax = ticks[ticks.length - 1]!;
   const tickLabels = ticks.map((t) => formatTick(t, ctx.locale, tickStep(ticks)));
   const left = ctx.pad + Math.max(...tickLabels.map((l) => ctx.measure(l, SMALL_SIZE))) + 8;
   const right = ctx.width - ctx.pad;
+  return { ticks, tickLabels, left, right, band: (right - left) / f.rows.length };
+}
+
+function vertical(ctx: Ctx, f: ChartFigure, top: number): number {
+  const S = Math.max(1, f.columns.length - 1);
+  const { ticks, tickLabels, left, right, band } = verticalAxis(ctx, f);
+  const tMin = ticks[0]!;
+  const tMax = ticks[ticks.length - 1]!;
   const plotTop = top + 6;
   const plotBottom = plotTop + PLOT_HEIGHT;
   const yOf = (v: number) => plotBottom - ((v - tMin) / (tMax - tMin)) * PLOT_HEIGHT;
-  const band = (right - left) / R;
 
   // 目盛り線と基線
   ticks.forEach((t, i) => {
@@ -115,12 +119,16 @@ function vertical(ctx: Ctx, f: ChartFigure, top: number): number {
   // 横軸のラベル（重なるなら間引く）
   const maxLabel = Math.max(...f.rows.map((r) => ctx.measure(r.label, SMALL_SIZE)));
   const every = Math.max(1, Math.ceil((maxLabel + 6) / band));
+  // 間引いたラベルは区画より広いので、両端のラベルは図の外へはみ出さないように内側へ寄せる。
+  // 寄せて前のラベルに重なるなら、そのラベルは省く
+  let prevRight = -Infinity;
   f.rows.forEach((r, i) => {
     if (i % every !== 0) return;
-    const text = fit(r.label, band * every - 4, SMALL_SIZE, ctx.measure);
-    // 間引いたラベルは区画より広いので、両端のラベルが図の外へはみ出さないように内側へ寄せる
+    const text = fit(r.label, Math.min(band * every - 4, right - ctx.pad), SMALL_SIZE, ctx.measure);
     const half = ctx.measure(text, SMALL_SIZE) / 2;
     const x = Math.min(Math.max(left + band * (i + 0.5), ctx.pad + half), right - half);
+    if (x - half < prevRight + 4) return;
+    prevRight = x + half;
     ctx.items.push({ t: "text", x, y: plotBottom + 16, text, size: SMALL_SIZE, fill: "muted", anchor: "middle" });
   });
 

@@ -33,34 +33,44 @@ export const estimate: Measure = (text, fontSize, weight = 400) => {
   return em * fontSize * (weight >= 600 ? 1.04 : 1);
 };
 
+const LATIN = "[A-Za-z0-9][A-Za-z0-9.,%\\-+/_]*[」』）)\\]、。，．！？]*\\s*";
+const OTHER = "[「『（(]*.[」』）)\\]、。，．・！？ーぁぃぅぇぉっゃゅょァィゥェォッャュョ々]*";
+/** 折り返しの単位（開き括弧と続く英単語をまとめる）。 */
+const TOKEN = new RegExp(`\\[\\d+\\](?:\\[\\d+\\])*|[「『（(]*${LATIN}|\\s+|${OTHER}`, "gu");
+/** 開き括弧を語の先頭の 1 文字とだけまとめる分け方（まとめた英単語が 1 行に入らないとき）。 */
+const TOKEN_PLAIN = new RegExp(`\\[\\d+\\](?:\\[\\d+\\])*|${LATIN}|\\s+|${OTHER}`, "gu");
+
 /**
  * maxWidth に収まるように折り返す。和文は文字単位、欧文は単語単位で折る。
  * maxLines を超える分は末尾を「…」にする。
  */
 export function wrap(text: string, maxWidth: number, fontSize: number, measure: Measure = estimate, maxLines = 3, weight = 400): string[] {
-  // 引用番号 `[1]` は 1 語として扱う。開き括弧は続く英単語とまとめる（「（pre-filter）」を「（p」で折らない）。行頭に来てはいけない閉じ括弧・句読点は、直前の文字とまとめて 1 語にする（禁則）
-  const tokens = text.match(/\[\d+\](?:\[\d+\])*|[「『（(]*[A-Za-z0-9][A-Za-z0-9.,%\-+/_]*[」』）)\]、。，．！？]*\s*|\s+|[「『（(]*.[」』）)\]、。，．・！？ーぁぃぅぇぉっゃゅょァィゥェォッャュョ々]*/gu) ?? [];
+  // 引用番号 `[1]` は 1 語として扱う。行頭に来てはいけない閉じ括弧・句読点は、直前の文字とまとめて 1 語にする（禁則）。
+  // 開き括弧は続く英単語とまとめる（「（pre-filter）」を「（p」で折らない）。まとめた語が 1 行に入らないときは、
+  // 開き括弧と語の先頭の 1 文字だけをまとめる従来の分け方に戻す
+  const tokens = (text.match(TOKEN) ?? []).flatMap((tok) =>
+    /^[「『（(]/.test(tok) && measure(tok.trimEnd(), fontSize, weight) > maxWidth ? (tok.match(TOKEN_PLAIN) ?? [tok]) : [tok],
+  );
   const lines: string[] = [];
   let cur = "";
   for (const tok of tokens) {
-    const next = cur + tok;
-    if (measure(next.trimEnd(), fontSize, weight) <= maxWidth || cur === "") {
-      // 1 語だけで幅を超える場合は文字単位に崩す
-      if (cur === "" && measure(tok.trimEnd(), fontSize, weight) > maxWidth && tok.length > 1) {
-        for (const ch of tok) {
-          if (measure(cur + ch, fontSize, weight) > maxWidth && cur !== "") {
-            lines.push(cur);
-            cur = "";
-          }
-          cur += ch;
-        }
-        continue;
-      }
-      cur = next;
-    } else {
+    if (cur !== "" && measure((cur + tok).trimEnd(), fontSize, weight) > maxWidth) {
       lines.push(cur.trimEnd());
-      cur = tok.trimStart();
+      cur = "";
     }
+    const t = cur === "" ? tok.trimStart() : tok;
+    // 1 語だけで幅を超える場合は文字単位に崩す
+    if (cur === "" && measure(t.trimEnd(), fontSize, weight) > maxWidth && t.length > 1) {
+      for (const ch of t) {
+        if (measure(cur + ch, fontSize, weight) > maxWidth && cur !== "") {
+          lines.push(cur);
+          cur = "";
+        }
+        cur += ch;
+      }
+      continue;
+    }
+    cur += t;
   }
   if (cur.trim() !== "") lines.push(cur.trimEnd());
   if (lines.length > maxLines) {

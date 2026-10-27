@@ -50,13 +50,15 @@ export function layoutCompare(ctx: Ctx, f: CompareFigure, top: number): number {
   const headTop = top + (badge ? 26 : 4);
   const headH = headLines * HEAD_LH + 12;
 
-  // 印の横に 3 文字も入らない狭い列（スマホで列が多い）では、印だけを描き、文字はツールチップに回す
-  const hide = (c: CompareCell) => !!c.mark && cellW - ICON_W - 6 < TEXT * 3;
+  // 印の横に 3 文字も入らない狭い列（スマホで列が多い）では、1 行に入らない文字は描かず、印だけにして
+  // 文字はツールチップに回す（1 文字ずつ縦に折り返すと読めない）
+  const room = cellW - ICON_W - 6;
+  const hide = (c: CompareCell) => !!c.mark && !!c.text && room < TEXT * 3 && ctx.measure(c.text, TEXT) > room;
 
   // 行（項目名とセルの文字を折り返し、行の高さを揃える）
   const rows = f.rows.map((r) => {
     const label = wrap(r.label + refsOf(r.refs), labelW - 16, TEXT, ctx.measure, 3, 500);
-    const hidden = r.cells.some((c) => c.text && hide(c));
+    const hidden = r.cells.some(hide);
     const cells = r.cells.map((c) => (c.text && !hide(c) ? wrapCell(ctx, c.text, cellW - (c.mark ? ICON_W + 6 : 0)) : []));
     const lines = Math.max(label.length, 1, ...cells.map((c) => c.length));
     return { label, cells, hidden, h: lines * TEXT_LH + 20 };
