@@ -1,6 +1,6 @@
 # Yui ロードマップ
 
-今の位置は 0.9.0（公開待ち。0.8.1 まで公開済み）。0.9.0 で app の画面を組み立てるエディタ（[editor.md](editor.md)）を足した。対応する種類は 27（グラフ: bar / line / pie / scatter / radar / treemap、数値: stat / progress / funnel、流れ・時間: flow / steps / timeline / gantt、構造・整理: stack / tree / quadrant / cards / callout / map、比較・判断: compare / proscons / swot / checklist、操作: calc / app / ask / plan）で、パーサ・SVG・React（ホバーとキーボード・操作）・書き出し（PNG / SVG / クリップボード）がある。Shiki の emit_ui を Yui に置き換える計画: [emit-ui-replacement.md](emit-ui-replacement.md)（imanect-labs/shiki-platform#604）。
+今の位置は 0.9.1（公開待ち。0.9.0 まで公開済み）。0.9.1 で狭い幅（スマホ）での崩れを直した（棒が 6 本以下でも項目名を間引くなら横向きにする・間引いた横軸ラベルを図の内側に収めて重ねない・列の多い比較表は印だけにする・レーダーの観点名を図に収める・括弧付きの英単語を途中で折らない）。棒グラフの向きの判定は広い幅でも同じ規則で変わる。0.9.0 で app の画面を組み立てるエディタ（[editor.md](editor.md)）を足した。対応する種類は 27（グラフ: bar / line / pie / scatter / radar / treemap、数値: stat / progress / funnel、流れ・時間: flow / steps / timeline / gantt、構造・整理: stack / tree / quadrant / cards / callout / map、比較・判断: compare / proscons / swot / checklist、操作: calc / app / ask / plan）で、パーサ・SVG・React（ホバーとキーボード・操作）・書き出し（PNG / SVG / クリップボード）がある。Shiki の emit_ui を Yui に置き換える計画: [emit-ui-replacement.md](emit-ui-replacement.md)（imanect-labs/shiki-platform#604）。
 
 この文書の順番で進める。v0.6・v0.7・Shiki 側の組み込みは並行する。
 

@@ -29,6 +29,7 @@ export function cross(ctx: Ctx, cx: number, cy: number, stroke: Token, group?: s
 
 const ICON_W = 12;
 
+/** 比較表を描く（見出し・推奨の列・行ごとの項目名とセル）。下端の y を返す。 */
 export function layoutCompare(ctx: Ctx, f: CompareFigure, top: number): number {
   const n = f.columns.length - 1;
   if (n <= 0 || f.rows.length === 0) return top;
@@ -50,12 +51,18 @@ export function layoutCompare(ctx: Ctx, f: CompareFigure, top: number): number {
   const headTop = top + (badge ? 26 : 4);
   const headH = headLines * HEAD_LH + 12;
 
+  // 印の横に 3 文字も入らない狭い列（スマホで列が多い）では、1 行に入らない文字は描かず、印だけにして
+  // 文字はツールチップに回す（1 文字ずつ縦に折り返すと読めない）
+  const room = cellW - ICON_W - 6;
+  const hide = (c: CompareCell) => !!c.mark && !!c.text && room < TEXT * 3 && ctx.measure(c.text, TEXT) > room;
+
   // 行（項目名とセルの文字を折り返し、行の高さを揃える）
   const rows = f.rows.map((r) => {
     const label = wrap(r.label + refsOf(r.refs), labelW - 16, TEXT, ctx.measure, 3, 500);
-    const cells = r.cells.map((c) => (c.text ? wrapCell(ctx, c.text, cellW - (c.mark ? ICON_W + 6 : 0)) : []));
+    const hidden = r.cells.some(hide);
+    const cells = r.cells.map((c) => (c.text && !hide(c) ? wrapCell(ctx, c.text, cellW - (c.mark ? ICON_W + 6 : 0)) : []));
     const lines = Math.max(label.length, 1, ...cells.map((c) => c.length));
-    return { label, cells, h: lines * TEXT_LH + 20 };
+    return { label, cells, hidden, h: lines * TEXT_LH + 20 };
   });
   const bodyTop = headTop + headH;
   const bottom = bodyTop + rows.reduce((a, r) => a + r.h, 0);
@@ -93,7 +100,7 @@ export function layoutCompare(ctx: Ctx, f: CompareFigure, top: number): number {
       drawCell(ctx, c, ls, cx, cy0, g);
     });
     const say = `${r.label}: ${r.cells.map((c, i) => `${f.columns[i + 1]} ${cellSay(ctx, c)}`).join("、")}`;
-    const cut = [...row.label, ...row.cells.flat()].some((l) => l.endsWith("…"));
+    const cut = row.hidden || [...row.label, ...row.cells.flat()].some((l) => l.endsWith("…"));
     ctx.targets.push({ hit: { x: ctx.pad, y, w: inner, h: row.h }, keep: [g], ...(cut ? { tip: { title: r.label, rows: r.cells.map((c, i) => ({ label: f.columns[i + 1]!, value: cellSay(ctx, c) })), x: ctx.pad + labelW / 2, y } } : { say }) });
     y += row.h;
   });
