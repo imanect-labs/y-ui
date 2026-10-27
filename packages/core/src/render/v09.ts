@@ -50,12 +50,16 @@ export function layoutCompare(ctx: Ctx, f: CompareFigure, top: number): number {
   const headTop = top + (badge ? 26 : 4);
   const headH = headLines * HEAD_LH + 12;
 
+  // 印の横に 3 文字も入らない狭い列（スマホで列が多い）では、印だけを描き、文字はツールチップに回す
+  const hide = (c: CompareCell) => !!c.mark && cellW - ICON_W - 6 < TEXT * 3;
+
   // 行（項目名とセルの文字を折り返し、行の高さを揃える）
   const rows = f.rows.map((r) => {
     const label = wrap(r.label + refsOf(r.refs), labelW - 16, TEXT, ctx.measure, 3, 500);
-    const cells = r.cells.map((c) => (c.text ? wrapCell(ctx, c.text, cellW - (c.mark ? ICON_W + 6 : 0)) : []));
+    const hidden = r.cells.some((c) => c.text && hide(c));
+    const cells = r.cells.map((c) => (c.text && !hide(c) ? wrapCell(ctx, c.text, cellW - (c.mark ? ICON_W + 6 : 0)) : []));
     const lines = Math.max(label.length, 1, ...cells.map((c) => c.length));
-    return { label, cells, h: lines * TEXT_LH + 20 };
+    return { label, cells, hidden, h: lines * TEXT_LH + 20 };
   });
   const bodyTop = headTop + headH;
   const bottom = bodyTop + rows.reduce((a, r) => a + r.h, 0);
@@ -93,7 +97,7 @@ export function layoutCompare(ctx: Ctx, f: CompareFigure, top: number): number {
       drawCell(ctx, c, ls, cx, cy0, g);
     });
     const say = `${r.label}: ${r.cells.map((c, i) => `${f.columns[i + 1]} ${cellSay(ctx, c)}`).join("、")}`;
-    const cut = [...row.label, ...row.cells.flat()].some((l) => l.endsWith("…"));
+    const cut = row.hidden || [...row.label, ...row.cells.flat()].some((l) => l.endsWith("…"));
     ctx.targets.push({ hit: { x: ctx.pad, y, w: inner, h: row.h }, keep: [g], ...(cut ? { tip: { title: r.label, rows: r.cells.map((c, i) => ({ label: f.columns[i + 1]!, value: cellSay(ctx, c) })), x: ctx.pad + labelW / 2, y } } : { say }) });
     y += row.h;
   });

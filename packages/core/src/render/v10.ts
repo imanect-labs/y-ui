@@ -66,7 +66,9 @@ export function layoutRadar(ctx: Ctx, f: ChartFigure, top: number): number {
     const ly = cy + Math.sin(a) * (R + 12);
     const anchor = Math.abs(Math.cos(a)) < 0.2 ? "middle" : Math.cos(a) > 0 ? "start" : "end";
     const dy = Math.sin(a) > 0.5 ? 12 : Math.sin(a) < -0.5 ? -4 : 4;
-    ctx.items.push({ t: "text", x: lx, y: ly + dy, text: fit(r.label, labelW, TEXT, ctx.measure), size: TEXT, fill: "ink2", anchor });
+    // 狭い幅では円の脇に labelW が残らないので、その側の図の端までに収める
+    const room = anchor === "start" ? ctx.width - ctx.pad - lx : anchor === "end" ? lx - ctx.pad : inner;
+    ctx.items.push({ t: "text", x: lx, y: ly + dy, text: fit(r.label, Math.min(labelW, room), TEXT, ctx.measure), size: TEXT, fill: "ink2", anchor });
     const [hx, hy] = pt(i, top1);
     ctx.targets.push({
       hit: { x: Math.min(hx, lx) - 30, y: Math.min(hy, ly) - 16, w: Math.abs(hx - lx) + 60, h: Math.abs(hy - ly) + 32 },
