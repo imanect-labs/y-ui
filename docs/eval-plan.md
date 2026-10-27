@@ -176,3 +176,10 @@ pnpm eval report eval/results/<run-id>
 - G・H は、system に短い案内だけを置き、`yui_guide` ツールを呼ばれたら Shiki の `yui_guide.md` をそのまま返す。最大 3 ターン（読む → 書く、に 1 回の余裕）。
 - 図を取り出すのは全ターンの本文をつないだもの。トークンと時間は全ターンの合計。
 
+
+### 2026-10-27（方式 I を足した。採点は変えていない）
+
+- I は、Shiki の決まり（`crates/chat/src/worker/yui_guide.md`）＋ `@imanect/yui/guide` の共通の決まりと種類の早見を system に置き、種類ごとの書き方は `ui_reference`（`kinds` を指定）で返す。Shiki の `with_yui_guide` と同じ順に組む。Shiki の説明の手書きをやめ、このリポジトリの定義から作る形の評価。
+- 早見に載せない ask・plan（Shiki では実行前フェーズの門が書き方ごと指示する）は I で測らない。
+- Shiki から emit_ui が消えたので、`--shiki-root` に emit_tool.rs が無くても読み込めるようにした（A・A2 はそのファイルが残る版でだけ測れる）。
+- OpenCode Go を認証付きのプロキシ越しに呼ぶときは `LUNA_GO_API_KEY=`（空）でキーを送らない。Node の fetch にプロキシを通すには `NODE_USE_ENV_PROXY=1`。

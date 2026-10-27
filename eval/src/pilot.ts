@@ -33,6 +33,7 @@ export function sampleTasks(tasks: EvalTask[], perCategory: number): EvalTask[] 
 }
 
 function toolInstruction(shiki: ShikiTool): string {
+  if (!shiki.tool) throw new Error("方式 A には emit_ui の残っている Shiki のソースが必要です");
   const f = shiki.tool.function;
   return [
     "## 使えるツール",

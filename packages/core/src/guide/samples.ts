@@ -1,8 +1,11 @@
 /**
- * 図の種類ごとの例（英語版・日本語版）。README の画像（readme-images.ts）と、種類の一覧（kinds-doc.ts）で同じ例を使う。
+ * 図の種類ごとの例（英語版・日本語版）。README の画像（scripts/readme-images.ts）・種類の一覧
+ * （scripts/kinds-doc.ts）・LLM 向けの書き方（[`kindGuide`](./index.ts)）で同じ例を使う。
  */
 
-export const SAMPLES: Record<"en" | "ja", Record<string, string>> = {
+import type { Kind } from "../ir.js";
+
+export const SAMPLES: Record<"en" | "ja", Record<Kind, string>> = {
   en: {
     bar: `bar Revenue and profit by quarter
 unit: $M

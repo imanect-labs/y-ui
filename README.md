@@ -352,6 +352,20 @@ downloadFigure(figure, "png", { scale: 2 });       // or "svg"; colors baked in 
 
 One layout drives both SVG and React output, so exports look exactly like the screen. On screen, charts show values on hover (or with arrow keys) and highlight the category; flowcharts highlight the hovered box and its connections. The default look is quiet — outlined cards, dashed grid lines, muted seasonal hues — and the palette is validated for color-vision deficiencies in both light and dark. Dark mode follows `<html class="dark">` or `data-theme`, then the OS. Override anything with CSS variables (`--yui-s1` … `--yui-s8`, `--yui-ink`, `--yui-font`, …).
 
+## Prompting a model
+
+`@imanect/yui/guide` returns the text a host puts in front of a model (Japanese). Put the short index of kinds and the common rules in the system prompt, and let the model load the full syntax of a kind (usage, syntax, options, limits, when to use another kind, an example) through a tool right before it writes that kind. The index and rules are about 1,100 characters, against about 9,700 for every kind's syntax. In our evaluation ([docs/eval-results-2026-10-13-luna.md](docs/eval-results-2026-10-13-luna.md), arm H) loading the syntax on demand kept quality; without the index in the prompt, models stopped choosing the right kind.
+
+```ts
+import type { Kind } from "@imanect/yui";
+import { GUIDE_RULES, guideIndex, kindGuide } from "@imanect/yui/guide";
+
+const system = `${GUIDE_RULES}\n\n${guideIndex({ kinds: ["bar", "pie", "calc"] })}`; // omit kinds for all
+const tool = (kind: Kind) => kindGuide(kind); // e.g. "## pie 円グラフ（ドーナツ）…"
+```
+
+The same definitions generate [docs/kinds.md](docs/kinds.md).
+
 ## Building screens with drag and drop
 
 `app` screens (inputs and buttons) can be built without writing the syntax. A checker points at the exact input or setting that would change on save or that targets an unavailable workflow. Design: [docs/editor.md](docs/editor.md) (Japanese).

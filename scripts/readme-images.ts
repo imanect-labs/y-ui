@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { chromium } from "playwright";
 import { parseBlock } from "@imanect/yui";
 import { renderSVG } from "@imanect/yui/svg";
-import { SAMPLES } from "./samples.js";
+import { SAMPLES } from "@imanect/yui/guide";
 
 
 const out = join(import.meta.dirname, "../docs/images");
