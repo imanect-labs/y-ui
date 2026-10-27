@@ -54,7 +54,9 @@ export function wrap(text: string, maxWidth: number, fontSize: number, measure: 
   const lines: string[] = [];
   let cur = "";
   for (const tok of tokens) {
-    if (cur !== "" && measure((cur + tok).trimEnd(), fontSize, weight) > maxWidth) {
+    // 文字単位に崩した語の後に残った空白だけの行頭は、行にせず捨てる（空行を作らない）
+    if (cur.trim() === "") cur = "";
+    else if (measure((cur + tok).trimEnd(), fontSize, weight) > maxWidth) {
       lines.push(cur.trimEnd());
       cur = "";
     }
@@ -63,7 +65,7 @@ export function wrap(text: string, maxWidth: number, fontSize: number, measure: 
     if (cur === "" && measure(t.trimEnd(), fontSize, weight) > maxWidth && t.length > 1) {
       for (const ch of t) {
         if (measure(cur + ch, fontSize, weight) > maxWidth && cur !== "") {
-          lines.push(cur);
+          lines.push(cur.trimEnd());
           cur = "";
         }
         cur += ch;

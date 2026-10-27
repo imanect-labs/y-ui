@@ -106,6 +106,13 @@ describe("折り返し", () => {
     expect(lines.some((l) => l.includes("（post-filter）")), lines.join("/")).toBe(true);
   });
 
+  it("長い語を文字単位に崩した後に空行を作らない", () => {
+    for (let width = 30; width <= 160; width++) {
+      const lines = wrap("supercalifragilistic expialidocious antidisestablishment word", width, 13, estimate, 20);
+      expect(lines.filter((l) => l.trim() === ""), `${width}px: ${JSON.stringify(lines)}`).toEqual([]);
+    }
+  });
+
   it("括弧ごとまとめた語が 1 行に入らなくても、幅を超える行を作らない", () => {
     for (const [text, width] of [["モデル（GPT-4o）を使う", 50], ["権限は「ReBAC」で判定する", 50], ["APIは（REST）とする", 45], ["a supercalifragilistic word", 60]] as const) {
       const lines = wrap(text, width, 13, estimate, 9);
