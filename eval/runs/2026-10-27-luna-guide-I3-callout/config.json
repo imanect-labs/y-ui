@@ -1,0 +1,33 @@
+{
+  "runId": "2026-10-27T17-32-56-164Z",
+  "outDir": "eval/runs/2026-10-27-luna-guide-I3-callout",
+  "models": [
+    "luna-go"
+  ],
+  "efforts": [
+    "low"
+  ],
+  "arms": [
+    "I"
+  ],
+  "seeds": 4,
+  "tasks": [
+    "none-unneeded-001",
+    "none-unneeded-002",
+    "none-unneeded-003",
+    "none-unneeded-004",
+    "none-unneeded-005",
+    "none-unneeded-006",
+    "none-unneeded-007",
+    "none-unneeded-008",
+    "none-unneeded-009",
+    "none-unneeded-010",
+    "callout-001",
+    "callout-002"
+  ],
+  "concurrency": 6,
+  "shiki": {
+    "commit": "a3a201f"
+  },
+  "mock": false
+}

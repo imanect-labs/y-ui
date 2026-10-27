@@ -95,6 +95,17 @@ if (r.ok) setFigure(r.figure);
 const saved = toSource(figure);
 ```
 
+## Prompting a model
+
+`@imanect/yui/guide` returns the (Japanese) text a host shows a model: a short index of kinds and common rules for the system prompt (`guideIndex`, `GUIDE_RULES`), and the full syntax of one kind with an example (`kindGuide`) to load through a tool right before the model writes that kind.
+
+```ts
+import { GUIDE_RULES, guideIndex, kindGuide } from "@imanect/yui/guide";
+
+const system = `${GUIDE_RULES}\n\n${guideIndex()}`;
+const syntaxOfPie = kindGuide("pie");
+```
+
 ## Docs
 
 - Notation spec (Japanese): [docs/spec.md](https://github.com/imanect-labs/y-ui/blob/main/docs/spec.md)

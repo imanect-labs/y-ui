@@ -99,6 +99,7 @@ export function mockChat(arm: ArmId, task: EvalTask): ChatFn {
       case "F":
       case "G":
       case "H":
+      case "I":
         r = result(`${lead}\`\`\`ui\n${toSource(f)}\`\`\`\n`);
         break;
       case "D":

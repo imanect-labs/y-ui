@@ -7,7 +7,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseBlock, type Figure } from "@imanect/yui";
 import { renderSVG } from "@imanect/yui/svg";
-import { SAMPLES } from "./samples.js";
+import { SAMPLES } from "@imanect/yui/guide";
 
 const out = process.argv[2] ?? "gallery";
 mkdirSync(out, { recursive: true });
@@ -268,7 +268,7 @@ const figures: [string, Figure][] = [
   ...Object.entries({
     ...samples,
     // v0.9 の種類は README の見本をそのまま使う
-    ...Object.fromEntries(["compare", "proscons", "swot", "checklist", "app", "ask", "plan", "radar", "treemap", "callout", "map"].flatMap((k) => [[k, SAMPLES.ja[k]!], [`${k}-en`, SAMPLES.en[k]!]])),
+    ...Object.fromEntries((["compare", "proscons", "swot", "checklist", "app", "ask", "plan", "radar", "treemap", "callout", "map"] as const).flatMap((k) => [[k, SAMPLES.ja[k]], [`${k}-en`, SAMPLES.en[k]]])),
   }).map(([k, src]) => {
     const r = parseBlock(src, { final: true });
     if (!r.figure) throw new Error(`${k}: ${JSON.stringify(r.diagnostics)}`);

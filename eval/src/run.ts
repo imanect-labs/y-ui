@@ -43,8 +43,9 @@ export function resolveEndpoint(name: string, effort: string): Endpoint {
   const baseUrl = process.env[cfg.baseUrlEnv] ?? cfg.baseUrlDefault;
   const missing: string[] = [];
   if (!baseUrl) missing.push(cfg.baseUrlEnv);
+  // 空文字は「キーを送らない」（認証を付け足す社内のプロキシ越しに呼ぶとき）。未設定は誤りとして止める。
   const apiKey = process.env[cfg.apiKeyEnv];
-  if (!apiKey && name !== "gemma") missing.push(cfg.apiKeyEnv);
+  if (apiKey === undefined && name !== "gemma") missing.push(cfg.apiKeyEnv);
   if (missing.length > 0) throw new Error(`${name}: 環境変数 ${missing.join(", ")} が必要です`);
   const extraBody = cfg.effort[effort];
   if (!extraBody) throw new Error(`${name}: effort=${effort} の設定が models.json にありません`);

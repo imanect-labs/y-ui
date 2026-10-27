@@ -1,6 +1,6 @@
 # Yui ロードマップ
 
-今の位置は 0.9.1（公開待ち。0.9.0 まで公開済み）。0.9.1 で狭い幅（スマホ）での崩れを直した（棒が 6 本以下でも項目名を間引くなら横向きにする・間引いた横軸ラベルを図の内側に収めて重ねない・列の多い比較表は印だけにする・レーダーの観点名を図に収める・括弧付きの英単語を途中で折らない）。棒グラフの向きの判定は広い幅でも同じ規則で変わる。0.9.0 で app の画面を組み立てるエディタ（[editor.md](editor.md)）を足した。対応する種類は 27（グラフ: bar / line / pie / scatter / radar / treemap、数値: stat / progress / funnel、流れ・時間: flow / steps / timeline / gantt、構造・整理: stack / tree / quadrant / cards / callout / map、比較・判断: compare / proscons / swot / checklist、操作: calc / app / ask / plan）で、パーサ・SVG・React（ホバーとキーボード・操作）・書き出し（PNG / SVG / クリップボード）がある。Shiki の emit_ui を Yui に置き換える計画: [emit-ui-replacement.md](emit-ui-replacement.md)（imanect-labs/shiki-platform#604）。
+今の位置は 0.10.0（公開待ち。0.9.1 まで公開済み）。0.10.0 で LLM 向けの書き方（`@imanect/yui/guide`。種類の早見・共通の決まり・種類ごとの書き方）をパッケージから出し、ホストが説明を手書きしなくてよいようにした。0.9.1 で狭い幅（スマホ）での崩れを直した（棒が 6 本以下でも項目名を間引くなら横向きにする・間引いた横軸ラベルを図の内側に収めて重ねない・列の多い比較表は印だけにする・レーダーの観点名を図に収める・括弧付きの英単語を途中で折らない）。棒グラフの向きの判定は広い幅でも同じ規則で変わる。0.9.0 で app の画面を組み立てるエディタ（[editor.md](editor.md)）を足した。対応する種類は 27（グラフ: bar / line / pie / scatter / radar / treemap、数値: stat / progress / funnel、流れ・時間: flow / steps / timeline / gantt、構造・整理: stack / tree / quadrant / cards / callout / map、比較・判断: compare / proscons / swot / checklist、操作: calc / app / ask / plan）で、パーサ・SVG・React（ホバーとキーボード・操作）・書き出し（PNG / SVG / クリップボード）がある。Shiki の emit_ui を Yui に置き換える計画: [emit-ui-replacement.md](emit-ui-replacement.md)（imanect-labs/shiki-platform#604）。
 
 この文書の順番で進める。v0.6・v0.7・Shiki 側の組み込みは並行する。
 
@@ -65,7 +65,7 @@
 3. 描画（`render/`）と React のホバー・キーボード（`targets`）。明暗・幅 390px で目で確かめる。
 4. テスト（パーサ・描画・往復 `parseBlock(toSource(f))`）。
 5. 評価の課題と採点（`eval/src/tasks`・`eval/src/score.ts`）。Luna で、新しい種類の合格率と、今の種類の合格率が下がっていないことを確かめる。
-6. 説明文（`eval/prompts/miniui-full.md` と Shiki の `yui_guide.md`）。
+6. 説明（`packages/core/src/guide/kinds.ts` の `KIND_GUIDE` と作例 `guide/samples.ts`。Shiki はここから早見と書き方を読む）と、評価の `eval/prompts/miniui-full.md`。`pnpm docs:kinds` で docs/kinds.md を作り直す。
 
 ## Shiki 側の組み込み（並行）
 
@@ -74,7 +74,7 @@
 | ノート（TipTap）と文書の中でも ```ui を図として描き、編集できるようにする | 調査中 |
 | ミニアプリの画面をドラッグ＆ドロップで組み立てる（app のエディタ・チェッカー。[docs/editor.md](editor.md)） | Yui 側は実装済み（0.9.0）。Shiki への組み込みは実装中 |
 | チャット・ノートの書き出し（Markdown・docx・PDF）で、図を画像か表に置き換える（`docs/export.md` §3） | 未着手 |
-| 新しい種類を足すたびに `yui_guide.md` を更新し、`emit_ui` に頼っている図（円グラフ・散布図）を Yui に移す | v0.7 に合わせて |
+| 新しい種類を足すたびに `yui_guide.md` を更新し、`emit_ui` に頼っている図（円グラフ・散布図）を Yui に移す | 0.10.0 で置き換え。`yui_guide.md` の手書きが 5 種類のまま止まっていた（円グラフを「描けない」と答えていた）ため、Shiki は `@imanect/yui/guide` の早見をプロンプトに置き、種類ごとの書き方をツールで読む（imanect-labs/y-ui#5） |
 
 ## v0.9 — calc（画面内で完結する計算）
 

@@ -15,6 +15,7 @@
  *                                         予備評価: D/answers-<M>-<方式>.md を取り込んで採点する
  */
 
+import { UI_REFERENCE_TOOL } from "./arms.js";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -47,7 +48,7 @@ const str = (v: string | true | undefined, d: string) => (typeof v === "string" 
 const list = (v: string | true | undefined, d: string) => str(v, d).split(",").map((s) => s.trim()).filter(Boolean);
 
 function shikiFrom(opts: Record<string, string | true>, arms: readonly ArmId[]): ShikiTool | null {
-  if (!arms.some((a) => a === "A" || a === "A2" || a === "F" || a === "G" || a === "H")) return null;
+  if (!arms.some((a) => a === "A" || a === "A2" || a === "F" || a === "G" || a === "H" || a === "I")) return null;
   const root = str(opts["shiki-root"], process.env.SHIKI_ROOT ?? resolve(ROOT, "../shiki-platform"));
   return loadShikiTool(root);
 }
@@ -70,7 +71,8 @@ async function main(): Promise<void> {
       console.log("| 方式 | system の文字数 | ツール定義の文字数 |\n|---|---:|---:|");
       for (const arm of ARMS) {
         const sys = buildMessages(arm, sample, undefined, shiki)[0]!.content!.length;
-        const tool = arm === "A" || arm === "A2" ? JSON.stringify(shiki!.tool).length : 0;
+        if ((arm === "A" || arm === "A2") && !shiki?.tool) continue; // emit_ui の無い版の Shiki
+        const tool = arm === "A" || arm === "A2" ? JSON.stringify(shiki!.tool).length : arm === "I" ? JSON.stringify(UI_REFERENCE_TOOL).length : 0;
         console.log(`| ${arm} | ${sys} | ${tool} |`);
       }
       return;

@@ -4,6 +4,8 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { KINDS, type Kind } from "@imanect/yui";
+import { GUIDE_RULES, guideIndex } from "@imanect/yui/guide";
 import type { ChatMessage, ToolDef } from "./client.js";
 import { rng } from "./tasks/generate.js";
 import type { EvalTask } from "./tasks/types.js";
@@ -11,7 +13,7 @@ import type { EvalTask } from "./tasks/types.js";
 const PROMPTS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../prompts");
 const read = (name: string) => readFileSync(join(PROMPTS_DIR, name), "utf8").trim();
 
-export const ARMS = ["A", "A2", "B", "C", "D", "E", "F", "G", "H"] as const;
+export const ARMS = ["A", "A2", "B", "C", "D", "E", "F", "G", "H", "I"] as const;
 export type ArmId = (typeof ARMS)[number];
 
 export const ARM_LABELS: Record<ArmId, string> = {
@@ -24,7 +26,22 @@ export const ARM_LABELS: Record<ArmId, string> = {
   F: "Yui 本文中（Shiki の yui_guide.md）",
   G: "Yui 本文中（説明は必要なときにツールで読む）",
   H: "Yui 本文中（必要なときに読む＋種類の早見）",
+  I: "Yui 本文中（Shiki の決まり＋@imanect/yui/guide の早見、種類ごとの書き方はツールで読む）",
 };
+
+/**
+ * 方式 I で早見に載せる種類。Shiki と同じく ask・plan は載せない（実行前フェーズの門が、
+ * 書き方を添えて書くよう指示したときだけ使う）。
+ */
+export const ARM_I_KINDS: readonly Kind[] = KINDS.filter((k) => k !== "ask" && k !== "plan");
+
+/**
+ * 方式 I の system に足す Yui の説明。Shiki の `with_yui_guide`（crates/chat/src/worker/yui.rs）と
+ * 同じ順に組む: Shiki の決まり（yui_guide.md）→ 共通の決まり → 種類の早見。
+ */
+export function armIGuide(hostGuide: string): string {
+  return `${hostGuide}\n\n${GUIDE_RULES}\n\n種類の早見:\n${guideIndex({ kinds: ARM_I_KINDS })}`;
+}
 
 /** その方式で評価する課題か。 */
 export const V07_CATEGORIES: string[] = ["scatter", "timeline", "steps", "tree", "cards", "progress", "funnel", "quadrant", "gantt", "calc", "compare", "proscons", "swot", "checklist", "app", "ask", "plan", "radar", "treemap", "callout", "map"];
@@ -34,6 +51,8 @@ export function armApplies(arm: ArmId, task: EvalTask): boolean {
   if (arm === "E") return task.category === "flow" || task.category === "stack";
   // D（JSON）は比較用の方式で、v0.7 で足した種類の書き方を持たない
   if (arm === "D") return !V07_CATEGORIES.includes(task.category);
+  // I は ask・plan を早見に載せない（Shiki では門が書き方ごと指示する）
+  if (arm === "I") return task.category !== "ask" && task.category !== "plan";
   return true;
 }
 
@@ -69,7 +88,8 @@ export function readRustString(src: string, from: number): string {
 }
 
 export interface ShikiTool {
-  tool: ToolDef;
+  /** Shiki の emit_ui（方式 A・A2）。Shiki から emit_ui を消した後の版では無い。 */
+  tool?: ToolDef;
   /** 読み込んだ Shiki のコミット。 */
   commit: string;
   /** Shiki がチャットの system に足す Yui の説明（`crates/chat/src/worker/yui_guide.md`）。方式 F で使う。 */
@@ -77,11 +97,6 @@ export interface ShikiTool {
 }
 
 export function loadShikiTool(shikiRoot: string): ShikiTool {
-  const path = join(shikiRoot, "crates/gui/src/emit_tool.rs");
-  const src = readFileSync(path, "utf8");
-  const desc = readRustString(src, src.indexOf("fn description"));
-  const schemaAt = src.indexOf("fn input_schema");
-  const specDesc = readRustString(src, src.indexOf('"description"', schemaAt) + '"description"'.length);
   let commit = "unknown";
   try {
     commit = execFileSync("git", ["-C", shikiRoot, "rev-parse", "--short", "HEAD"], { encoding: "utf8" }).trim();
@@ -90,18 +105,24 @@ export function loadShikiTool(shikiRoot: string): ShikiTool {
   }
   const guidePath = join(shikiRoot, "crates/chat/src/worker/yui_guide.md");
   const yuiGuide = existsSync(guidePath) ? readFileSync(guidePath, "utf8").trim() : undefined;
-  return {
-    commit,
-    ...(yuiGuide ? { yuiGuide } : {}),
-    tool: {
+  // emit_ui は Shiki から消えた（#604）。残っている古い版を測るときだけ読む。
+  const path = join(shikiRoot, "crates/gui/src/emit_tool.rs");
+  let tool: ToolDef | undefined;
+  if (existsSync(path)) {
+    const src = readFileSync(path, "utf8");
+    const desc = readRustString(src, src.indexOf("fn description"));
+    const schemaAt = src.indexOf("fn input_schema");
+    const specDesc = readRustString(src, src.indexOf('"description"', schemaAt) + '"description"'.length);
+    tool = {
       type: "function",
       function: {
         name: "emit_ui",
         description: desc,
         parameters: { type: "object", properties: { spec: { type: "object", description: specDesc } }, required: ["spec"] },
       },
-    },
-  };
+    };
+  }
+  return { commit, ...(yuiGuide ? { yuiGuide } : {}), ...(tool ? { tool } : {}) };
 }
 
 // ------------------------------------------------------------ 文脈の水増し（長い文脈の下での劣化を見る）
@@ -177,6 +198,10 @@ export function systemPrompt(arm: ArmId, task: EvalTask, shiki?: ShikiTool | nul
       return `${base}\n\n${read("yui-ondemand.md")}`;
     case "H":
       return `${base}\n\n${read("yui-ondemand-kinds.md")}`;
+    case "I":
+      // Shiki の決まりは Shiki のソースから読み、早見はこのリポジトリの @imanect/yui/guide から作る。
+      if (!shiki?.yuiGuide) throw new Error("方式 I には Shiki のソース（--shiki-root）の yui_guide.md が必要です");
+      return `${base}\n\n${armIGuide(shiki.yuiGuide)}`;
   }
   void task;
 }
