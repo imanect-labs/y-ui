@@ -29,6 +29,7 @@ export function cross(ctx: Ctx, cx: number, cy: number, stroke: Token, group?: s
 
 const ICON_W = 12;
 
+/** 比較表を描く（見出し・推奨の列・行ごとの項目名とセル）。下端の y を返す。 */
 export function layoutCompare(ctx: Ctx, f: CompareFigure, top: number): number {
   const n = f.columns.length - 1;
   if (n <= 0 || f.rows.length === 0) return top;

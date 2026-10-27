@@ -18,6 +18,7 @@ const f2 = (n: number) => +n.toFixed(2);
 
 // ---------------------------------------------------------------- radar
 
+/** レーダーチャートを描く（目盛りの多角形・系列・観点の名前）。観点が 3 つ未満なら何も描かない。下端の y を返す。 */
 export function layoutRadar(ctx: Ctx, f: ChartFigure, top: number): number {
   const n = f.rows.length;
   if (n < 3) return top;

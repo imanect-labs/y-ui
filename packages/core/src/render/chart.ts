@@ -69,6 +69,7 @@ function rowExtent(f: ChartFigure, values: (number | null)[]): [number, number] 
   return [Math.min(0, ...vs), Math.max(0, ...vs)];
 }
 
+/** 棒・折れ線を描く。凡例・単位の下に、縦向きか横向き（棒だけ）の本体を置き、下端の y を返す。 */
 export function layoutChart(ctx: Ctx, f: ChartFigure, y0: number): number {
   const names = seriesNames(f);
   let y = drawLegend(ctx, names, y0, f.kind === "bar" ? "box" : "line");
@@ -100,6 +101,7 @@ function verticalAxis(ctx: Ctx, f: ChartFigure) {
   return { ticks, tickLabels, left, right, band: (right - left) / f.rows.length };
 }
 
+/** 縦向きの棒・折れ線（目盛り・横軸のラベル・本体・ホバーの対象）を描き、下端の y を返す。 */
 function vertical(ctx: Ctx, f: ChartFigure, top: number): number {
   const S = Math.max(1, f.columns.length - 1);
   const { ticks, tickLabels, left, right, band } = verticalAxis(ctx, f);
