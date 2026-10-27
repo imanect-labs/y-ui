@@ -9,7 +9,8 @@
     "eval": "tsx eval/src/cli.ts",
     "build": "pnpm --filter @imanect/yui run build",
     "docs:kinds": "tsx scripts/kinds-doc.ts",
-    "spec:app": "tsx scripts/app-fixtures.ts"
+    "spec:app": "tsx scripts/app-fixtures.ts",
+    "spec:flow": "tsx scripts/flow-fixtures.ts"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

@@ -46,9 +46,11 @@ describe("レイアウト", () => {
     expect(scene.items.filter((i) => i.t === "path" && i.arrow)).toHaveLength(3);
   });
 
-  it("流れ図: ラベルの無い枝分かれ（並行する処理）はひし形にしない", () => {
-    const scene = layout(fig("flow x\n抽出 -> 生成\n抽出 -> 連結\n"));
-    expect(scene.items.filter((i) => i.t === "path" && i.fill === "accentWash")).toHaveLength(0);
+  it("流れ図: 出る辺が 2 本以上ならひし形（ラベルが無くても）。枠をまたぐ辺は数えない", () => {
+    const diamonds = (src: string) => layout(fig(src)).items.filter((i) => i.t === "path" && i.fill === "accentWash").length;
+    expect(diamonds("flow x\n抽出 -> 生成\n抽出 -> 連結\n")).toBe(1);
+    expect(diamonds("flow x\nsubgraph 前\n  抽出 -> 生成\nend\nsubgraph 後\n  連結\nend\n抽出 -> 連結\n")).toBe(0);
+    expect(diamonds("flow x\nsubgraph 前\n  抽出 -> 生成\n  抽出 -> 確認\nend\n")).toBe(1);
   });
 
   describe("流れ図の枠", () => {

@@ -117,20 +117,18 @@ export function layoutFlow(ctx: Ctx, f: FlowFigure, top: number): number {
   return top + plan.height + 8;
 }
 
-/** ひし形にするノード: `{判断}` と書かれたもの、またはラベル付きで 2 本以上に分かれるもの。 */
+/**
+ * ひし形にするノード: `{判断}` と書かれたもの、または出る辺が 2 本以上のもの。
+ * 枠をまたぐ辺（段階から次の段階への受け渡し）は分岐に数えない。枠の無い図では全部の辺を数える。
+ */
 function decisions(f: FlowFigure): Set<string> {
-  const out = new Map<string, { n: number; labeled: boolean }>();
+  const group = new Map<string, string | undefined>(f.nodes.map((n) => [n.id, n.group]));
+  const outDeg = new Map<string, number>();
   for (const e of f.edges) {
-    const o = out.get(e.from) ?? { n: 0, labeled: false };
-    o.n++;
-    if (e.label !== undefined) o.labeled = true;
-    out.set(e.from, o);
+    if (!group.has(e.to) || group.get(e.from) !== group.get(e.to)) continue;
+    outDeg.set(e.from, (outDeg.get(e.from) ?? 0) + 1);
   }
-  const branch = (n: FlowNode) => {
-    const o = out.get(n.id);
-    return o !== undefined && o.n >= 2 && o.labeled;
-  };
-  return new Set(f.nodes.filter((n) => n.shape === "decision" || (n.shape !== "terminal" && branch(n))).map((n) => n.id));
+  return new Set(f.nodes.filter((n) => n.shape === "decision" || (n.shape !== "terminal" && (outDeg.get(n.id) ?? 0) >= 2)).map((n) => n.id));
 }
 
 /** ホバー: この箱と、つながる線・前後の箱だけを残して薄くする（流れを追いやすくする）。 */
