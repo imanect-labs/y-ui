@@ -46,6 +46,80 @@ describe("レイアウト", () => {
     expect(scene.items.filter((i) => i.t === "path" && i.arrow)).toHaveLength(3);
   });
 
+  it("流れ図: ラベルの無い枝分かれ（並行する処理）はひし形にしない", () => {
+    const scene = layout(fig("flow x\n抽出 -> 生成\n抽出 -> 連結\n"));
+    expect(scene.items.filter((i) => i.t === "path" && i.fill === "accentWash")).toHaveLength(0);
+  });
+
+  describe("流れ図の枠", () => {
+    const paper = [
+      "flow 目次検索",
+      "dir: LR",
+      "subgraph Stage 1 — Input Preparation",
+      "  Book (PDF/Text) -> ToC Extraction -> Synthetic QA Generation",
+      "end",
+      "subgraph Stage 2 — Training",
+      "  C1[Concatenate ToC + Query] -> LLM Fine-tuning -> Target: ToC Leaf Node",
+      "end",
+      "subgraph Stage 3 — Inference",
+      "  Query Input -> C2[Concatenate ToC + Query]",
+      "  ToC -> C2",
+      "  C2 -> Fine-tuned LLM -> **Constrained Generation** -> Predicted Leaf Node",
+      "end",
+      "ToC Extraction -> C1",
+      "Synthetic QA Generation -> C1",
+      "LLM Fine-tuning -> Fine-tuned LLM",
+    ].join("\n");
+    type Rect = { x: number; y: number; w: number; h: number };
+    const frames = (sc: ReturnType<typeof layout>) => sc.items.filter((i) => i.t === "path" && i.dash !== undefined);
+    const nodeRects = (sc: ReturnType<typeof layout>) => sc.targets.map((t) => t.hit as Rect);
+
+    it.each([960, 640, 360])("幅 %ipx: 枠を 3 つ描き、箱は重ならず、文字は図の中に収まる", (width) => {
+      const sc = layout(fig(paper), { width });
+      expect(frames(sc)).toHaveLength(3);
+      const rs = nodeRects(sc);
+      expect(rs).toHaveLength(12);
+      for (let i = 0; i < rs.length; i++) {
+        for (let j = i + 1; j < rs.length; j++) {
+          const [a, b] = [rs[i]!, rs[j]!];
+          const overlap = a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+          expect(overlap, `${i} と ${j} が重なる（${width}px）`).toBe(false);
+        }
+      }
+      for (const it of sc.items) if (it.t === "text") expect(it.x).toBeLessThanOrEqual(sc.width);
+    });
+
+    it("横向きで幅に収まれば、段を左から右に並べ、枠をまたぐ辺もつながる", () => {
+      const sc = layout(fig(paper), { width: 960 });
+      const xs = frames(sc).map((p) => Number(/^M(-?[\d.]+)/.exec((p as { d: string }).d)![1]));
+      expect(xs[0]!).toBeLessThan(xs[1]!);
+      expect(xs[1]!).toBeLessThan(xs[2]!);
+      // 枠の中 9 本 + 枠をまたぐ 3 本
+      expect(sc.items.filter((i) => i.t === "path" && i.arrow)).toHaveLength(12);
+    });
+
+    it("強調した箱は強調の色の太い枠で描く", () => {
+      const sc = layout(fig(paper), { width: 960 });
+      expect(sc.items.filter((i) => i.t === "rect" && i.stroke === "s5" && i.strokeWidth === 2)).toHaveLength(1);
+    });
+
+    it("狭い幅で全部を縦に積むと、枠の中の箱を貫かないように枠の外側を回す", () => {
+      const sc = layout(fig(paper), { width: 360 });
+      const rs = nodeRects(sc);
+      for (const p of sc.items) {
+        if (p.t !== "path" || !p.arrow) continue;
+        // 縦の区間（x が同じ 2 点）が、端以外の箱を縦に横切らない
+        const pts = [...p.d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map((m) => [Number(m[1]), Number(m[2])] as const);
+        for (let k = 0; k + 1 < pts.length; k++) {
+          const [[x1, y1], [x2, y2]] = [pts[k]!, pts[k + 1]!];
+          if (Math.abs(x1 - x2) > 0.01) continue;
+          const crossed = rs.filter((r) => x1 > r.x + 1 && x1 < r.x + r.w - 1 && Math.min(y1, y2) < r.y && Math.max(y1, y2) > r.y + r.h);
+          expect(crossed, p.d).toEqual([]);
+        }
+      }
+    });
+  });
+
   it("狭い幅で項目名が区画に入らない棒グラフは、行が少なくても横向きにする", () => {
     const f = fig("bar 部署別\n部署 | 件数\nカスタマーサクセス本部 第一グループ | 412\nエンタープライズ営業本部 | 288\n経営企画室 | 120\n");
     const names = (w: number) => layout(f, { width: w }).items.filter((i) => i.t === "text" && i.anchor === "end" && !/^[\d,]+$/.test(i.text)).length;

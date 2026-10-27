@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseBlock, toSource, type ChartFigure, type FlowFigure, type StackFigure, type StatFigure } from "../src/index.js";
+import { parseBlock, toSource, toText, type ChartFigure, type FlowFigure, type StackFigure, type StatFigure } from "../src/index.js";
 
 const final = { final: true } as const;
 
@@ -121,6 +121,92 @@ describe("flow", () => {
     const f = parseBlock("flow x\nA -> B\nA -> B\nB -> A\n", final).figure as FlowFigure;
     expect(f.nodes).toHaveLength(2);
     expect(f.edges).toHaveLength(2);
+  });
+
+  it("名前の後の空白に続く丸括弧は名前の一部（Mermaid の id としない）", () => {
+    const f = parseBlock("flow x\nBook (PDF/Text) -> 目次の抽出\nA(丸) -> B\n", final).figure as FlowFigure;
+    expect(f.nodes.map((n) => n.label)).toEqual(["Book (PDF/Text)", "目次の抽出", "丸", "B"]);
+  });
+
+  it("枠: subgraph 〜 end。ノードは最初に書かれた枠に属し、枠の外の行で枠をまたいでつなぐ", () => {
+    const src = [
+      "flow 学習と推論",
+      "subgraph 準備",
+      "  本 -> 目次の抽出",
+      "end",
+      "subgraph S2[学習]",
+      "  direction LR",
+      "  連結 -> 微調整",
+      "  目次の抽出 -> 連結",
+      "end",
+      "微調整 -> 推論",
+    ].join("\n");
+    const f = parseBlock(src, final).figure as FlowFigure;
+    expect(f.groups).toEqual([
+      { id: "g1", label: "準備" },
+      { id: "g2", label: "学習", direction: "LR" },
+    ]);
+    expect(f.nodes.map((n) => [n.label, n.group])).toEqual([
+      ["本", "g1"],
+      ["目次の抽出", "g1"],
+      ["連結", "g2"],
+      ["微調整", "g2"],
+      ["推論", undefined],
+    ]);
+    expect(labels(f)).toContain("目次の抽出>>連結");
+  });
+
+  it("枠: ## 見出し は次の見出しまで。End という名前のノードは枠の終わりにしない", () => {
+    const f = parseBlock("flow x\n## 前半\nStart -> A\n## 後半\nA -> B\nEnd\n", final).figure as FlowFigure;
+    expect(f.groups?.map((g) => g.label)).toEqual(["前半", "後半"]);
+    expect(f.nodes.map((n) => [n.label, n.group])).toEqual([
+      ["Start", "g1"],
+      ["A", "g1"],
+      ["B", "g2"],
+      ["End", "g2"],
+    ]);
+  });
+
+  it("枠の名前や id を矢印の端に書くと、枠につなぐ", () => {
+    const f = parseBlock("flow x\nsubgraph S1[受付]\n  申込\nend\n開始 -> S1\n開始 -> 受付\n", final).figure as FlowFigure;
+    expect(f.nodes.map((n) => n.label)).toEqual(["申込", "開始"]);
+    expect(f.edges).toEqual([{ from: "n2", to: "g1" }]);
+  });
+
+  it("枠の中の枠は外に並べ、閉じていない end と上限は診断を出す", () => {
+    const r = parseBlock("flow x\nsubgraph A\nsubgraph B\n  b\nend\n  a\nend\nend\n", final);
+    const f = r.figure as FlowFigure;
+    expect(f.nodes.map((n) => [n.label, n.group])).toEqual([
+      ["b", "g2"],
+      ["a", "g1"],
+    ]);
+    expect(r.diagnostics.map((d) => d.code)).toEqual(["nested_too_deep", "unrecognized_line"]);
+  });
+
+  it("強調: **名前**、A:::クラス、style、class。色の指定は読まない", () => {
+    const src = ["flow x", "**受付** -> B:::hot -> C -> D", "style C fill:#f00", "class D important", "classDef hot fill:#f00"].join("\n");
+    const r = parseBlock(src, final);
+    const f = r.figure as FlowFigure;
+    expect(f.nodes.map((n) => [n.label, n.emphasis])).toEqual([
+      ["受付", true],
+      ["B", true],
+      ["C", true],
+      ["D", true],
+    ]);
+    expect(r.diagnostics.map((d) => [d.severity, d.code])).toEqual([["info", "unrecognized_line"]]);
+  });
+
+  it("枠と強調はテキスト化を通しても保つ", () => {
+    const src = "flow x\ndir: LR\nsubgraph 前\n  A -> **B**\nend\nsubgraph 後\n  X[同名] -> C\nend\nY[同名] -> A\nB -> C\n";
+    const f = parseBlock(src, final).figure as FlowFigure;
+    const back = parseBlock(toSource(f), final).figure as FlowFigure;
+    const norm = (x: FlowFigure) => ({
+      groups: x.groups,
+      nodes: x.nodes.map((n) => `${n.label}/${n.group ?? "-"}/${n.emphasis ?? false}`).sort(),
+      edges: x.edges.map((e) => `${x.nodes.find((n) => n.id === e.from)?.group ?? "-"}:${labels({ ...x, edges: [e] })[0]}`).sort(),
+    });
+    expect(norm(back)).toEqual(norm(f));
+    expect(toText(f)).toBe(["**x**", "", "- 前", "  - A → B", "- 後", "  - 同名 → C", "- 同名 → A", "- B → C"].join("\n"));
   });
 });
 

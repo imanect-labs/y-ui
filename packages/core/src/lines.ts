@@ -16,6 +16,7 @@ export const LIMITS = {
   statItems: 24,
   flowNodes: 60,
   flowEdges: 100,
+  flowGroups: 12,
   stackTiers: 12,
   stackBoxesPerTier: 8,
   stackChildren: 16,

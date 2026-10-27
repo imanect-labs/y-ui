@@ -97,9 +97,14 @@ const INFO: Record<Kind, KindInfo> = {
   flow: {
     name: "流れ図",
     use: "承認・処理の流れ。分岐・差戻し・繰り返しを含められる。",
-    syntax: ["「A -> B -> C」、条件は「A -ラベル-> B」", "同じ名前は同じ箱。分岐はひし形、ループは脇を回る"],
+    syntax: [
+      "「A -> B -> C」、条件は「A -ラベル-> B」",
+      "同じ名前は同じ箱。ラベル付きの分岐はひし形、ループは脇を回る",
+      "段階・担当で囲むなら `subgraph 名前` 〜 `end`（`## 名前` も可）。枠をまたぐ矢印は枠の外に書く",
+      "強調したい箱は `**名前**`",
+    ],
     options: ["`dir: LR` 横向き", ...COMMON],
-    limits: [`${LIMITS.flowNodes} ノード、${LIMITS.flowEdges} 辺`],
+    limits: [`${LIMITS.flowNodes} ノード、${LIMITS.flowEdges} 辺、${LIMITS.flowGroups} 枠`],
     instead: "分岐の無い手順は steps、システムの構成は stack。",
     spec: "5.3 flow",
   },

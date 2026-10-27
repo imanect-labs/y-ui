@@ -66,12 +66,25 @@ export interface FlowNode {
   id: string;
   label: string;
   shape: NodeShape;
+  /** 属するグループの id（最初に書かれた `subgraph` の中）。 */
+  group?: string;
+  /** 強調する箱（`**名前**`）。 */
+  emphasis?: true;
 }
 
 export interface FlowEdge {
+  /** ノードの id、またはグループの id（グループの枠につなぐ）。 */
   from: string;
   to: string;
   label?: string;
+}
+
+/** 囲み枠（`subgraph 名前` 〜 `end`）。 */
+export interface FlowGroup {
+  id: string;
+  label: string;
+  /** 枠の中の向き。無ければ図の向きと直交する向き（横向きの図なら枠の中は縦）。 */
+  direction?: "TB" | "LR";
 }
 
 export interface FlowFigure extends FigureBase {
@@ -79,6 +92,8 @@ export interface FlowFigure extends FigureBase {
   direction: "TB" | "LR";
   nodes: FlowNode[];
   edges: FlowEdge[];
+  /** グループ。1 つも無ければ省く。 */
+  groups?: FlowGroup[];
 }
 
 export interface StackBox {

@@ -188,15 +188,40 @@ function chartSource(f: ChartFigure, lines: string[]): void {
 
 function flowSource(f: FlowFigure, lines: string[]): void {
   if (f.direction === "LR") lines.push("dir: LR");
-  const label = new Map(f.nodes.map((n) => [n.id, n.label]));
+  // 同じ名前のノードが複数あるときは Mermaid 風の id で分ける（`n3[名前]`）
+  const count = new Map<string, number>();
+  for (const n of f.nodes) count.set(n.label, (count.get(n.label) ?? 0) + 1);
+  const name = new Map<string, string>(f.nodes.map((n) => {
+    const text = n.emphasis ? `**${n.label}**` : n.label;
+    return [n.id, count.get(n.label)! > 1 ? `${n.id}[${text}]` : text];
+  }));
+  for (const g of f.groups ?? []) name.set(g.id, g.label);
+  const edge = (e: FlowFigure["edges"][number]) => `${name.get(e.from)} ${e.label === undefined ? "->" : `-${e.label}->`} ${name.get(e.to)}`;
+
   const used = new Set<string>();
-  for (const e of f.edges) {
+  const done = new Set<number>();
+  // 枠ごとに、枠の中の辺と、辺の無いノードを書く（ノードは最初に書かれた枠に属する）
+  for (const g of f.groups ?? []) {
+    lines.push(`subgraph ${g.label}`);
+    if (g.direction) lines.push(`  direction ${g.direction}`);
+    const inside = new Set(f.nodes.filter((n) => n.group === g.id).map((n) => n.id));
+    f.edges.forEach((e, i) => {
+      if (!inside.has(e.from) || !inside.has(e.to)) return;
+      done.add(i);
+      used.add(e.from);
+      used.add(e.to);
+      lines.push(`  ${edge(e)}`);
+    });
+    for (const id of inside) if (!used.has(id)) (used.add(id), lines.push(`  ${name.get(id)}`));
+    lines.push("end");
+  }
+  f.edges.forEach((e, i) => {
+    if (done.has(i)) return;
     used.add(e.from);
     used.add(e.to);
-    const arrow = e.label === undefined ? "->" : `-${e.label}->`;
-    lines.push(`${label.get(e.from)} ${arrow} ${label.get(e.to)}`);
-  }
-  for (const n of f.nodes) if (!used.has(n.id)) lines.push(n.label);
+    lines.push(edge(e));
+  });
+  for (const n of f.nodes) if (!used.has(n.id)) lines.push(name.get(n.id)!);
 }
 
 function boxText(b: StackBox): string {
@@ -443,16 +468,45 @@ function statText(f: StatFigure, out: string[]): void {
   }
 }
 
-function flowText(f: FlowFigure, out: string[]): void {
-  const label = new Map(f.nodes.map((n) => [n.id, n.label]));
+/**
+ * 流れ図を、枠ごとの「A → B」の並びにする（テキスト化・HTML の書き出しで共有）。
+ * 枠の中の辺を枠の見出しの下に、枠をまたぐ辺と枠の外のノードを最後に（見出し無し）置く。
+ */
+export function flowOutline(f: FlowFigure): { title?: string; items: string[] }[] {
+  const label = new Map<string, string>(f.nodes.map((n) => [n.id, n.label]));
+  for (const g of f.groups ?? []) label.set(g.id, g.label);
   const used = new Set<string>();
-  for (const e of f.edges) {
+  const done = new Set<number>();
+  const line = (e: FlowFigure["edges"][number]) => {
     used.add(e.from);
     used.add(e.to);
-    const arrow = e.label === undefined ? "→" : `→（${e.label}）`;
-    out.push(`- ${label.get(e.from)} ${arrow} ${label.get(e.to)}`);
+    return `${label.get(e.from)} ${e.label === undefined ? "→" : `→（${e.label}）`} ${label.get(e.to)}`;
+  };
+  const sections: { title?: string; items: string[] }[] = [];
+  for (const g of f.groups ?? []) {
+    const inside = new Set(f.nodes.filter((n) => n.group === g.id).map((n) => n.id));
+    if (inside.size === 0) continue;
+    const items: string[] = [];
+    f.edges.forEach((e, i) => {
+      if (inside.has(e.from) && inside.has(e.to)) (done.add(i), items.push(line(e)));
+    });
+    for (const id of inside) if (!used.has(id)) items.push(label.get(id)!);
+    sections.push({ title: g.label, items });
   }
-  for (const n of f.nodes) if (!used.has(n.id)) out.push(`- ${n.label}`);
+  const rest = f.edges.flatMap((e, i) => (done.has(i) ? [] : [line(e)]));
+  for (const n of f.nodes) if (!used.has(n.id) && n.group === undefined) rest.push(n.label);
+  if (rest.length > 0) sections.push({ items: rest });
+  return sections;
+}
+
+function flowText(f: FlowFigure, out: string[]): void {
+  for (const s of flowOutline(f)) {
+    if (s.title === undefined) for (const it of s.items) out.push(`- ${it}`);
+    else {
+      out.push(`- ${s.title}`);
+      for (const it of s.items) out.push(`  - ${it}`);
+    }
+  }
 }
 
 function stackText(f: StackFigure, out: string[]): void {
