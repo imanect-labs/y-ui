@@ -118,7 +118,7 @@ ARPU | $19.4K
 
 ### `flow`
 
-Flowchart. Branches become diamonds, labels sit where the edge leaves, and loops route around the side.
+Flowchart. Branches become diamonds, labels sit where the edge leaves, and loops route around the side. Wrap stages in `subgraph Name` … `end` to draw dashed, colored frames (edges between frames route through the gaps), and mark a box with `**Name**` to emphasize it.
 
 <img src="docs/images/en-flow.png" width="640" alt="flow">
 

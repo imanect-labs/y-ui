@@ -12,7 +12,7 @@ import { formatCalc, runCalc } from "./calc/run.js";
 import { type CalcFigure, type ChartFigure, type Figure, type FlowFigure, isChart, type ListItem, type ScatterFigure, type StackBox, type StackFigure, type StatFigure, type TreeNode } from "./ir.js";
 import { layout, type LayoutOptions } from "./render/layout.js";
 import { sceneToSVG } from "./render/svg.js";
-import { share, toSource, toText } from "./text.js";
+import { flowOutline, share, toSource, toText } from "./text.js";
 
 export interface ExportOptions extends LayoutOptions {
   /** 書き出しの配色。既定は light（紙・文書に貼る前提）。 */
@@ -59,15 +59,8 @@ function statTable(f: StatFigure): string {
 }
 
 function flowList(f: FlowFigure): string {
-  const label = new Map(f.nodes.map((n) => [n.id, n.label]));
-  const used = new Set<string>();
-  const items = f.edges.map((e) => {
-    used.add(e.from);
-    used.add(e.to);
-    const arrow = e.label === undefined ? "→" : `→（${e.label}）`;
-    return `<li>${esc(`${label.get(e.from)} ${arrow} ${label.get(e.to)}`)}</li>`;
-  });
-  for (const n of f.nodes) if (!used.has(n.id)) items.push(`<li>${esc(n.label)}</li>`);
+  const li = (s: string) => `<li>${esc(s)}</li>`;
+  const items = flowOutline(f).flatMap((s) => (s.title === undefined ? s.items.map(li) : [`<li>${esc(s.title)}<ul>${s.items.map(li).join("")}</ul></li>`]));
   return `<ul>${items.join("")}</ul>`;
 }
 
