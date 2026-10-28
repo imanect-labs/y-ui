@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { parseBlock, type Figure } from "@imanect/yui";
-import { runArm, type ChatFn } from "../src/arms.js";
+import { runArm, uiReference, type ChatFn } from "../src/arms.js";
 import type { ChatRequest } from "../src/client.js";
 import { extractJsonui } from "../src/extract/jsonui.js";
 import { extractMermaid } from "../src/extract/mermaid.js";
 import { extractYui } from "../src/extract/yui.js";
 import { approxValidate, extractShiki } from "../src/extract/shiki.js";
 import { mockChat } from "../src/mock.js";
-import { armApplies, readRustString, type ArmId } from "../src/prompts.js";
+import { armApplies, armIGuide, readRustString, type ArmId } from "../src/prompts.js";
 import { COMMON_CATEGORIES, wilson } from "../src/report.js";
 import { scoreTask } from "../src/score.js";
 import { buildTasks, loadTasks } from "../src/tasks/index.js";
@@ -184,6 +184,7 @@ describe("模範解答モデルで配線を確かめる", () => {
     F: () => true,
     G: () => true,
     H: () => true,
+    I: () => true,
   };
   const fakeShiki = { commit: "test", yuiGuide: "# 図の書き方", tool: { type: "function" as const, function: { name: "emit_ui", description: "", parameters: {} } } };
 
@@ -227,5 +228,29 @@ describe("必要なときに書き方を読む方式（G・H）", () => {
     expect(seen[0]!.messages[0]!.content).not.toContain("図の書き方（本文）");
     expect(out.usage.promptTokens).toBe(20);
     expect(scoreTask(task, out.extraction).pass).toBe(true);
+  });
+});
+
+describe("方式 I（Shiki の決まり＋@imanect/yui/guide）", () => {
+  it("system は Shiki の決まり → 共通の決まり → 早見の順で、ask・plan を載せない", () => {
+    const guide = armIGuide("# 回答の中の図と UI");
+    expect(guide.startsWith("# 回答の中の図と UI\n\n- ```ui ブロックの 1 行目")).toBe(true);
+    expect(guide).toContain("種類の早見:\nグラフ:\n- `bar` 棒グラフ");
+    expect(guide).not.toContain("`ask`");
+    expect(guide).not.toContain("`plan`");
+  });
+
+  it("ui_reference は指定した種類の書き方を返し、知らない種類は一覧を添えて返す", () => {
+    const out = uiReference({ name: "ui_reference", arguments: JSON.stringify({ kinds: ["pie", "Calc", "donut"] }) });
+    expect(out).toContain("## pie 円グラフ");
+    expect(out).toContain("## calc 計算機");
+    expect(out).toContain("不明な種類: donut（使える種類: bar, line");
+    expect(uiReference({ name: "ui_reference", arguments: "{" })).toContain("JSON ではありません");
+    expect(uiReference({ name: "ui_reference", arguments: "{}" })).toContain("kinds に種類の名前の配列");
+  });
+
+  it("ask・plan の課題は I で測らない", () => {
+    expect(armApplies("I", { category: "ask" } as EvalTask)).toBe(false);
+    expect(armApplies("I", { category: "pie" } as EvalTask)).toBe(true);
   });
 });

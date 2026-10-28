@@ -1,5 +1,6 @@
 /** 評価の実行。結果は 1 生成 1 行の JSONL に追記し、途中から再開できる。 */
 
+import { createHash } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -43,8 +44,9 @@ export function resolveEndpoint(name: string, effort: string): Endpoint {
   const baseUrl = process.env[cfg.baseUrlEnv] ?? cfg.baseUrlDefault;
   const missing: string[] = [];
   if (!baseUrl) missing.push(cfg.baseUrlEnv);
+  // 空文字は「キーを送らない」（認証を付け足す社内のプロキシ越しに呼ぶとき）。未設定は誤りとして止める。
   const apiKey = process.env[cfg.apiKeyEnv];
-  if (!apiKey && name !== "gemma") missing.push(cfg.apiKeyEnv);
+  if (apiKey === undefined && name !== "gemma") missing.push(cfg.apiKeyEnv);
   if (missing.length > 0) throw new Error(`${name}: 環境変数 ${missing.join(", ")} が必要です`);
   const extraBody = cfg.effort[effort];
   if (!extraBody) throw new Error(`${name}: effort=${effort} の設定が models.json にありません`);
@@ -174,9 +176,14 @@ export async function run(cfg: RunConfig, log: (msg: string) => void = console.l
   mkdirSync(cfg.outDir, { recursive: true });
   const path = resultsPath(cfg.outDir);
   const done = new Set(readResults(cfg.outDir).filter((r) => r.ok).map((r) => r.key));
+  // Shiki の説明は作業ツリーから読むので、コミットだけでは入力を復元できない。読んだ本文も残す。
+  // ハッシュは保存したファイルの中身（末尾の改行を含む）に対して取る（sha256sum で照合できる）。
+  const guideFile = cfg.shiki?.yuiGuide ? `${cfg.shiki.yuiGuide}\n` : null;
+  if (guideFile) writeFileSync(join(cfg.outDir, "shiki-yui_guide.md"), guideFile);
+  const shiki = cfg.shiki ? { commit: cfg.shiki.commit, ...(guideFile ? { yuiGuideSha256: sha256(guideFile) } : {}) } : null;
   writeFileSync(
     join(cfg.outDir, "config.json"),
-    JSON.stringify({ ...cfg, tasks: cfg.tasks.map((t) => t.id), shiki: cfg.shiki ? { commit: cfg.shiki.commit } : null }, null, 2),
+    JSON.stringify({ ...cfg, tasks: cfg.tasks.map((t) => t.id), shiki }, null, 2),
   );
 
   const jobs: (() => Promise<void>)[] = [];
@@ -255,4 +262,9 @@ export async function rescore(outDir: string, tasks: EvalTask[], shiki: ShikiToo
   }
   writeFileSync(resultsPath(outDir), `${out.join("\n")}\n`);
   return n;
+}
+
+/** 評価の入力（Shiki の説明）の本文を識別する。 */
+export function sha256(text: string): string {
+  return createHash("sha256").update(text).digest("hex");
 }

@@ -1,6 +1,7 @@
 /** 1 課題 × 1 方式を実行し、抽出結果を返す。 */
 
-import { isEmpty, parseMarkdown } from "@imanect/yui";
+import { isEmpty, KINDS, parseMarkdown, type Kind } from "@imanect/yui";
+import { kindGuide } from "@imanect/yui/guide";
 import { chat, type ChatMessage, type ChatRequest, type ChatResult, type Endpoint, type ToolDef } from "./client.js";
 import { chatGemini } from "./gemini.js";
 import { chatResponses } from "./responses.js";
@@ -61,7 +62,7 @@ export async function runArm(arm: ArmId, task: EvalTask, call: ChatFn, shiki: Sh
   const usage = { promptTokens: 0, completionTokens: 0, reasoningTokens: 0 };
 
   if (arm === "A" || arm === "A2") {
-    if (!shiki) throw new Error("方式 A には Shiki のソース（--shiki-root）が必要です");
+    if (!shiki?.tool) throw new Error("方式 A には emit_ui の残っている Shiki のソース（--shiki-root）が必要です");
     let elapsed = 0;
     let firstTrySyntaxOk = true;
     let ttftMs: number | undefined;
@@ -113,7 +114,12 @@ export async function runArm(arm: ArmId, task: EvalTask, call: ChatFn, shiki: Sh
     return out;
   }
 
-  if (arm === "G" || arm === "H") return runOnDemand(messages, call, shiki, usage, promptChars);
+  if (arm === "G" || arm === "H") {
+    if (!shiki?.yuiGuide) throw new Error("方式 G・H には Shiki のソース（--shiki-root）の yui_guide.md が必要です");
+    const guide = shiki.yuiGuide;
+    return runOnDemand(messages, call, YUI_GUIDE_TOOL, (c) => (c.name === "yui_guide" ? guide : `不明なツール: ${c.name}`), usage, promptChars);
+  }
+  if (arm === "I") return runOnDemand(messages, call, UI_REFERENCE_TOOL, uiReference, usage, promptChars);
 
   const yui = arm === "B" || arm === "C" || arm === "F";
   const ready = yui ? yuiReady : arm === "D" ? fenceClosed("uijson") : fenceClosed("mermaid");
@@ -147,22 +153,55 @@ export const YUI_GUIDE_TOOL: ToolDef = {
   },
 };
 
+/**
+ * 方式 I で、種類ごとの書き方を返すツール（Shiki の `ui_reference` と同じ形）。
+ * 中身は @imanect/yui/guide の kindGuide で、Shiki が返すものと同じ。
+ */
+export const UI_REFERENCE_TOOL: ToolDef = {
+  type: "function",
+  function: {
+    name: "ui_reference",
+    description: "```ui ブロックの種類ごとの書き方（用途・書き方・オプション・上限・使い分け・作例）を返す。図を書く前に、使う種類を指定して呼ぶ。",
+    parameters: {
+      type: "object",
+      properties: { kinds: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 5, description: "読む種類（早見の英字の名前。例: [\"pie\", \"calc\"]）" } },
+      required: ["kinds"],
+      additionalProperties: false,
+    },
+  },
+};
+
+/** ui_reference の結果（知らない種類は、知っている種類の一覧を添えて返す）。 */
+export function uiReference(c: { name: string; arguments: string }): string {
+  if (c.name !== "ui_reference") return `不明なツール: ${c.name}`;
+  let kinds: unknown;
+  try {
+    kinds = (JSON.parse(c.arguments || "{}") as { kinds?: unknown }).kinds;
+  } catch {
+    return "引数が JSON ではありません。kinds に種類の名前の配列を渡してください。";
+  }
+  if (!Array.isArray(kinds) || kinds.length === 0) return "kinds に種類の名前の配列を渡してください。";
+  return kinds
+    .map((k) => String(k).trim().toLowerCase())
+    .map((k) => ((KINDS as readonly string[]).includes(k) ? kindGuide(k as Kind) : `不明な種類: ${k}（使える種類: ${KINDS.join(", ")}）`))
+    .join("\n\n");
+}
+
 /** 書き方を読みに行くための往復の上限（読む → 書く、に 1 回の余裕）。 */
 const ON_DEMAND_MAX_TURNS = 3;
 
 /**
- * 方式 G・H: system には短い案内だけを置き、書き方の全文はモデルが yui_guide を呼んだときに返す。
+ * 方式 G・H・I: system には短い案内だけを置き、書き方はモデルがツールを呼んだときに返す。
  * 「必要なときだけ読み込む」方式の品質（読みに行くか・読まずに書いて崩れないか）と往復の増分を測る。
  */
 async function runOnDemand(
   messages: ChatMessage[],
   call: ChatFn,
-  shiki: ShikiTool | null,
+  tool: ToolDef,
+  respond: (c: { name: string; arguments: string }) => string,
   usage: ArmOutcome["usage"],
   promptChars: number,
 ): Promise<ArmOutcome> {
-  if (!shiki?.yuiGuide) throw new Error("方式 G・H には Shiki のソース（--shiki-root）の yui_guide.md が必要です");
-  const guide = shiki.yuiGuide;
   let elapsed = 0;
   let text = "";
   let ttftMs: number | undefined;
@@ -172,7 +211,7 @@ async function runOnDemand(
   let turns = 0;
   for (let i = 0; i < ON_DEMAND_MAX_TURNS; i++) {
     turns++;
-    const r = await call({ messages, tools: [YUI_GUIDE_TOOL] }, yuiReady);
+    const r = await call({ messages, tools: [tool] }, yuiReady);
     if (ttftMs === undefined && r.ttftMs !== undefined) ttftMs = elapsed + r.ttftMs;
     if (firstFigureMs === undefined && r.firstFigureMs !== undefined) firstFigureMs = elapsed + r.firstFigureMs;
     elapsed += r.totalMs;
@@ -187,7 +226,7 @@ async function runOnDemand(
       tool_calls: r.toolCalls.map((c, j) => ({ id: c.id || `call_${i}_${j}`, type: "function" as const, function: { name: c.name, arguments: c.arguments || "{}" } })),
     });
     r.toolCalls.forEach((c, j) => {
-      messages.push({ role: "tool", tool_call_id: c.id || `call_${i}_${j}`, content: c.name === "yui_guide" ? guide : `不明なツール: ${c.name}` });
+      messages.push({ role: "tool", tool_call_id: c.id || `call_${i}_${j}`, content: respond(c) });
     });
   }
   const extraction = extractYui(text);
@@ -199,7 +238,7 @@ async function runOnDemand(
     turns,
     usage,
     totalMs: elapsed,
-    promptChars: promptChars + JSON.stringify(YUI_GUIDE_TOOL).length,
+    promptChars: promptChars + JSON.stringify(tool).length,
     finishReasons,
   };
   if (ttftMs !== undefined) out.ttftMs = ttftMs;

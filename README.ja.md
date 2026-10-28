@@ -355,6 +355,20 @@ downloadFigure(figure, "png", { scale: 2 });       // "svg" も可。色は焼�
 
 描画は 1 本のレイアウトから SVG と React の両方を作るので、画面と書き出しの見た目がずれません。画面では、グラフにカーソルを載せる（または矢印キーで動かす）と値が出てその項目が強調され、流れ図は載せた箱とつながりが強調されます。既定の見た目は控えめで（枠線のカード・破線の目盛り・彩度を抑えた四季の色）、系列の色は色覚多様性のシミュレーションで明暗それぞれ検証しています。ダークモードは `<html class="dark">` か `data-theme` に、無ければ OS の設定に従います。`--yui-s1`〜`--yui-s8`・`--yui-ink`・`--yui-font` などの CSS 変数で差し替えられます。
 
+## モデルへの説明
+
+`@imanect/yui/guide` は、ホストがモデルに渡す説明の文を返します。システムプロンプトには種類の早見と共通の決まりだけを置き、種類ごとの書き方（用途・書き方・オプション・上限・使い分け・作例）は、モデルがその種類を書く前にツールで読み込ませます。早見と決まりは約 1,100 字で、全種類の書き方（約 9,700 字）より大幅に短くなります。評価（[docs/eval-results-2026-10-13-luna.md](docs/eval-results-2026-10-13-luna.md) の方式 H）では、書き方を必要なときに読み込んでも品質は落ちませんでした。早見をプロンプトに置かないと、どの種類を使うかの判断が落ちます。
+
+```ts
+import type { Kind } from "@imanect/yui";
+import { GUIDE_RULES, guideIndex, kindGuide } from "@imanect/yui/guide";
+
+const system = `${GUIDE_RULES}\n\n${guideIndex({ kinds: ["bar", "pie", "calc"] })}`; // kinds を省くと全種類
+const tool = (kind: Kind) => kindGuide(kind); // 例: "## pie 円グラフ（ドーナツ）…"
+```
+
+[docs/kinds.md](docs/kinds.md) も同じ定義から作ります。
+
 ## 画面の組み立て（ドラッグ＆ドロップ）
 
 `app`（入力とボタンの画面）は、記法を書かずに組み立てられます。チェッカーが、保存すると内容が変わってしまう設定や選べない実行先を、部品の場所つきで知らせます。設計: [docs/editor.md](docs/editor.md)。
