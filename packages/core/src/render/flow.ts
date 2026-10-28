@@ -162,7 +162,9 @@ function shiftPlan(p: Plan, dx: number, dy: number): void {
 }
 
 function planPlain(ctx: Ctx, f: FlowFigure, decision: Set<string>): Plan {
-  const edges = f.edges.map((e, i) => ({ ...e, i }));
+  // 枠につなぐ辺は、枠を描かない図では端が無いので外す（中身の無い枠への辺。生成途中にも起きる）
+  const ids = new Set(f.nodes.map((n) => n.id));
+  const edges = f.edges.map((e, i) => ({ ...e, i })).filter((e) => ids.has(e.from) && ids.has(e.to));
   const wantLR = f.direction === "LR";
   const lr = layoutOnce(ctx, f.nodes, edges, wantLR ? "LR" : "TB", decision);
   // 横向きが幅に収まらなければ縦向きにする（幅はレンダラーが決める）

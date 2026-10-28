@@ -100,6 +100,14 @@ describe("レイアウト", () => {
       expect(sc.items.filter((i) => i.t === "path" && i.arrow)).toHaveLength(12);
     });
 
+    it("中身の無い枠につなぐ辺があっても描ける（生成途中で枠を開いた直後など）", () => {
+      for (const src of ["flow x\nsubgraph 受付\nend\n開始 -> 受付\n", "flow x\nsubgraph 受付\n開始 -> 受付\n"]) {
+        const sc = layout(fig(src), { width: 640 });
+        expect(sc.targets).toHaveLength(1);
+        expect(sc.items.filter((i) => i.t === "path" && i.arrow)).toHaveLength(0);
+      }
+    });
+
     it("強調した箱は強調の色の太い枠で描く", () => {
       const sc = layout(fig(paper), { width: 960 });
       expect(sc.items.filter((i) => i.t === "rect" && i.stroke === "s5" && i.strokeWidth === 2)).toHaveLength(1);
