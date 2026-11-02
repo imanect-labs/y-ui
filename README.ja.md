@@ -385,6 +385,15 @@ if (r.ok) setFigure(r.figure);
 const saved = toSource(figure);
 ```
 
+## GitHub などで図を見せる（画像で埋め込む）
+
+コードを実行しない Markdown（GitHub の README・Issue・Wiki）では、ui ブロックのソースを URL に入れた画像のリンクを付け、Cloudflare Worker が SVG を描きます。CLI `yui-embed` が Markdown の ui ブロックに画像のリンクを付け（何度かけても同じ結果）、Worker の MCP（`/mcp`）と `/llms.txt` で AI にも書かせられます。詳しくは [docs/embed.md](docs/embed.md)。
+
+```bash
+npx @imanect/yui-embed --base https://yui.example.workers.dev README.md
+claude mcp add --transport http yui https://yui.example.workers.dev/mcp
+```
+
 ## 小さなモデルで書けるか
 
 Gemma 4 31B（141 課題）で、JSON をツール呼び出しで出す方式と比べました。Yui は 92〜99%（JSON 方式は 72〜91%）で、トークンは 4 分の 1〜3 分の 1、応答時間は約半分でした。JSON 方式ではほぼ描けなかった流れ図・構成図も 70〜80% 描けています。詳細は [docs/eval-results-2026-10-12-gemma.md](docs/eval-results-2026-10-12-gemma.md)、評価計画は [docs/eval-plan.md](docs/eval-plan.md)。
@@ -394,6 +403,8 @@ Gemma 4 31B（141 課題）で、JSON をツール呼び出しで出す方式と
 | パス | 内容 |
 |---|---|
 | `packages/core` | `@imanect/yui`: パーサ・中間表現・テキスト化、`/svg` レンダラー、`/react` 部品 |
+| `packages/embed` | `@imanect/yui-embed`: ソースを画像の URL にする関数と、Markdown に画像のリンクを付ける CLI |
+| `packages/worker` | 図を SVG で配信し、AI 向けの MCP と `/llms.txt` を出す Cloudflare Worker |
 | `eval` | モデルがどれだけ正しく書けるかの評価（課題・採点・実行・レポート） |
 | `scripts` | 描画の確認用ギャラリーと README の画像 |
 | `docs` | 仕様・書き出しの設計・評価計画と結果 |

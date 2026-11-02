@@ -1,0 +1,38 @@
+{
+  "name": "@imanect/yui-embed",
+  "version": "0.1.0",
+  "description": "Markdown の ```ui ブロックを画像 URL にして埋め込む（GitHub などコードを実行しない Markdown で図を見せる）",
+  "keywords": ["markdown", "yui", "svg", "github", "readme", "diagram"],
+  "license": "MIT OR Apache-2.0",
+  "author": "Imanect Labs",
+  "homepage": "https://github.com/imanect-labs/y-ui/blob/main/docs/embed.md",
+  "bugs": "https://github.com/imanect-labs/y-ui/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imanect-labs/y-ui.git",
+    "directory": "packages/embed"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "bin": {
+    "yui-embed": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "README.md", "LICENSE-MIT", "LICENSE-APACHE"],
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/cli.js",
+    "prepack": "cp ../../LICENSE-MIT ../../LICENSE-APACHE . && pnpm run build"
+  },
+  "dependencies": {
+    "@imanect/yui": "workspace:^"
+  }
+}
