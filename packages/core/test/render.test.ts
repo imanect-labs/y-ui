@@ -231,6 +231,15 @@ describe("SVG", () => {
     expect(css).toContain("font-family:var(--yui-font,");
   });
 
+  it("fixedSize なら auto でも幅と高さを固定し、単体の SVG でも OS の明暗に従う", () => {
+    const svg = renderSVG(f, { fixedSize: true });
+    expect(svg).toMatch(/^<svg [^>]*width="\d+" height="\d+"/);
+    expect(svg).not.toContain('width="100%"');
+    expect(svg).toContain("var(--yui-s1, var(--yui-default-s1))");
+    const cls = svg.match(/class="([^"]+)"/)![1]!;
+    expect(svg).toContain(`@media (prefers-color-scheme: dark){:root.${cls}{`);
+  });
+
   it("読み上げ用に、表にした内容を desc に入れる", () => {
     expect(renderSVG(f)).toMatch(/<desc id="[^"]+">[^<]*\| 1月 \| 120 \|/);
   });

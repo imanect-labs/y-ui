@@ -14,6 +14,11 @@ import { FONT, paint, themeCss, type ThemeMode, type Token } from "./theme.js";
 
 export interface SvgOptions extends LayoutOptions {
   theme?: ThemeMode;
+  /**
+   * 幅と高さを属性で固定する。auto でも `<img>` で読み込む SVG（画像として配信するとき）は
+   * 自分の大きさを持たないと寸法が決まらないので、これを付ける。light / dark は常に固定。
+   */
+  fixedSize?: boolean;
 }
 
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -69,10 +74,10 @@ function item(it: Item, mode: ThemeMode, arrowId: string): string {
   }
 }
 
-export function sceneToSVG(scene: Scene, theme: ThemeMode = "auto"): string {
+export function sceneToSVG(scene: Scene, theme: ThemeMode = "auto", opts: { fixedSize?: boolean } = {}): string {
   const id = hashId(scene);
   const arrowId = `${id}-arrow`;
-  const size = theme === "auto" ? `width="100%" style="max-width:${scene.width}px;height:auto;display:block"` : `width="${scene.width}" height="${scene.height}"`;
+  const size = theme === "auto" && !opts.fixedSize ? `width="100%" style="max-width:${scene.width}px;height:auto;display:block"` : `width="${scene.width}" height="${scene.height}"`;
   const titleId = `${id}-t`;
   const descId = `${id}-d`;
   const bg = theme === "auto" ? "" : `<rect width="100%" height="100%"${colorAttrs(theme, { fill: "surface" })}/>`;
@@ -91,5 +96,5 @@ export function sceneToSVG(scene: Scene, theme: ThemeMode = "auto"): string {
 
 /** 図を SVG にする。 */
 export function renderSVG(figure: Figure, opts: SvgOptions = {}): string {
-  return sceneToSVG(layout(figure, opts), opts.theme ?? "auto");
+  return sceneToSVG(layout(figure, opts), opts.theme ?? "auto", { fixedSize: opts.fixedSize ?? false });
 }

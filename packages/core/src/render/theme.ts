@@ -81,6 +81,7 @@ export const FONT = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Hirag
  * - 明示が無ければ OS の設定（prefers-color-scheme）
  * 各色は `var(--yui-<token>, var(--yui-default-<token>))` で参照し、ホストの上書きを優先する。
  * 文字は `--yui-font` があればそれを使う（埋め込み先と揃えたいとき）。
+ * SVG を単体で開いたとき（`<img>` で読み込んだ画像など）は SVG 自身が :root なので、OS の設定に直接従う。
  */
 export function themeCss(scope: string): string {
   const decl = (p: Palette) => TOKENS.map((t) => `--yui-default-${t}:${p[t]}`).join(";");
@@ -89,6 +90,7 @@ export function themeCss(scope: string): string {
     `${scope}{${decl(LIGHT)};font-family:var(--yui-font,${FONT.replace(/"/g, "'")})}`,
     `@media (prefers-color-scheme: dark){${explicitLight} ${scope}{${decl(DARK)}}}`,
     `:root:where([data-theme="dark"],.dark) ${scope}{${decl(DARK)}}`,
+    `@media (prefers-color-scheme: dark){:root${scope}{${decl(DARK)}}}`,
   ].join("");
 }
 
