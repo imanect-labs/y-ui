@@ -1,0 +1,20 @@
+# Yui の図を画像として配信する Worker（docs/embed.md）。
+#   pnpm --filter @imanect/yui-worker dev      # 手元で動かす（http://localhost:8787）
+#   pnpm --filter @imanect/yui-worker deploy   # Cloudflare に出す（先に npx wrangler login）
+name = "yui"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+# ワークスペースのパッケージはビルドせずにソースを束ねる（公開パッケージの dist を待たない）
+[alias]
+"@imanect/yui" = "../core/src/index.ts"
+"@imanect/yui/svg" = "../core/src/svg.ts"
+"@imanect/yui/guide" = "../core/src/guide/index.ts"
+"@imanect/yui-embed" = "../embed/src/index.ts"
+
+# 独自ドメインで配信するなら、画像の URL の基点をここで決める（無ければリクエストの origin）
+# [vars]
+# PUBLIC_BASE = "https://yui.example.com"
+
+# 独自ドメインにするなら
+# routes = [{ pattern = "yui.example.com", custom_domain = true }]

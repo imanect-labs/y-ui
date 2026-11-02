@@ -1,0 +1,19 @@
+{
+  "name": "@imanect/yui-worker",
+  "private": true,
+  "type": "module",
+  "description": "Yui の図を画像（SVG）として配信し、AI 向けの MCP と説明を出す Cloudflare Worker",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "wrangler deploy --dry-run --outdir dist"
+  },
+  "dependencies": {
+    "@imanect/yui": "workspace:*",
+    "@imanect/yui-embed": "workspace:*"
+  },
+  "license": "MIT OR Apache-2.0",
+  "devDependencies": {
+    "wrangler": "^4.156.1"
+  }
+}

@@ -6,6 +6,8 @@ export default defineConfig({
     // 開発中はビルドせずにソースを直接使う（公開パッケージは dist を指す）。
     alias: [
       { find: /^@imanect\/yui\/guide$/, replacement: fileURLToPath(new URL("./packages/core/src/guide/index.ts", import.meta.url)) },
+      { find: /^@imanect\/yui-embed$/, replacement: fileURLToPath(new URL("./packages/embed/src/index.ts", import.meta.url)) },
+      { find: /^@imanect\/yui\/export$/, replacement: fileURLToPath(new URL("./packages/core/src/export.ts", import.meta.url)) },
       { find: /^@imanect\/yui\/svg$/, replacement: fileURLToPath(new URL("./packages/core/src/svg.ts", import.meta.url)) },
       { find: /^@imanect\/yui\/editor\/react$/, replacement: fileURLToPath(new URL("./packages/core/src/editor/react/index.ts", import.meta.url)) },
       { find: /^@imanect\/yui\/editor$/, replacement: fileURLToPath(new URL("./packages/core/src/editor/index.ts", import.meta.url)) },

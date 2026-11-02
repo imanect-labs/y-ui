@@ -382,6 +382,15 @@ if (r.ok) setFigure(r.figure);
 const saved = toSource(figure);
 ```
 
+## Showing figures on GitHub (embedding as images)
+
+Markdown viewers that run no code (GitHub READMEs, issues, wikis) get an image link whose URL carries the ui block's source, and a Cloudflare Worker draws the SVG. The `yui-embed` CLI adds those links to every ui block in a Markdown file (idempotently), and the Worker's MCP endpoint (`/mcp`) and `/llms.txt` let AI agents write them too. See [docs/embed.md](docs/embed.md) (Japanese).
+
+```bash
+npx @imanect/yui-embed --base https://yui.example.workers.dev README.md
+claude mcp add --transport http yui https://yui.example.workers.dev/mcp
+```
+
 ## Does it work with small models?
 
 We compared Yui against a JSON tool-call UI spec on Gemma 4 31B (141 tasks): Yui reached 92–99% versus 72–91%, with a quarter to a third of the tokens and half the latency. Flowcharts and architecture diagrams, which the JSON approach could barely produce, came out right 70–80% of the time. Details (Japanese): [docs/eval-results-2026-10-12-gemma.md](docs/eval-results-2026-10-12-gemma.md).
@@ -391,6 +400,8 @@ We compared Yui against a JSON tool-call UI spec on Gemma 4 31B (141 tasks): Yui
 | Path | What |
 |---|---|
 | `packages/core` | `@imanect/yui`: parser, IR, text fallback; `/svg` renderer; `/react` components |
+| `packages/embed` | `@imanect/yui-embed`: source → image URL, and a CLI that adds image links to Markdown |
+| `packages/worker` | Cloudflare Worker that serves figures as SVG, plus an MCP endpoint and `/llms.txt` for AI agents |
 | `eval` | Harness that measures how well models write Yui (tasks, scoring, runs, reports) |
 | `scripts` | Rendering gallery and README images |
 | `docs` | Spec, export design, evaluation plan and results (Japanese) |

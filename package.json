@@ -8,6 +8,7 @@
     "test": "vitest run",
     "eval": "tsx eval/src/cli.ts",
     "build": "pnpm --filter @imanect/yui run build",
+    "embed": "tsx packages/embed/src/cli.ts",
     "docs:kinds": "tsx scripts/kinds-doc.ts",
     "spec:app": "tsx scripts/app-fixtures.ts",
     "spec:flow": "tsx scripts/flow-fixtures.ts"
