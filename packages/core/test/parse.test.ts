@@ -39,6 +39,8 @@ describe("bar / line", () => {
     expect(r.diagnostics).toEqual([]);
     const g = parseBlock("bar 件数\n区分 | 2024年度版 | 2025年発生\nA | 1 | 2\n", final).figure as ChartFigure;
     expect(g.columns).toEqual(["区分", "2024年度版", "2025年発生"]);
+    const h = parseBlock("bar 件数\n区分 | 2024年版[1] | 2025年版[2]\nA | 1 | 2\n", final).figure as ChartFigure;
+    expect(h.rows.map((x) => x.label)).toEqual(["A"]);
   });
 
   it("不正な行だけを除き、診断を残す", () => {

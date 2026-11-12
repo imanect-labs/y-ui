@@ -93,7 +93,8 @@ const PERIOD_LIKE = /^((19|20)\d{2}(年[^\d\s|]{0,6})?|FY\s?\d{2,4}|\d{4}\/\d{1,
 function looksLikeHeader(cells: string[]): boolean {
   if (cells.length < 2) return true;
   const rest = cells.slice(1).map((c) => c.normalize("NFKC").trim());
-  return rest.some((c) => parseCell(c).kind === "bad") || rest.every((c) => PERIOD_LIKE.test(c));
+  // 参照番号（`2024年版[1]`）は期間の判定から外す（付いていると見出しと分からない）。
+  return rest.some((c) => parseCell(c).kind === "bad") || rest.every((c) => PERIOD_LIKE.test(takeRefs(c).text.trim()));
 }
 
 function synthesizeHeader(series: number, line: number, diags: Diagnostics): string[] {
