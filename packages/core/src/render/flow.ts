@@ -131,7 +131,7 @@ function decisions(f: FlowFigure): Set<string> {
   return new Set(f.nodes.filter((n) => n.shape === "decision" || (n.shape !== "terminal" && (outDeg.get(n.id) ?? 0) >= 2)).map((n) => n.id));
 }
 
-/** ホバー: この箱と、つながる線・前後の箱だけを残して薄くする（流れを追いやすくする）。 */
+/** 箱ごとの対象と、つながる線・前後の箱。出すもの（tip・say）が無いので、画面用の描画ではホバーの対象にならない。 */
 function targetsFor(f: FlowFigure, rects: Map<string, Rect>, dx: number, dy: number): Target[] {
   const targets: Target[] = [];
   for (const n of f.nodes) {

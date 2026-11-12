@@ -9,7 +9,7 @@ interface Common {
   /** マウスを載せたときの説明（SVG の <title>）。 */
   hint?: string;
   opacity?: number;
-  /** 強調のまとまり。ホバー中は、対象の keep に無いまとまりの要素を薄くする（まとまりの無い要素はそのまま）。 */
+  /** 強調のまとまり（Target.keep と対応させる）。画面用の描画はホバー中も他の要素を薄くしない。 */
   group?: string;
 }
 
@@ -30,7 +30,7 @@ export interface Target {
   hit: { x: number; y: number; w: number; h: number };
   /** 追加の当たり判定（矩形にならない形。円グラフの扇など）。SVG の path。 */
   hitPath?: string;
-  /** 強調するまとまり（これ以外のまとまりを薄くする）。空なら何も薄くしない。 */
+  /** この対象に関わるまとまり（Item.group）。画面用の描画では他を薄くするのには使わない。 */
   keep: string[];
   /** 読み上げる文（ツールチップを出さない対象のため。tip があれば tip の内容を読む）。 */
   say?: string;

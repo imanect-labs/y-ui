@@ -83,13 +83,10 @@ function colors(mode: ThemeMode, fill?: Token | "none", stroke?: Token): CSSProp
   return s;
 }
 
-/** ホバー中に薄くする要素の不透明度。 */
-const DIMMED = 0.28;
-
-function renderItem(it: Item, i: number, mode: ThemeMode, arrowId: string, keep: Set<string> | null): ReactElement {
+function renderItem(it: Item, i: number, mode: ThemeMode, arrowId: string): ReactElement {
   const title = it.hint ? h("title", null, it.hint) : null;
-  const dimmed = keep !== null && it.group !== undefined && !keep.has(it.group);
-  const common = { key: i, opacity: dimmed ? DIMMED * (it.opacity ?? 1) : it.opacity, "data-g": it.group === undefined ? undefined : "" };
+  // ホバー中も他の要素は薄くしない（値はツールチップ・縦線・点で示す）
+  const common = { key: i, opacity: it.opacity };
   switch (it.t) {
     case "rect":
       return h("rect", { ...common, x: it.x, y: it.y, width: Math.max(0, it.w), height: Math.max(0, it.h), rx: it.r, style: colors(mode, it.fill, it.stroke), strokeWidth: it.stroke ? (it.strokeWidth ?? 1) : undefined }, title);
@@ -135,13 +132,14 @@ export function SceneSvg(props: { scene: Scene; theme?: ThemeMode; fluid?: boole
   const id = `yui${useId().replace(/[^A-Za-z0-9_-]/g, "")}`;
   const arrowId = `${id}-arrow`;
   const fluid = props.fluid ?? mode === "auto";
-  const interactive = (props.interactive ?? false) && scene.targets.length > 0;
+  // 出すもの（ツールチップ・読み上げ・縦線と点）がある対象だけを操作の対象にする（他を薄くするだけの対象は無視する）
+  const targets = useMemo(() => scene.targets.filter((t) => t.tip || t.say || t.guide || t.points?.length), [scene.targets]);
+  const interactive = (props.interactive ?? false) && targets.length > 0;
   const [active, setActive] = useState<number | null>(null);
   // 直前に押したポインタの種類。タッチ・ペンはタップ（click）が確定してから出す
   // （押した瞬間に出すと、スクロールしようと指を置くたびに値が出てしまう）。
   const pointer = useRef<string>("mouse");
-  const target = active === null ? null : (scene.targets[active] ?? null);
-  const keep = target && target.keep.length ? new Set(target.keep) : null;
+  const target = active === null ? null : (targets[active] ?? null);
 
   const svg = h(
     "svg",
@@ -165,13 +163,13 @@ export function SceneSvg(props: { scene: Scene; theme?: ThemeMode; fluid?: boole
       h("marker", { id: arrowId, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, h("path", { d: "M1,1L9,5L1,9Z", style: colors(mode, "muted") })),
     ),
     mode === "auto" ? null : h("rect", { width: "100%", height: "100%", style: colors(mode, "surface") }),
-    ...scene.items.map((it, i) => renderItem(it, i, mode, arrowId, keep)),
+    ...scene.items.map((it, i) => renderItem(it, i, mode, arrowId)),
     interactive && target ? emphasis(target, mode) : null,
     interactive
       ? h(
           "g",
           { key: "hits", "aria-hidden": true },
-          ...scene.targets.flatMap((t, i) => {
+          ...targets.flatMap((t, i) => {
             const handlers = {
               fill: "transparent",
               style: { cursor: t.tip ? "default" : "pointer" },
@@ -189,7 +187,7 @@ export function SceneSvg(props: { scene: Scene; theme?: ThemeMode; fluid?: boole
       : null,
   );
   if (!interactive) return svg;
-  return h(Interactive, { id, scene, mode, target, active, setActive, svg });
+  return h(Interactive, { id, scene, count: targets.length, mode, target, active, setActive, svg });
 }
 
 /** 折れ線の縦線と、強調する点。 */
@@ -206,13 +204,15 @@ function emphasis(t: Target, mode: ThemeMode): ReactElement {
 function Interactive(props: {
   id: string;
   scene: Scene;
+  /** 操作の対象の数。 */
+  count: number;
   mode: ThemeMode;
   target: Target | null;
   active: number | null;
   setActive: (v: number | null | ((cur: number | null) => number | null)) => void;
   svg: ReactElement;
 }): ReactElement {
-  const { id, scene, mode, target, active, setActive } = props;
+  const { id, scene, count, mode, target, active, setActive } = props;
   const wrap = useRef<HTMLDivElement | null>(null);
   const tipRef = useRef<HTMLDivElement | null>(null);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
@@ -235,7 +235,6 @@ function Interactive(props: {
     setPos({ left, top });
   }, [tip, scene.width]);
 
-  const count = scene.targets.length;
   const onKeyDown = (e: KeyboardEvent) => {
     const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
     if (step) {
@@ -282,7 +281,7 @@ function Interactive(props: {
       onBlur: () => setActive(null),
       onPointerLeave: (e: PointerEvent) => e.pointerType === "mouse" && setActive(null),
     },
-    h("style", null, `.${id}:focus-visible{outline:2px solid var(--yui-focus,${paint("accentLine", mode)});outline-offset:4px;border-radius:8px}.${id} [data-g]{transition:opacity .12s}@media (prefers-reduced-motion:reduce){.${id} [data-g]{transition:none}}`),
+    h("style", null, `.${id}:focus-visible{outline:2px solid var(--yui-focus,${paint("accentLine", mode)});outline-offset:4px;border-radius:8px}`),
     props.svg,
     tip
       ? h(
