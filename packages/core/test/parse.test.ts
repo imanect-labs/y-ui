@@ -31,6 +31,18 @@ describe("bar / line", () => {
     expect(f.rows).toHaveLength(1);
   });
 
+  it("年の後ろに語が続く列見出し（2024年版など）も見出しとして扱う", () => {
+    const r = parseBlock("bar 天候別\n天候 | 2024年版 | 2025年版\n晴 | 797 | 910\n曇 | 382 | 450\n", final);
+    const f = r.figure as ChartFigure;
+    expect(f.columns).toEqual(["天候", "2024年版", "2025年版"]);
+    expect(f.rows.map((x) => x.label)).toEqual(["晴", "曇"]);
+    expect(r.diagnostics).toEqual([]);
+    const g = parseBlock("bar 件数\n区分 | 2024年度版 | 2025年発生\nA | 1 | 2\n", final).figure as ChartFigure;
+    expect(g.columns).toEqual(["区分", "2024年度版", "2025年発生"]);
+    const h = parseBlock("bar 件数\n区分 | 2024年版[1] | 2025年版[2]\nA | 1 | 2\n", final).figure as ChartFigure;
+    expect(h.rows.map((x) => x.label)).toEqual(["A"]);
+  });
+
   it("不正な行だけを除き、診断を残す", () => {
     const r = parseBlock("bar 売上\n月 | 金額\n1月 | 100\n2月 | abc\n3月 | 200\n", final);
     const f = r.figure as ChartFigure;
